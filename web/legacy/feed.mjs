@@ -70,7 +70,7 @@ export class BriefClient {
         throw new ProtocolError('Brief query definition changed');
       return body;
     };
-    const rows=validateRows(await ask(ROW_QUERY),this.inventory);
+    const rows=validateRows(await ask(ROW_QUERY));
     let stats=null;
     try {stats=validateStats(await ask(STATS_QUERY),this.now());} catch { /* Rows-first: explicit UNKNOWN stats is a valid view. */ }
     return {rows,stats};
