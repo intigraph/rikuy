@@ -1,6 +1,16 @@
 import { GRAPH, ROW_QUERY, STATS_QUERY, validateRows, validateStats, validatePage, integer } from './model.mjs';
 
 export class ProtocolError extends Error {}
+export function validateEndpoint(endpoint, pageOrigin) {
+  let url;
+  try { url=new URL(endpoint); } catch { throw new ProtocolError('Brief endpoint is invalid'); }
+  if(!['http:','https:'].includes(url.protocol) || url.username || url.password
+      || url.pathname!=='/' || url.search || url.hash)
+    throw new ProtocolError('Brief endpoint must be a plain web origin');
+  if(pageOrigin && new URL(pageOrigin).protocol==='https:' && url.protocol!=='https:')
+    throw new ProtocolError('Secure brief connection required');
+  return url.origin;
+}
 export class TransportError extends Error {
   constructor(message, retryAfter = 0) { super(message); this.retryAfter=retryAfter; }
 }
@@ -35,9 +45,9 @@ export async function readJSON(url, {body, cap, signal, fetcher=fetch}={}) {
 
 export class BriefClient {
   constructor({config,inventory,definitions,render,status,request=readJSON,
-    eventSource=globalThis.EventSource,now=()=>Date.now(),
+    eventSource=globalThis.EventSource,pageOrigin=globalThis.location?.origin,now=()=>Date.now(),
     schedule=(fn,ms)=>globalThis.setTimeout(fn,ms),cancel=timer=>globalThis.clearTimeout(timer),random=Math.random}) {
-    Object.assign(this,{config,inventory,definitions,render,status,request,eventSource,now,schedule,cancel,random});
+    Object.assign(this,{config,inventory,definitions,render,status,request,eventSource,pageOrigin,now,schedule,cancel,random});
     this.state=null;this.timer=null;this.stream=null;this.alive=false;this.busy=false;
     this.failures=0;this.lastRefresh=-Infinity;this.lastPoll=-Infinity;this.generation=0;
   }
@@ -78,6 +88,7 @@ export class BriefClient {
       return this.status('Live brief not yet verified');
     this.alive=true;const generation=++this.generation;
     try {
+      validateEndpoint(this.config.endpoint,this.pageOrigin);
       if(!this.state) {
         const registry=await this.read('/graphs');
         const matches=registry.graphs?.filter(g=>g.iri===GRAPH) || [];
