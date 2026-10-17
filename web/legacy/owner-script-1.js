@@ -2,7 +2,10 @@
 (function(){
   const $=id=>document.getElementById(id);
   window.briefExplorerPromise=import('./explorer.js').then(m=>m.attachExplorer($('quipu-explorer')));
-  const deskLink=document.createElement('button');deskLink.className='quipu-node-link';deskLink.id='all-desk';deskLink.textContent='All Desk cards';deskLink.disabled=true;$('asks').after(deskLink);window.briefExplorerPromise.then(api=>{deskLink.textContent='All Desk cards ('+api.deskCount+')';deskLink.disabled=false;deskLink.onclick=()=>{window.briefShow&&window.briefShow('explore');api.openDesk();};}).catch(()=>{});
+  const deskLink=document.createElement('button');deskLink.className='quipu-node-link';deskLink.id='all-desk';deskLink.textContent='All Desk cards';deskLink.disabled=true;$('asks').after(deskLink);window.briefExplorerPromise.then(api=>{
+    if($('quipu-explorer').dataset.ready!=='true'||!Number.isSafeInteger(api.deskCount)||api.deskCount<0){deskLink.textContent='Snapshot unavailable';return;}
+    deskLink.textContent='All Desk cards ('+api.deskCount+')';deskLink.disabled=false;deskLink.onclick=()=>{window.briefShow&&window.briefShow('explore');api.openDesk();};
+  }).catch(()=>{deskLink.textContent='Snapshot unavailable';});
   const recordButton=(id,title)=>{const b=document.createElement('button');b.type='button';b.className='quipu-node-link';b.textContent='Open record';b.setAttribute('aria-label','Open '+id);b.addEventListener('click',()=>{window.briefShow&&window.briefShow('explore');window.briefExplorerPromise.then(api=>api.openItem(id,title)).catch(e=>{$('quipu-explorer').textContent='Explorer unavailable: '+e.message;});});return b;};
   const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;};
   const fmt=iso=>{try{const d=new Date(iso);return d.toISOString().slice(0,16).replace('T',' ')+'Z';}catch(e){return iso||'';}};
