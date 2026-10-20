@@ -1,0 +1,11 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {verifiedDemo,demoRows} from '../scripts/demo-data.mjs';
+import {validateRows,validatePage,GRAPH} from '../web/legacy/model.mjs';
+import {BriefClient,validateEndpoint,readJSON} from '../web/legacy/feed.mjs';
+import {config} from '../web/legacy/config.mjs';
+test('real row validation accepts synthetic priorities and decisions',()=>{assert.equal(verifiedDemo().length,3);});
+test('wrong provenance and duplicate identity refuse',()=>{for(const change of [x=>x.rows[0].curator='foreign',x=>x.rows.push(x.rows[0]),x=>x.rows[0].revision=0]){const x=demoRows();change(x);assert.throws(()=>validateRows(x));}});
+test('mixed content and credentials refuse',()=>{assert.throws(()=>validateEndpoint('http://localhost:3030','https://example.test'));assert.throws(()=>validateEndpoint('https://user:pass@example.test'));});
+test('disabled reader sends zero requests',async()=>{let calls=0;const c=new BriefClient({config,request:()=>{calls++;throw Error('network');},status:()=>{}});await c.start();assert.equal(calls,0);});
+test('feed rejects a foreign graph without advancing cursor',()=>{assert.throws(()=>validatePage({capture:'new_values',next_tx:2,watermark_tx:2,records:[{tx:2,sequence:0,op:'assert',graph:'urn:foreign',entity:'urn:x',attribute:'urn:p'}]},1));});
+test('bounded transport refuses overflow',async()=>{await assert.rejects(readJSON('http://localhost',{cap:1,fetcher:async()=>new Response('{"large":true}')}),/budget/);});

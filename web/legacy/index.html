@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="./site.css">
+<title>Rikuy Daily Brief</title>
+<link rel="stylesheet" href="./explorer.css">
+<link rel="stylesheet" href="./owner-style-1.css">
+
+</head><body>
+<div class="wrap">
+<p id="demo" role="status">Deployment configuration required; live connection disabled.</p>
+  <header class="top">
+    <div class="titlerow"><h1>Rikuy Daily Brief</h1><span class="asof" id="asof">Loading the latest status…</span></div>
+    <nav class="tabs" role="tablist" aria-label="Brief sections">
+      <button role="tab" id="tab-today" aria-controls="v-today" data-v="today">Today<b id="ask-count" hidden></b></button>
+      <button role="tab" id="tab-next" aria-controls="v-next" data-v="next">Next</button>
+      <button role="tab" id="tab-pace" aria-controls="v-pace" data-v="pace">Pace</button>
+      <button role="tab" id="tab-board" aria-controls="v-board" data-v="board">Board</button>
+      <button role="tab" id="tab-log" aria-controls="v-log" data-v="log">Log</button>
+      <button role="tab" id="tab-explore" aria-controls="v-explore" data-v="explore">Explore</button>
+    </nav>
+  </header>
+  <p id="connection" role="status" aria-live="polite" class="note">Live connection pending.</p>
+
+  <div class="view" id="v-today" role="tabpanel" aria-labelledby="tab-today">
+    <div class="glance" id="glance" aria-label="At a glance"></div>
+    <section aria-labelledby="h-today">
+      <h2 id="h-today">Today</h2>
+      <div class="today" id="today"><p class="empty">The day's summary appears here when the configured source provides it.</p></div>
+    </section>
+    <section aria-labelledby="h-asks">
+      <h2 id="h-asks">Needs you</h2>
+      <div class="asks" id="asks"><p class="empty">Waiting for verified brief rows.</p></div>
+    </section>
+  </div>
+
+  <div class="view" id="v-next" role="tabpanel" aria-labelledby="tab-next" hidden>
+    <section aria-labelledby="h-next">
+      <h2 id="h-next">What's next, in order</h2>
+      <div class="tablebox">
+        <table class="prio">
+          <thead><tr><th>#</th><th>Item</th><th class="who">Owner</th><th>State</th></tr></thead>
+          <tbody id="prio"><tr><td colspan="4" class="empty">Waiting for verified brief rows.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div class="view" id="v-pace" role="tabpanel" aria-labelledby="tab-pace" hidden>
+    <section aria-labelledby="h-pace" id="pace" class="stack">
+      <h2 id="h-pace">Pace</h2>
+      <div class="tiles" id="pace-tiles"><p class="empty">Loading the pace snapshot…</p></div>
+      <div class="chart"><h3>P0 and P1 work: where it has been, where it is headed</h3>
+        <p class="sub">Each bar runs from the day the seed was opened to now, then hatched to its due date. Red means past due. Tap a bar for details.</p>
+        <div class="scroll"><svg id="gantt" role="img" aria-label="Gantt chart of open P0 and P1 seeds"></svg></div>
+        <div class="legend"><span><i style="background:var(--s1)"></i>open so far</span><span><i class="hatch"></i>to due date</span><span><i class="over"></i>past due</span><span><i style="background:var(--ink);width:2px;height:10px"></i>now</span></div>
+      </div>
+      <div class="chart"><h3>Seeds closed per day</h3>
+        <p class="sub" id="closes-sub"></p>
+        <svg id="closes" role="img" aria-label="Seeds closed per day"></svg>
+      </div>
+      <div class="chart"><h3>Weekly model quota used</h3>
+        <p class="sub" id="quota-sub"></p>
+        <svg id="quota" role="img" aria-label="Weekly quota used, Claude and Codex"></svg>
+        <div class="legend"><span><i style="background:var(--s1)"></i>Claude</span><span><i style="background:var(--s2)"></i>Codex</span></div>
+      </div>
+      <p class="note" id="pace-src"></p>
+    </section>
+  </div>
+
+  <div class="view" id="v-board" role="tabpanel" aria-labelledby="tab-board" hidden>
+    <section aria-labelledby="h-board" class="stack">
+      <h2 id="h-board">The board, laid out by its shape</h2>
+      <div class="chart">
+        <p class="sub" id="shape-sub"></p>
+        <div class="scroll"><div class="shape" id="shape-grid"></div></div>
+      </div>
+      <details class="chart"><summary>What the shape requires of every seed</summary><ul class="props" id="shape-props"></ul></details>
+    </section>
+  </div>
+
+  <div class="view" id="v-log" role="tabpanel" aria-labelledby="tab-log" hidden>
+    <section aria-labelledby="h-log">
+      <h2 id="h-log">Status log</h2>
+      <div class="log" id="log"><p class="empty">Each status update is added here, newest first.</p></div>
+    </section>
+  </div>
+
+  <div class="view" id="v-explore" role="tabpanel" aria-labelledby="tab-explore" hidden>
+    <section id="quipu-explorer" aria-label="Explore the bundled work items"></section>
+    <p class="note">Rows update live. Explorer details come from the dated, verified snapshot.</p>
+  </div>
+</div>
+
+<script src="./owner-script-1.js"></script>
+<script type="module" src="./app.mjs"></script>
+<script src="./owner-script-2.js"></script>
+
+
+
+
+</body></html>

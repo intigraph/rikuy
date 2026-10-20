@@ -1,0 +1,12 @@
+{
+  "daily_brief_rows_v1": {
+    "name": "daily_brief_rows_v1",
+    "template": "FIXTURE rows; production must provide its exact registered definition",
+    "params": []
+  },
+  "daily_brief_stats_v1": {
+    "name": "daily_brief_stats_v1",
+    "template": "FIXTURE stats; production must provide its exact registered definition",
+    "params": []
+  }
+}

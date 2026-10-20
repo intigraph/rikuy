@@ -6,14 +6,12 @@ on:
 permissions:
   contents: read
 jobs:
-  bootstrap:
+  check:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          fetch-depth: 2
-      - name: Validate repository patch
-        run: git diff --check HEAD^ HEAD
-      - name: Verify checkout integrity
-        run: git fsck --no-dangling
+          node-version: '22'
+      - run: npm run ci

@@ -1,0 +1,6 @@
+dist/
+node_modules/
+artifacts/
+.playwright/
+
+/docs/book/book/

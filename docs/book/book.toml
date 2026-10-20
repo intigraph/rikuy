@@ -1,0 +1,10 @@
+[book]
+title = "Rikuy"
+authors = ["Rikuy contributors"]
+language = "en"
+src = "src"
+
+[output.html]
+default-theme = "coal"
+preferred-dark-theme = "coal"
+additional-css = ["custom/css/custom.css"]

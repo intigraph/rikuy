@@ -1,0 +1,3 @@
+Rikuy includes portable Daily Brief client source and the Quipu browser explorer.
+The bundled Quipu browser engine is distributed under Apache-2.0; see web/legacy/pkg/LICENSE.
+Operator snapshots, inventories, enrollment, credentials and private data are not distributed.

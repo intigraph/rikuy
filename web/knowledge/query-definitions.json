@@ -1,0 +1,67 @@
+{
+  "next": {
+    "name": "daily_brief_next_v2",
+    "params": [],
+    "description": "blh.1 next: explicit Seeds graph; read-only; output overflow sentinel. Served plan/cost admission required separately.",
+    "template": "PREFIX schema: <https://schema.org/>\nPREFIX seeds: <https://seeds.local/ontology/>\nPREFIX q: <https://scbrown.github.io/quechua/ns#>\nPREFIX ical: <http://www.w3.org/2002/12/cal/ical#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?item ?id ?title ?priority ?rank ?status ?owner ?due ?revision ?modified ?sourceKind ?confidence WHERE { GRAPH <https://example.test/project/demo> { ?item a schema:Action ; schema:identifier ?id ; schema:name ?title ;\n seeds:priority ?priority ; seeds:status ?status ; schema:version ?revision ;\n schema:dateModified ?modified .\n OPTIONAL { ?item seeds:rank ?rank }\n OPTIONAL { ?item schema:agent ?owner }\n OPTIONAL { ?item ical:due ?due }\n OPTIONAL { ?item q:sourceKind ?sourceKind }\n OPTIONAL { ?item q:confidence ?confidence }\n BIND(COALESCE(?rank, 1000000000) AS ?sortRank)\n FILTER(?status != \"closed\" && ?status != \"tombstone\")\nFILTER NOT EXISTS { ?item schema:keywords \"inbox\" } } } ORDER BY ?priority ?sortRank ?id LIMIT 40\n",
+    "graph": "https://example.test/project/demo",
+    "rowCap": 41,
+    "scope": "top 40 active items"
+  },
+  "asks": {
+    "name": "daily_brief_asks_v2",
+    "params": [],
+    "description": "blh.1 asks: explicit Seeds graph; read-only; output overflow sentinel. Served plan/cost admission required separately.",
+    "template": "PREFIX schema: <https://schema.org/>\nPREFIX seeds: <https://seeds.local/ontology/>\nPREFIX q: <https://scbrown.github.io/quechua/ns#>\nPREFIX ical: <http://www.w3.org/2002/12/cal/ical#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT DISTINCT ?item ?id ?title ?priority ?rank ?status ?owner ?due ?revision ?modified ?sourceKind ?confidence ?gate WHERE { GRAPH <https://example.test/project/demo> {\n ?item a schema:Action ; schema:identifier ?id ; schema:name ?title ;\n seeds:priority ?priority ; seeds:status ?status ; schema:version ?revision ;\n schema:dateModified ?modified .\n OPTIONAL { ?item seeds:rank ?rank }\n OPTIONAL { ?item schema:agent ?owner }\n OPTIONAL { ?item ical:due ?due }\n OPTIONAL { ?item q:sourceKind ?sourceKind }\n OPTIONAL { ?item q:confidence ?confidence }\n BIND(COALESCE(?rank, 1000000000) AS ?sortRank)\n FILTER(?status != \"closed\" && ?status != \"tombstone\")\nFILTER NOT EXISTS { ?item schema:keywords \"inbox\" } ?item schema:keywords ?gate .\n FILTER(?gate = \"blocked:human\" || ?gate = \"needs-stiwi\" || ?gate = \"decision-stiwi\" || ?gate = \"desk\")\n } } ORDER BY ?priority ?sortRank ?id LIMIT 101\n",
+    "graph": "https://example.test/project/demo",
+    "rowCap": 101,
+    "scope": "bounded human-gate selection"
+  },
+  "dependencies": {
+    "name": "daily_brief_dependencies_v2",
+    "params": [],
+    "description": "blh.1 dependencies: explicit Seeds graph; read-only; output overflow sentinel. Served plan/cost admission required separately.",
+    "template": "PREFIX schema: <https://schema.org/>\nPREFIX seeds: <https://seeds.local/ontology/>\nPREFIX q: <https://scbrown.github.io/quechua/ns#>\nPREFIX ical: <http://www.w3.org/2002/12/cal/ical#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?item ?id ?title ?revision ?modified ?relation ?target ?targetTitle ?targetStatus ?targetRevision WHERE {\n { SELECT ?item ?id ?title ?priority ?rank ?status ?owner ?due ?revision ?modified ?sourceKind ?confidence WHERE { GRAPH <https://example.test/project/demo> { ?item a schema:Action ; schema:identifier ?id ; schema:name ?title ;\n seeds:priority ?priority ; seeds:status ?status ; schema:version ?revision ;\n schema:dateModified ?modified .\n OPTIONAL { ?item seeds:rank ?rank }\n OPTIONAL { ?item schema:agent ?owner }\n OPTIONAL { ?item ical:due ?due }\n OPTIONAL { ?item q:sourceKind ?sourceKind }\n OPTIONAL { ?item q:confidence ?confidence }\n BIND(COALESCE(?rank, 1000000000) AS ?sortRank)\n FILTER(?status != \"closed\" && ?status != \"tombstone\")\nFILTER NOT EXISTS { ?item schema:keywords \"inbox\" } } } ORDER BY ?priority ?sortRank ?id LIMIT 20 } GRAPH <https://example.test/project/demo> {\n ?item ?relation ?target . FILTER(?relation = q:blockedOn || ?relation = schema:isPartOf)\n OPTIONAL { ?target schema:name ?targetTitle }\n OPTIONAL { ?target seeds:status ?targetStatus }\n OPTIONAL { ?target schema:version ?targetRevision }\n } } ORDER BY ?id ?relation ?target LIMIT 201\n",
+    "graph": "https://example.test/project/demo",
+    "rowCap": 201,
+    "scope": "top 20 parents"
+  },
+  "epics": {
+    "name": "daily_brief_epics_v2",
+    "params": [],
+    "description": "blh.1 epics: explicit Seeds graph; read-only; output overflow sentinel. Served plan/cost admission required separately.",
+    "template": "PREFIX schema: <https://schema.org/>\nPREFIX seeds: <https://seeds.local/ontology/>\nPREFIX q: <https://scbrown.github.io/quechua/ns#>\nPREFIX ical: <http://www.w3.org/2002/12/cal/ical#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?item ?id ?title ?revision ?modified ?child ?childTitle ?childStatus ?childRevision WHERE {\n { SELECT ?item ?id ?title ?priority ?rank ?status ?owner ?due ?revision ?modified ?sourceKind ?confidence WHERE { GRAPH <https://example.test/project/demo> { ?item a schema:Action ; schema:identifier ?id ; schema:name ?title ;\n seeds:priority ?priority ; seeds:status ?status ; schema:version ?revision ;\n schema:dateModified ?modified .\n OPTIONAL { ?item seeds:rank ?rank }\n OPTIONAL { ?item schema:agent ?owner }\n OPTIONAL { ?item ical:due ?due }\n OPTIONAL { ?item q:sourceKind ?sourceKind }\n OPTIONAL { ?item q:confidence ?confidence }\n BIND(COALESCE(?rank, 1000000000) AS ?sortRank)\n FILTER(?status != \"closed\" && ?status != \"tombstone\")\nFILTER NOT EXISTS { ?item schema:keywords \"inbox\" } } } ORDER BY ?priority ?sortRank ?id LIMIT 20 } GRAPH <https://example.test/project/demo> { ?child schema:isPartOf ?item .\n OPTIONAL { ?child schema:name ?childTitle }\n OPTIONAL { ?child seeds:status ?childStatus }\n OPTIONAL { ?child schema:version ?childRevision }\n } } ORDER BY ?id ?child LIMIT 201\n",
+    "graph": "https://example.test/project/demo",
+    "rowCap": 201,
+    "scope": "top 20 parents"
+  },
+  "closes": {
+    "name": "daily_brief_closes_v2",
+    "params": [
+      {
+        "name": "start",
+        "type": "text",
+        "required": true
+      },
+      {
+        "name": "end",
+        "type": "text",
+        "required": true
+      }
+    ],
+    "description": "blh.1 closes: explicit Seeds graph; read-only; output overflow sentinel. Served plan/cost admission required separately.",
+    "template": "PREFIX schema: <https://schema.org/>\nPREFIX seeds: <https://seeds.local/ontology/>\nPREFIX q: <https://scbrown.github.io/quechua/ns#>\nPREFIX ical: <http://www.w3.org/2002/12/cal/ical#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?item ?id ?title ?revision ?modified ?closed ?reason ?sourceKind WHERE { GRAPH <https://example.test/project/demo> {\n ?item a schema:Action ; schema:identifier ?id ; schema:name ?title ; seeds:status \"closed\" ;\n schema:version ?revision ; schema:dateModified ?modified ; schema:endTime ?closed .\n FILTER(xsd:dateTime(?closed) >= xsd:dateTime('{start}') && xsd:dateTime(?closed) < xsd:dateTime('{end}'))\n OPTIONAL { ?item q:closeReason ?reason } OPTIONAL { ?item q:sourceKind ?sourceKind }\n FILTER NOT EXISTS { ?item schema:keywords \"inbox\" }\n } } ORDER BY DESC(?closed) ?id LIMIT 501\n",
+    "graph": "https://example.test/project/demo",
+    "rowCap": 501,
+    "scope": "window closes"
+  },
+  "coverage": {
+    "name": "daily_brief_coverage_v2",
+    "params": [],
+    "description": "blh.1 coverage: explicit Seeds graph; read-only; output overflow sentinel. Served plan/cost admission required separately.",
+    "template": "PREFIX schema: <https://schema.org/>\nPREFIX seeds: <https://seeds.local/ontology/>\nPREFIX q: <https://scbrown.github.io/quechua/ns#>\nPREFIX ical: <http://www.w3.org/2002/12/cal/ical#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?item ?revision WHERE { GRAPH <https://example.test/project/demo> {\n ?item a schema:Action ; schema:version ?revision . } } LIMIT 1\n",
+    "graph": "https://example.test/project/demo",
+    "rowCap": 2,
+    "scope": "bounded human-gate selection"
+  }
+}
