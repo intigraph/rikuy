@@ -22,7 +22,7 @@ const client=new KnowledgeClient({config,definitions,request,
 // Resolve the original worker/pendant relative paths from the original page
 // base, rather than creating a second engine or interpreting RDF in JS.
 const explorerLink=document.getElementById('snapshot-link');
-explorerLink.href='../index.html#v-explore';
+explorerLink.href='../index.html#explore';
 explorerLink.textContent='Open the existing dated snapshot explorer (not live coverage)';
 // attachExplorer remains in its existing page: its worker uses ./worker.js.
 // Do not mount it here under a different base URL or call it a live graph.
