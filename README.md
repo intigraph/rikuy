@@ -16,18 +16,20 @@ Read [how it works](docs/book/src/how-it-works.md) for the client boundaries.
 
 ## Install
 
-Use Node 22 or newer and [just](https://github.com/casey/just).
-The first source release has no published installable package or server daemon.
+Requires Node 22+, Python 3, Git and npm. Rikuy has **no published release
+package or checksum manifest**. This installer builds the current public source
+snapshot, records its Git revision and package version, and copies only the
+static output into `~/.local/share/rikuy/REVISION`:
 
 ```sh
-git clone https://github.com/scbrown/rikuy.git
-cd rikuy
-just build
+curl -fsSL https://raw.githubusercontent.com/scbrown/rikuy/main/install.sh | sh
 ```
 
-The static output is `dist/`. Deploy it through your normal static-site lane;
-configure only your admitted graph, exact query definitions and read budget.
-Never put a bearer, private key or operator snapshot in a public bundle.
+Set `STACK_INSTALL_ROOT` on the receiving shell to choose another prefix. No
+server, credentials or live connection are configured. Deploy the resulting
+static files through your normal site lane. Never include a bearer, private key
+or operator snapshot in the bundle. A versioned, checksummed release installer
+remains unavailable until the project publishes its first release.
 
 ## First success in three commands
 
@@ -78,9 +80,11 @@ when.
 
 | tool | what it gives your agents |
 |---|---|
-| [caboodle](https://github.com/scbrown/caboodle) | 🧰 Agent Platform Toolkit - installs and configures the quipu stack |
+| [tambo](https://github.com/scbrown/tambo) | 🧰 Agent Platform Toolkit - installs and configures the quipu stack |
 | [quipu](https://github.com/scbrown/quipu) | stores shared facts with provenance and history; can check writes against your rules |
 | [camayoc](https://github.com/scbrown/camayoc) | prepares knowledge and vocabulary for Quipu, with checks before it is admitted |
+| [quechua](https://github.com/scbrown/quechua) | shared vocabulary and shapes for interoperable knowledge |
+| [chaski](https://github.com/scbrown/chaski) | reacts to graph changes and delivers governed notifications |
 | [bobbin](https://github.com/scbrown/bobbin) | searches your code and can include related knowledge from Quipu |
 | [yupana](https://github.com/scbrown/yupana) | shows code impact and can read policies from Quipu to check changes |
 | [desire-path](https://github.com/scbrown/desire-path) | turns agent mistakes into feature requests; works on its own without Quipu |
@@ -90,6 +94,12 @@ when.
 | [shuttle](https://github.com/scbrown/shuttle) | runs signed agent workflows and keeps their records in Quipu |
 
 <!-- stack-table:end -->
+
+**Load this repository’s graph:** public repository-pendant publication is pending.
+When an archive, checksum and provenance are published, use the
+[verified import workflow](https://scbrown.github.io/quipu/sharing/index.html).
+Extract the share directory before `quipu import SHARE_DIR --db repository.db`;
+import stages knowledge and leaves ROOT unchanged.
 
 ## Contributing
 
