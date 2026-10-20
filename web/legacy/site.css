@@ -1,0 +1,7 @@
+#connection {padding:.65rem .8rem;border:1px solid var(--line);border-radius:.5rem;background:var(--surface);overflow-wrap:anywhere}
+#connection[data-stale=true] {border-color:var(--p0)}
+#v-board .shape {display:block}
+#v-pace .scroll table {min-width:32rem}
+#v-board .scroll table {min-width:34rem}
+#v-pace .scroll,#v-board .scroll {overflow:auto;max-width:100%}
+[hidden] {display:none!important}
