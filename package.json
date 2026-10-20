@@ -1,0 +1,16 @@
+{
+  "name": "rikuy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/*.test.mjs web/knowledge/*.test.mjs web/offline/*.test.mjs",
+    "ci": "npm test && npm run build && node scripts/check-readme.mjs",
+    "demo": "node scripts/demo.mjs"
+  }
+}

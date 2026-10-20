@@ -16,7 +16,7 @@
 
   function renderToday(d){
     const box=$('today');box.replaceChildren();
-    if(!d){box.append(el('p','empty','The day\'s summary appears here once sattler posts it.'));return;}
+    if(!d){box.append(el('p','empty','The day\'s summary appears here once the configured source publishes it.'));return;}
     box.append(el('p','head',d.headline||''));
     const ul=el('ul','pts');(d.points||[]).forEach(p=>ul.append(el('li',null,p)));box.append(ul);
     $('asof').textContent='Updated '+fmt(d.updated);
