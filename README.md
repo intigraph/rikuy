@@ -1,6 +1,6 @@
 <h1 align="center">rikuy</h1>
 <p align="center"><em>👁 Keep status, graphs, watches and decisions in view</em></p>
-<p align="center"><a href="LICENSE">Apache-2.0</a> · <a href="https://github.com/scbrown/rikuy/actions/workflows/ci.yml">CI</a> · <a href="https://github.com/scbrown/tambo">Quipu stack</a></p>
+<p align="center"><a href="LICENSE">Apache-2.0</a> · <a href="https://github.com/intigraph/rikuy/actions/workflows/ci.yml">CI</a> · <a href="https://github.com/scbrown/tambo">Quipu stack</a></p>
 
 **Rikuy is a browser brief for people using Quipu: source-bound status, graphs,
 watches and signed-decision client surfaces. It is a static site, not a new
@@ -20,7 +20,7 @@ Use Node 22 or newer and [just](https://github.com/casey/just).
 The first source release has no published installable package or server daemon.
 
 ```sh
-git clone https://github.com/scbrown/rikuy.git
+git clone https://github.com/intigraph/rikuy.git
 cd rikuy
 just build
 ```
@@ -32,7 +32,7 @@ Never put a bearer, private key or operator snapshot in a public bundle.
 ## First success in three commands
 
 ```sh
-git clone https://github.com/scbrown/rikuy.git
+git clone https://github.com/intigraph/rikuy.git
 cd rikuy
 just demo
 ```
