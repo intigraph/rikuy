@@ -4,6 +4,7 @@ from contextlib import redirect_stderr, redirect_stdout
 import io
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import tempfile
@@ -65,6 +66,50 @@ class SourceInstall(unittest.TestCase):
         identity = json.loads((path / '.source.json').read_text())
         self.assertEqual(identity['source_revision'], REVISION)
         self.assertIn('not a published release', identity['distribution'])
+
+    def test_intact_reinstall_succeeds(self):
+        self.assertEqual(self.invoke()[0], 0)
+        self.assertEqual(self.invoke()[0], 0)
+
+    def test_changed_installed_tree_refuses_success(self):
+        for change in ('bytes', 'mode', 'directory-mode', 'extra', 'missing', 'file-link', 'marker-link', 'directory-link', 'root-link'):
+            with self.subTest(change=change):
+                self.assertEqual(self.invoke()[0], 0)
+                destination = self.prefix / 'share/rikuy' / REVISION
+                index = destination / 'index.html'
+                if change == 'bytes':
+                    index.write_text('tampered')
+                elif change == 'mode':
+                    index.chmod(0o700)
+                elif change == 'directory-mode':
+                    destination.chmod(0o700)
+                elif change == 'extra':
+                    (destination / 'extra').write_text('unexpected')
+                elif change == 'missing':
+                    index.unlink()
+                elif change == 'file-link':
+                    index.unlink()
+                    index.symlink_to(self.previous)
+                elif change == 'marker-link':
+                    marker = destination / '.source.json'
+                    saved = self.root / 'source-marker.json'
+                    saved.write_bytes(marker.read_bytes())
+                    marker.unlink()
+                    marker.symlink_to(saved)
+                elif change == 'directory-link':
+                    (destination / 'linked').symlink_to(self.previous.parent, target_is_directory=True)
+                else:
+                    retained = destination.with_name('retained')
+                    destination.rename(retained)
+                    destination.symlink_to(retained, target_is_directory=True)
+                result = self.invoke()
+                self.assertNotEqual(result[0], 0, result)
+                self.assertNotIn('Built Rikuy', result[1])
+                if destination.is_symlink():
+                    destination.unlink()
+                    shutil.rmtree(retained)
+                else:
+                    shutil.rmtree(destination)
 
     def test_unsupported_node_preserves_prior_site(self):
         self.node = 'v18.0.0\n'

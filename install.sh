@@ -2,13 +2,40 @@
 # Rikuy has no published release package: build a public source snapshot.
 set -eu
 exec python3 - "$@" <<'PYINSTALL'
+import hashlib
 import json
 import os
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
+
+
+def site_identity(root, installed=False):
+    """Compare the entire static tree without following symbolic links."""
+    result = {}
+    def visit(path):
+        metadata = path.lstat()
+        relative = str(path.relative_to(root))
+        if stat.S_ISLNK(metadata.st_mode):
+            raise ValueError('static site contains a symbolic link')
+        if stat.S_ISDIR(metadata.st_mode):
+            result[relative] = ('directory', stat.S_IMODE(metadata.st_mode))
+            for child in path.iterdir():
+                visit(child)
+        elif stat.S_ISREG(metadata.st_mode):
+            if relative == '.source.json':
+                if not installed:
+                    raise ValueError('build uses reserved source identity filename')
+                return
+            result[relative] = ('file', stat.S_IMODE(metadata.st_mode),
+                                hashlib.sha256(path.read_bytes()).hexdigest())
+        else:
+            raise ValueError('static site contains an unsupported entry')
+    visit(root)
+    return result
 
 
 def install():
@@ -29,6 +56,7 @@ def install():
         subprocess.run(['npm', 'run', 'build'], cwd=source, check=True, timeout=180)
         if not (source / 'dist/index.html').is_file():
             raise ValueError('source build did not produce dist/index.html')
+        expected = site_identity(source / 'dist')
         releases = prefix / 'share/rikuy'
         releases.mkdir(parents=True, exist_ok=True)
         lock = releases / '.install-lock'
@@ -37,7 +65,9 @@ def install():
             destination = releases / revision
             identity = {'package_version': package['version'], 'source_revision': revision,
                         'distribution': 'source build; not a published release'}
-            if destination.exists():
+            if destination.exists() or destination.is_symlink():
+                if site_identity(destination, installed=True) != expected:
+                    raise ValueError('installed static site bytes or modes differ')
                 if json.loads((destination / '.source.json').read_text()) != identity:
                     raise ValueError('existing source identity differs')
             else:
