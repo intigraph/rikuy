@@ -1,0 +1,89 @@
+{
+  "source_revision": "eb7b56540da74aec6aa9dd4f43b8d3663eeddbde",
+  "reviewed_at": "2026-10-20T23:31:00.919405Z",
+  "max_age_seconds": 2592000,
+  "records": [
+    {
+      "kind": "idea",
+      "source": "README.md",
+      "subject": "http://aegis.gastown.local/ontology/doc/rikuy/README.md#why-you-would-want-it",
+      "summary": "Rikuy presents source-bound status, graph snapshots, watches and decision client surfaces in a static browser brief. It is not a separate knowledge store.",
+      "source_sha256": "5fcdc14e8390199000382d6b9ac320d7497c2474695abe637e603a82e267c762",
+      "type": "Concept"
+    },
+    {
+      "kind": "interface",
+      "source": "web/legacy/config.mjs",
+      "subject": "http://aegis.gastown.local/ontology/code/rikuy/web%2Flegacy%2Fconfig.mjs",
+      "summary": "The immutable reader configuration owns graph/source bindings, enabled state, transport, bounded response limits and registration. No URL or browser-storage switch supplies activation authority.",
+      "source_sha256": "af13855630244c39da03216ba41d0dfbc6349a4b8cffedca8aa4acce887901d7",
+      "properties": {
+        "interfaceKind": "config",
+        "publicName": "contract and config exports"
+      },
+      "depends_on": [
+        "http://aegis.gastown.local/ontology/code/quipu/src%2Flib.rs"
+      ]
+    },
+    {
+      "kind": "interface",
+      "source": "README.md",
+      "subject": "http://aegis.gastown.local/ontology/doc/rikuy/README.md#install",
+      "summary": "The supported build produces a static dist directory. There is no installable package or server daemon in this source release.",
+      "source_sha256": "5fcdc14e8390199000382d6b9ac320d7497c2474695abe637e603a82e267c762",
+      "properties": {
+        "interfaceKind": "file-format",
+        "publicName": "Static dist directory"
+      },
+      "see_also": [
+        "https://github.com/scbrown/rikuy/blob/eb7b56540da74aec6aa9dd4f43b8d3663eeddbde/scripts/build.mjs"
+      ]
+    },
+    {
+      "kind": "decision",
+      "source": "docs/book/src/how-it-works.md",
+      "subject": "http://aegis.gastown.local/ontology/doc/rikuy/docs%2Fbook%2Fsrc%2Fhow-it-works.md",
+      "summary": "The source keeps Knowledge, Watches and offline signing disabled until separate admission; operator snapshots and private keys are not included. Missing snapshots stay unavailable.",
+      "source_sha256": "c04216382ad2bde07c8a01f045fd422f1e5d5309119d3d2c197d21d9e4b119bd",
+      "type": "DecisionRecord",
+      "properties": {
+        "status": "active",
+        "supersessionStatus": "not-recorded-in-source"
+      },
+      "see_also": [
+        "https://scbrown.github.io/quechua/ns#Decision"
+      ]
+    },
+    {
+      "kind": "start-here",
+      "source": "README.md",
+      "subject": "http://aegis.gastown.local/ontology/doc/rikuy/README.md",
+      "summary": "Start with the static-client overview and synthetic demo; demo success does not prove admitted live reads or signing enrollment.",
+      "source_sha256": "5fcdc14e8390199000382d6b9ac320d7497c2474695abe637e603a82e267c762",
+      "properties": {
+        "startHereOrder": 1,
+        "glossaryTerm": "https://scbrown.github.io/quechua/ns#Decision"
+      }
+    },
+    {
+      "kind": "start-here",
+      "source": "docs/book/src/reference.md",
+      "subject": "http://aegis.gastown.local/ontology/doc/rikuy/docs%2Fbook%2Fsrc%2Freference.md",
+      "summary": "Read the source configuration contract before supplying a graph, exact query registration, read budget or deployment-owned evidence.",
+      "source_sha256": "bd6bda6ebf08d1a60745e89b37454d981a20a0984b01d3ee01c55d1c9f845ea6",
+      "properties": {
+        "startHereOrder": 2
+      }
+    },
+    {
+      "kind": "start-here",
+      "source": "README.md",
+      "subject": "http://aegis.gastown.local/ontology/doc/rikuy/README.md#before-you-start",
+      "summary": "Confirm runtime and admitted read requirements; keep credentials server-side and source candidates disabled until their own acceptance.",
+      "source_sha256": "5fcdc14e8390199000382d6b9ac320d7497c2474695abe637e603a82e267c762",
+      "properties": {
+        "startHereOrder": 3
+      }
+    }
+  ]
+}

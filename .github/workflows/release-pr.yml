@@ -11,11 +11,34 @@ concurrency:
   cancel-in-progress: false
 jobs:
   release-please:
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1; sibling release contract
+      - id: release
+        uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1; sibling release contract
         with:
           token: ${{ github.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  repository-pendant:
+    name: Verify repository pendant
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    env:
+      RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: refs/tags/${{ needs.release-please.outputs.tag_name }}
+          fetch-depth: 0
+      - name: Verify the bounded public pointer corpus
+        run: python3 scripts/verify-repository-share.py "$RELEASE_TAG" "$(git rev-parse HEAD)"
