@@ -1,6 +1,7 @@
 # Decision Deck boundary: Rikuy owns the Deck, Quipu keeps generic primitives
 
-Status: design for review. Nothing is implemented or enabled by this document.
+Status: design, review rulings recorded below. Nothing is implemented or
+enabled by this document.
 
 ## Decision
 
@@ -22,7 +23,8 @@ an enrolled human signer approved its exact content on their device.
 
 1. **Signer registry.** An operator enrolls a signer: a public key, its
    scheme, the exact origin and relying party, the human identity it stands
-   for, the graphs it may write, an expiry and a revocation flag. Quipu also
+   for, an explicit list of the graphs it may write, an expiry and a
+   revocation flag. Quipu also
    stores the authenticator counter. Enrollment is operator-only, over the
    store file, with no HTTP route. This is a rename of today's Deck
    enrollment, with no Deck word left in it.
@@ -32,8 +34,10 @@ an enrolled human signer approved its exact content on their device.
    graph, datums, expectations, nonce, audience, origin and expiry. Quipu
    stores the challenge. The datums are ordinary triples; Quipu does not
    interpret them.
-3. **Commit.** `POST /attest/commit {nonce, assertion}` runs one savepoint:
+3. **Commit.** `POST /attest/commit {nonce, assertion}` runs one savepoint.
+   It carries nothing else: the signed content is the stored challenge.
    - the challenge exists, is unexpired and is unconsumed;
+   - the graph is still on the signer's list;
    - the assertion verifies over the stored bytes, for the stored signer and
      origin, with an advancing counter (the existing `verdict_schemes`
      verifiers);
@@ -137,15 +141,18 @@ of the old one. The new path must be equal or faster at p50 and p95.
 Acceptance for step 4: `git grep -i deck` in Quipu's source finds no domain
 hits.
 
-## Open questions for review
+## Review rulings
 
-1. **Datums supplied by the client.** In the native Deck the server builds
-   the signed content from the stored request. Here the client proposes the
-   datums and the operator signs them. A compromised client could propose a
-   different write, but it could equally show a different card today. The
-   expectations and the fail-closed disposition limit what such a write can
-   change. Is that sufficient, or must Quipu bind a request hash?
-2. **Graph scope.** Should a signer's allowed graphs be enforced by Quipu
-   (proposed), or only by the graph's writer policy?
-3. **The governance decision-nonce table.** Merge it into the attested-write
-   receipt, or keep the two separate?
+1. **Signed content is held by the server.** The challenge request carries
+   the proposed signer, graph, datums and expectations once. Quipu stores the
+   exact canonical bytes with the challenge. The commit carries only the nonce
+   and the assertion, so nothing signed can be swapped between challenge and
+   commit. Rikuy's curator, not the card, is the author of the request facts
+   the card shows.
+2. **Graph scope is enforced twice.** Each signer has an explicit list of
+   graphs it may write, checked at challenge and at commit, and the graph's
+   normal authority and SHACL gates still apply.
+3. **The governance decision-nonce table stays separate** for now. Merging it
+   with the attested-write receipt is a later, separate decision.
+
+The primitive ships default-off.
