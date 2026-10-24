@@ -1,0 +1,151 @@
+# Decision Deck boundary: Rikuy owns the Deck, Quipu keeps generic primitives
+
+Status: design for review. Nothing is implemented or enabled by this document.
+
+## Decision
+
+Quipu is a bitemporal, governed knowledge store. It must not know what a
+question, card, choice, Later, comment or disposition is. The Decision Deck
+moves into Rikuy, and Quipu keeps only generic, domain-free primitives that
+the Deck needs for **safety** or **performance**.
+
+Rikuy is a static site. It cannot issue a server nonce, read a trusted
+clock, verify a passkey assertion, or commit a decision atomically. Those
+four things must stay in a trusted server. The design question is therefore
+not "server or client", but "which server primitive, named without any Deck
+word".
+
+## What Quipu keeps: one generic primitive, the attested write
+
+An **attested write** is an ordinary governed write that is admitted only if
+an enrolled human signer approved its exact content on their device.
+
+1. **Signer registry.** An operator enrolls a signer: a public key, its
+   scheme, the exact origin and relying party, the human identity it stands
+   for, the graphs it may write, an expiry and a revocation flag. Quipu also
+   stores the authenticator counter. Enrollment is operator-only, over the
+   store file, with no HTTP route. This is a rename of today's Deck
+   enrollment, with no Deck word left in it.
+2. **Challenge.** `POST /attest/challenge {signer, graph, datums, expect}`
+   returns a server nonce, a server expiry (at most five minutes) and the
+   exact bytes to sign. The bytes are a canonical encoding of the signer,
+   graph, datums, expectations, nonce, audience, origin and expiry. Quipu
+   stores the challenge. The datums are ordinary triples; Quipu does not
+   interpret them.
+3. **Commit.** `POST /attest/commit {nonce, assertion}` runs one savepoint:
+   - the challenge exists, is unexpired and is unconsumed;
+   - the assertion verifies over the stored bytes, for the stored signer and
+     origin, with an advancing counter (the existing `verdict_schemes`
+     verifiers);
+   - every expectation holds (the existing conditional-write comparison);
+   - the graph's normal write gates pass: authority, SHACL and events;
+   - then it consumes the challenge, writes the datums, and records a receipt
+     (nonce, signer, content hash, server time, transaction).
+
+   Any failure records nothing.
+4. **Receipt.** `POST /attest/receipt {nonce}` is a read-only lookup for a
+   lost response. A commit is never retried; a second commit is refused.
+
+Every part already exists in Quipu in some form:
+
+| Need | Existing Quipu mechanism | Change |
+|---|---|---|
+| Verify a passkey assertion | `verdict_schemes` (WebAuthn, SSHSIG, COSE) | none |
+| Compare-and-set | conditional writes (`ExpectedValue`, `check_expected`) | none |
+| Single-use nonce with atomic facts | the governance decision-nonce spend | generalise naming |
+| Protected writer and graph gates | graph authority, SHACL, write events | none |
+| Reads | stored queries and projections | none |
+| Signer registry, challenge, receipt tables | the Deck's own tables today | rename and generalise |
+
+### Why this is justified
+
+- **Atomicity (safety).** Nonce consumption, counter advance, the
+  compare-and-set and the facts must commit together. Otherwise a stale card
+  or a replay can record a partial decision. A client cannot get this from
+  separate calls without a time-of-check gap.
+- **Trust.** The nonce, the server time and the verification must be server
+  side; a static client cannot be trusted with them.
+- **Performance.** One round trip per step, one savepoint, no extra reads.
+  This is the same work as today's Deck present and attest, so latency should
+  be equal. It is measured before and after (below).
+
+Anything that is not one of these stays in Rikuy.
+
+## What moves to Rikuy
+
+| Deck concept | Where it lives after the move |
+|---|---|
+| Request, revision, labels, allowed actions | ordinary facts in a Rikuy-owned graph, written by the curator through normal governed writes |
+| Choose, Later, comment | the datums of one attested write, signed by the operator |
+| One decision per request revision | an expectation in that attested write: the request revision's "decided" slot must be empty, and the write fills it |
+| Stale card or closed item | expectations on the item's revision and status, carried in the same attested write |
+| Disposition (answered, Later, waiting) and visible comments | a Rikuy stored query over the request and decision facts |
+| Curator | a Rikuy job with a least-privilege named credential that writes only the request graph |
+| Enrollment ceremony page | Rikuy, on the dedicated origin |
+| The Deck vocabulary | a Rikuy ontology and SHACL shapes, loaded into Quipu as data |
+
+### Integrity that Quipu no longer enforces
+
+Quipu's native Deck refuses an undeclared label at present. Quipu SHACL cannot
+express "the chosen label is one of this request's labels", because that
+needs a SPARQL-based constraint. Rikuy enforces it in two places:
+
+- the client refuses to build such a write;
+- the disposition query **fails closed**: a decision whose label is not
+  declared, or whose receipt lacks the request-revision and item
+  expectations, never counts as answered and is shown as invalid.
+
+A malformed decision is still the operator's signed statement and is kept;
+it simply never changes a disposition.
+
+## Safety properties, kept from the earlier design
+
+Each of these must record nothing, and Rikuy's end-to-end tests check it by
+counting receipts, challenges and facts before and after:
+
+| Case | Mechanism |
+|---|---|
+| Stale card (the item changed) | an expectation fails at commit |
+| Closed item | an expectation on its status fails |
+| Second answer to the same revision | the "decided" expectation fails |
+| Replay | the challenge is already consumed |
+| Forged or wrong-origin assertion | verification fails |
+| Expired challenge | the server clock refuses |
+
+## Performance acceptance
+
+Measured before the move, on the current Deck (Quipu main, release build, a
+file-backed store, 300 sequential answers): present plus attest takes about
+10 ms at p50 and 23 ms at p95 on a busy shared host. After the move, the same
+harness runs challenge plus commit, on the same host, interleaved with a rerun
+of the old one. The new path must be equal or faster at p50 and p95.
+
+## Migration, in order
+
+1. Quipu: add the attested-write primitive behind a default-off switch, as a
+   rename and generalisation of the Deck internals, with the Deck's existing
+   tests ported to generic fixtures.
+2. Rikuy: build the Deck on it (vocabulary, curator, card, disposition
+   query) with end-to-end tests for every row of the safety table.
+3. Switch the Brief to the Rikuy Deck. The old path stays available until the
+   new one passes.
+4. Quipu: remove the Deck routes, CLI, MCP tools, types and design documents
+   through a reviewed deprecation, keeping only the generic primitive.
+   Existing Deck facts stay as ordinary governed facts. The old tables are
+   kept read-only until a separate data ruling.
+
+Acceptance for step 4: `git grep -i deck` in Quipu's source finds no domain
+hits.
+
+## Open questions for review
+
+1. **Datums supplied by the client.** In the native Deck the server builds
+   the signed content from the stored request. Here the client proposes the
+   datums and the operator signs them. A compromised client could propose a
+   different write, but it could equally show a different card today. The
+   expectations and the fail-closed disposition limit what such a write can
+   change. Is that sufficient, or must Quipu bind a request hash?
+2. **Graph scope.** Should a signer's allowed graphs be enforced by Quipu
+   (proposed), or only by the graph's writer policy?
+3. **The governance decision-nonce table.** Merge it into the attested-write
+   receipt, or keep the two separate?
