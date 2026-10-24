@@ -1,6 +1,6 @@
 <h1 align="center">rikuy</h1>
 <p align="center"><em>👁 Keep status, graphs, watches and decisions in view</em></p>
-<p align="center"><a href="LICENSE">Apache-2.0</a> · <a href="https://github.com/scbrown/rikuy/actions/workflows/ci.yml">CI</a> · <a href="https://github.com/scbrown/tambo">Quipu stack</a></p>
+<p align="center"><a href="LICENSE">Apache-2.0</a> · <a href="https://github.com/intigraph/rikuy/actions/workflows/ci.yml">CI</a> · <a href="https://github.com/scbrown/tambo">Quipu stack</a></p>
 
 **Rikuy is a browser brief for people using Quipu: source-bound status, graphs,
 watches and signed-decision client surfaces. It is a static site, not a new
@@ -34,7 +34,7 @@ remains unavailable until the project publishes its first release.
 ## First success in three commands
 
 ```sh
-git clone https://github.com/scbrown/rikuy.git
+git clone https://github.com/intigraph/rikuy.git
 cd rikuy
 just demo
 ```
@@ -80,13 +80,13 @@ when.
 
 | tool | what it gives your agents |
 |---|---|
-| [tambo](https://github.com/scbrown/tambo) | 🧰 Agent Platform Toolkit - installs and configures the quipu stack |
+| [tambo](https://github.com/intigraph/tambo) | 🧰 Agent Platform Toolkit - installs and configures the quipu stack |
 | [quipu](https://github.com/scbrown/quipu) | stores shared facts with provenance and history; can check writes against your rules |
 | [camayoc](https://github.com/scbrown/camayoc) | prepares knowledge and vocabulary for Quipu, with checks before it is admitted |
 | [quechua](https://github.com/scbrown/quechua) | shared vocabulary and shapes for interoperable knowledge |
 | [chaski](https://github.com/scbrown/chaski) | reacts to graph changes and delivers governed notifications |
-| [bobbin](https://github.com/scbrown/bobbin) | searches your code and can include related knowledge from Quipu |
-| [yupana](https://github.com/scbrown/yupana) | shows code impact and can read policies from Quipu to check changes |
+| [bobbin](https://github.com/scbrown/bobbin) | indexes your codebase and injects context from that index and Quipu knowledge |
+| [yupana](https://github.com/scbrown/yupana) | shows code impact and can read policies from Quipu to govern agent actions |
 | [desire-path](https://github.com/scbrown/desire-path) | turns agent mistakes into feature requests; works on its own without Quipu |
 | [seeds](https://github.com/scbrown/seeds) | a work item tracker backed by the Quipu knowledge base |
 | [shantytown](https://github.com/scbrown/shantytown) | runs crews of AI agents on work items, triggered by hand, on a schedule or by events; can share work and memory through Quipu |
