@@ -55,11 +55,12 @@ Every part already exists in Quipu in some form:
 | Need | Existing Quipu mechanism | Change |
 |---|---|---|
 | Verify a passkey assertion | `verdict_schemes` (WebAuthn, SSHSIG, COSE) | none |
-| Compare-and-set | conditional writes (`ExpectedValue`, `check_expected`) | none |
+| Compare-and-set | conditional writes (`ExpectedValue`, `check_expected`) | graph-qualified, see below |
 | Single-use nonce with atomic facts | the governance decision-nonce spend | generalise naming |
 | Protected writer and graph gates | graph authority, SHACL, write events | none |
 | Reads | stored queries and projections | none |
 | Signer registry, challenge, receipt tables | the Deck's own tables today | rename and generalise |
+| Attested-only graphs | a hardcoded Deck-graph check today | an operator-set list |
 
 ### Why this is justified
 
@@ -74,6 +75,56 @@ Every part already exists in Quipu in some form:
   be equal. It is measured before and after (below).
 
 Anything that is not one of these stays in Rikuy.
+
+### Graph-qualified preconditions
+
+Quipu's conditional write compares slots in one graph. A Deck answer needs
+two: the answer's own slot (in the Rikuy graph it writes) and the item's
+revision and status (in the item's own graph). Each expectation therefore
+names its graph. The commit checks every graph's expectations with the same
+conditional-write comparison, inside the one commit savepoint, after it holds
+the writer. Nothing can change between the check and the write, in any graph.
+An expectation names exactly one graph: the same subject and value in another
+graph never satisfies it. An unregistered graph is refused, never read as
+empty, so an attested-only graph is registered when the operator protects it.
+
+### Attested-only graphs
+
+The operator marks the graphs that accept attested writes only. An ordinary
+write to such a graph is refused, so its facts all come from verified
+commits.
+
+### Queryable provenance
+
+The commit writes, in the same savepoint and into the same graph, a receipt
+node `urn:quipu:attest:<nonce>` of type `AttestedWrite`. The node carries the
+signer, the human identity, the server time, the content hash of the signed
+message, the graph, and the exact proposal (datums and graph-qualified
+expectations) as canonical JSON. Every subject the write touched links to the
+node with `attestedBy`. A proposal may not use the receipt namespace or this
+vocabulary, and the graph accepts no ordinary writes, so no client or curator
+triple can look like a server-authored attestation. Rikuy's disposition
+query reads only attested-only graphs and checks the recorded expectations.
+
+### What "records nothing" means
+
+A refused commit makes **zero accepted mutation**: no written facts, no
+receipt, no consumed challenge and no counter change. Two things are not part
+of that promise:
+
+- an already-issued challenge stays unconsumed until it expires, so the same
+  challenge can still commit once its preconditions hold again;
+- the normal refusal audit of the write gates (refusal events and denial
+  verdicts) is still recorded after the rollback, exactly as for any other
+  refused write.
+
+### Recovering from a signed write that is invalid for the Deck
+
+If a signed write fills a request revision's "decided" slot but fails Rikuy's
+own checks (for example, an undeclared label), the disposition query shows it
+as invalid and does not count it. The curator then re-projects the request as
+the next revision, which has an empty "decided" slot, so the operator can
+answer again. Quipu keeps the invalid write and its provenance unchanged.
 
 ## What moves to Rikuy
 
@@ -112,6 +163,8 @@ counting receipts, challenges and facts before and after:
 | Stale card (the item changed) | an expectation fails at commit |
 | Closed item | an expectation on its status fails |
 | Second answer to the same revision | the "decided" expectation fails |
+| Signer revoked, expired or removed after the challenge | the commit re-checks the signer |
+| Graph removed from the signer's list after the challenge | the commit re-checks the list |
 | Replay | the challenge is already consumed |
 | Forged or wrong-origin assertion | verification fails |
 | Expired challenge | the server clock refuses |
