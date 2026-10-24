@@ -88,6 +88,22 @@ An expectation names exactly one graph: the same subject and value in another
 graph never satisfies it. An unregistered graph is refused, never read as
 empty, so an attested-only graph is registered when the operator protects it.
 
+### The three scopes a Deck answer checks
+
+Rikuy uses two graphs of its own:
+
+- a **request graph**, written by the curator through ordinary governed
+  writes: requests, their current revision, labels and allowed actions;
+- an **answer graph**, marked attested-only: every answer and its provenance.
+
+One answer's commit carries expectations on three scopes, all checked in the
+same savepoint:
+
+1. the request's current revision in the request graph (a re-curated or
+   withdrawn request refuses the stale card);
+2. the revision's "decided" slot in the answer graph, which must be empty;
+3. the item's revision and status in the item's own graph.
+
 ### Attested-only graphs
 
 The operator marks the graphs that accept attested writes only. An ordinary
@@ -105,6 +121,16 @@ node with `attestedBy`. A proposal may not use the receipt namespace or this
 vocabulary, and the graph accepts no ordinary writes, so no client or curator
 triple can look like a server-authored attestation. Rikuy's disposition
 query reads only attested-only graphs and checks the recorded expectations.
+
+Rikuy's acceptance for this (owed with the Rikuy Deck, not this primitive):
+
+- the disposition query parses each answer's recorded `attestProposal` JSON
+  and counts the answer only if it carries all three expectations above,
+  for the request revision it answers;
+- negative controls against the served reader: a look-alike answer written to
+  an ordinary graph, an answer whose recorded proposal lacks one of the
+  three expectations, and one for another request revision are each shown as
+  not answered.
 
 ### What "records nothing" means
 
