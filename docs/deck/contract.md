@@ -14,7 +14,10 @@ with a current revision and an immutable revision subject. `requestPublication`
 constructs those facts; it does not publish them. A real curator job must use
 normal governed conditional writes: advance the current revision atomically,
 expect the old revision, and expect the new manifest slot to be absent. This
-source does not deploy that job or grant it a credential.
+source does not deploy that job or grant it a credential. The separate
+[conditional curator source](curator.md) implements plan construction and
+durable publication custody with explicit adapters; production adapters,
+credential restrictions and served admission remain separate gates.
 
 The admitted reader supplies the exact graph, request ID, current revision,
 revision subject and complete manifest. Unknown fields, duplicate JSON keys,
