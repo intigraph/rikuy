@@ -1,0 +1,40 @@
+{
+  "scope": "Actual browser Fetch/CORS, streamed body limits and Deck DOM; all responses intercepted synthetic fixtures, no native or human proof",
+  "results": [
+    {
+      "mode": "answered",
+      "status": "Answered \u00b7 fixture-operator \u00b7 2030-03-17T17:46:41.000Z",
+      "synthetic_http_calls": 11,
+      "page_errors": [],
+      "unhandled_routes": []
+    },
+    {
+      "mode": "empty",
+      "status": "Current request \u00b7 no admitted decision.",
+      "synthetic_http_calls": 8,
+      "page_errors": [],
+      "unhandled_routes": []
+    },
+    {
+      "mode": "changed-query",
+      "status": "UNKNOWN \u00b7 request or verified answer evidence unavailable.",
+      "synthetic_http_calls": 6,
+      "page_errors": [],
+      "unhandled_routes": []
+    },
+    {
+      "mode": "missing-receipt",
+      "status": "UNKNOWN \u00b7 request or verified answer evidence unavailable.",
+      "synthetic_http_calls": 7,
+      "page_errors": [],
+      "unhandled_routes": []
+    },
+    {
+      "mode": "oversized",
+      "status": "UNKNOWN \u00b7 request or verified answer evidence unavailable.",
+      "synthetic_http_calls": 1,
+      "page_errors": [],
+      "unhandled_routes": []
+    }
+  ]
+}

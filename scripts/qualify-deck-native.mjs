@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import {NS} from '../web/deck/value.mjs';
 import {buildProposal, canonicalProposal, operationIri, requestPublication, readRequest, revisionIri} from '../web/deck/model.mjs';
 import {admittedChallenge, readAnswer, disposition, readbackProof} from '../web/deck/evidence.mjs';
+import {DeckReader, readerDefinitions} from '../web/deck/reader.mjs';
 const cli = process.env.QUIPU_CLI, artifacts = process.env.QUIPU_ARTIFACTS;
 if (!cli || !artifacts) throw Error('Explicit candidate QUIPU_CLI and fresh QUIPU_ARTIFACTS JSONL required');
 const root = mkdtempSync(join(tmpdir(), 'rikuy-native-')), source = resolve(import.meta.dirname, '..');
@@ -98,6 +99,24 @@ try {
     assert.deepEqual(footprint(state, e.body.nonce), before);
     assert.throws(() => command(state.db, 'challenge', state.p)); // Decided or operation slot is spent.
     results.push({case: kind, state: disposition([answer], state.r, boundary).state, canonical_native_match: true, native_verified: e.receipt.verified, replay_no_mutation: true});
+    const nativeNamespace = e.facts.find(d => d.p.endsWith('attestedBy')).p.slice(0, -'attestedBy'.length);
+    const definitions = readerDefinitions(boundary, nativeNamespace);
+    const queryHashes = Object.fromEntries(Object.entries(definitions).map(([role, def]) => [role, sha(Buffer.from(JSON.stringify(def)))]));
+    for (const def of Object.values(definitions)) command(state.db, 'query-load', def);
+    const registrations = [boundary.requestGraph, boundary.answerGraph, boundary.itemGraph].map(graph => {
+      const metadata = command(state.db, 'graphs', {graph}).graphs[0];
+      return {iri: graph, creation: metadata.creation};
+    });
+    // Real stored-query rendering/execution, native point receipts and registry;
+    // synthetic transport dispatch only, with no HTTP or production endpoint.
+    const reader = new DeckReader({endpoint: 'https://reader.example.test/', boundary, operator: state.who, provenanceNamespace: nativeNamespace, queryHashes, registrations, request: async (address, {body}) => {
+      const url = new URL(address);
+      return command(state.db, url.pathname === '/graphs' ? 'graphs' : url.pathname === '/ask' ? 'ask' : 'receipt', url.pathname === '/graphs' ? {graph: url.searchParams.get('graph')} : body);
+    }});
+    const observed = await reader.read(state.r.id);
+    assert.equal(observed.rows.length, 1);
+    assert.equal(observed.rows[0].receipt.receipt_iri, e.receipt.receipt_iri);
+    results.push({case: `${kind}-stored-reader`, native_registered_queries: true, graph_creation_bound: true, typed_facts_and_provenance: true});
   }
   for (const [index, kind] of ['forged', 'wrong-origin', 'item-revision', 'closed-item', 'request-revision'].entries()) {
     const state = setup(index + 10), issued = command(state.db, 'challenge', state.p);

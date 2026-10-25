@@ -1,0 +1,111 @@
+{
+  "candidate": "quipu 0.16.3\ngit_sha: 771e710de7294b718ceaa1a4b825fd28e4b34c23\ngit_dirty: false",
+  "native_library_sha256": "2ac7b3096f54903dd18664016fc7d102632cb8b079a4fbb239b8818b9d3e1ef8",
+  "helper_source_sha256": "3bcfd058028c532c711fb02dd3e6743ddd48484ed7813db6c24e5e82e65b2ce3",
+  "fixture": "Disposable stores; generated software keys kept only in memory; local native methods and actual operator CLI; no HTTP/service/real credential or production profile union",
+  "results": [
+    {
+      "case": "choose",
+      "state": "ANSWERED",
+      "canonical_native_match": true,
+      "native_verified": true,
+      "replay_no_mutation": true
+    },
+    {
+      "case": "choose-stored-reader",
+      "native_registered_queries": true,
+      "graph_creation_bound": true,
+      "typed_facts_and_provenance": true
+    },
+    {
+      "case": "later",
+      "state": "LATER",
+      "canonical_native_match": true,
+      "native_verified": true,
+      "replay_no_mutation": true
+    },
+    {
+      "case": "later-stored-reader",
+      "native_registered_queries": true,
+      "graph_creation_bound": true,
+      "typed_facts_and_provenance": true
+    },
+    {
+      "case": "comment",
+      "state": "WAITING",
+      "canonical_native_match": true,
+      "native_verified": true,
+      "replay_no_mutation": true
+    },
+    {
+      "case": "comment-stored-reader",
+      "native_registered_queries": true,
+      "graph_creation_bound": true,
+      "typed_facts_and_provenance": true
+    },
+    {
+      "case": "forged",
+      "refused_no_mutation": true,
+      "nonce_and_counter_unspent": true
+    },
+    {
+      "case": "wrong-origin",
+      "refused_no_mutation": true,
+      "nonce_and_counter_unspent": true
+    },
+    {
+      "case": "item-revision",
+      "refused_no_mutation": true,
+      "nonce_and_counter_unspent": true
+    },
+    {
+      "case": "closed-item",
+      "refused_no_mutation": true,
+      "nonce_and_counter_unspent": true
+    },
+    {
+      "case": "request-revision",
+      "refused_no_mutation": true,
+      "nonce_and_counter_unspent": true
+    },
+    {
+      "case": "missing-expectation-0",
+      "native_verified": true,
+      "deck_reader_refused": true
+    },
+    {
+      "case": "missing-expectation-1",
+      "native_verified": true,
+      "deck_reader_refused": true
+    },
+    {
+      "case": "missing-expectation-2",
+      "native_verified": true,
+      "deck_reader_refused": true
+    },
+    {
+      "case": "missing-expectation-3",
+      "native_verified": true,
+      "deck_reader_refused": true
+    },
+    {
+      "case": "missing-expectation-4",
+      "native_verified": true,
+      "deck_reader_refused": true
+    },
+    {
+      "case": "missing-comment-floor",
+      "native_verified": true,
+      "deck_reader_refused": true,
+      "limitation": "Native post-state admission excludes MinCount floors; full shape validation and client/reader constraints remain distinct"
+    },
+    {
+      "case": "loaded-action-value-constraint",
+      "refused_no_mutation": true
+    },
+    {
+      "case": "ordinary-graph-and-other-request-revision",
+      "deck_reader_refused": true
+    }
+  ]
+}

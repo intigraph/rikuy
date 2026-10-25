@@ -46,6 +46,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "commit" => quipu::tool_attest_commit(&mut s, &v)?,
         "receipt" => quipu::tool_attest_receipt(&s, &v)?,
         "store-id" => json!({"store_id":s.store_id()?}),
+        "graphs" => quipu::tool_graph_list(&s, &v)?,
+        "ask" => quipu::tool_ask(&s, &v)?,
+        "query-load" => {
+            use quipu::store::queries::{StoredParam, StoredQuery};
+            let params = v["params"]
+                .as_object()
+                .unwrap()
+                .iter()
+                .map(|(name, kind)| StoredParam {
+                    name: name.clone(),
+                    kind: match kind.as_str().unwrap() {
+                        "iri" => "iri".into(),
+                        "int" => "int".into(),
+                        _ => panic!("fixture parameter kind"),
+                    },
+                    required: true,
+                    default: None,
+                    description: "Synthetic reader qualification".into(),
+                })
+                .collect();
+            s.query_load(
+                &StoredQuery {
+                    name: v["name"].as_str().unwrap().into(),
+                    description: "Disposable Rikuy reader definition".into(),
+                    template: v["template"].as_str().unwrap().into(),
+                    dataset: None,
+                    params,
+                },
+                "2026-10-25T00:00:00Z",
+            )?;
+            json!({"loaded":true})
+        }
         "facts" => {
             let g = s.lookup(v["graph"].as_str().unwrap())?.unwrap();
             let mut rows = Vec::new();
