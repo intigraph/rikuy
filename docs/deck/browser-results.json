@@ -1,0 +1,61 @@
+{
+  "scope": "Synthetic trusted-reader and signer adapters; actual DOM and IndexedDB; no service/authenticator/native receipt claim",
+  "results": [
+    {
+      "scenario": "disabled",
+      "pass": true,
+      "nonlocal_requests": 0,
+      "page_errors": []
+    },
+    {
+      "scenario": "choose",
+      "pass": true,
+      "nonlocal_requests": 0,
+      "page_errors": []
+    },
+    {
+      "scenario": "later",
+      "pass": true,
+      "nonlocal_requests": 0,
+      "page_errors": []
+    },
+    {
+      "scenario": "comment",
+      "pass": true,
+      "nonlocal_requests": 0,
+      "page_errors": []
+    },
+    {
+      "scenario": "unknown-recover",
+      "pass": true,
+      "nonlocal_requests": 0,
+      "page_errors": []
+    },
+    {
+      "scenario": "ordinary-graph",
+      "pass": true,
+      "nonlocal_requests": 0,
+      "page_errors": []
+    },
+    {
+      "scenario": "stale-item",
+      "pass": true,
+      "nonlocal_requests": 0,
+      "page_errors": []
+    },
+    {
+      "scenario": "xss-title",
+      "pass": true,
+      "nonlocal_requests": 0,
+      "page_errors": []
+    },
+    {
+      "scenario": "storage-reload-cas",
+      "one_insert": true,
+      "reload_exact": true,
+      "unknown_preserved": true,
+      "scope_isolated": true,
+      "pass": true
+    }
+  ]
+}
