@@ -18,3 +18,9 @@ test('online Deck modules publish together with disabled configuration and no te
  await assert.rejects(access('dist/deck/fixtures'));
  await assert.rejects(access('dist/deck/deck-fixture.mjs'));
 });
+
+test('enrollment assets are published together and retain the disabled configuration',async()=>{
+ execFileSync(process.execPath,['scripts/build.mjs']);
+ for(const name of ['index.html','app.mjs','model.mjs','cose.mjs','config.mjs','style.css'])assert.equal(await readFile('dist/enroll/'+name,'utf8'),await readFile('web/enroll/'+name,'utf8'));
+ assert.match(await readFile('dist/enroll/config.mjs','utf8'),/enabled:\s*false/);
+});
