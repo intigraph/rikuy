@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'">
+<title>Signing credential</title><link rel="stylesheet" href="./style.css"></head>
+<body><main><h1>Create a signing credential</h1><p>This page prepares a public credential for an operator to register. Your authenticator keeps the signing key.</p>
+<button type="button" disabled>Create signing credential</button><p role="status" aria-live="polite">Enrollment is not enabled.</p>
+<h2>Fingerprint</h2><output id="fingerprint"></output><label for="packet">Public registration packet</label><textarea id="packet" readonly rows="14" spellcheck="false"></textarea>
+<p>Creating a credential does not register it or enable signed actions.</p></main><script type="module" src="./app.mjs"></script></body></html>

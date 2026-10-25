@@ -1,0 +1,9 @@
+:root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+body { margin: 0; padding: 2rem 1rem; }
+main { max-width: 42rem; margin: auto; }
+p { line-height: 1.6; }
+button { font: inherit; padding: .7rem 1rem; cursor: pointer; }
+button:disabled { cursor: default; }
+output { display: block; font: 1.4rem ui-monospace, monospace; min-height: 2rem; }
+label { display: block; margin: 1rem 0 .5rem; }
+textarea { box-sizing: border-box; width: 100%; font: .9rem ui-monospace, monospace; }
