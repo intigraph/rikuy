@@ -1,0 +1,14 @@
+Script started on 2026-10-25 18:22:44-04:00 [COMMAND="node scripts/demo-deck-curator.mjs" <not executed on terminal>]
+Base b290c515bfb3cda35eba38af3533c6c9200a0003 : request fact builder exists; publication job absent.
+Demonstrated source HEAD: 5727afd66297160c64006558fe82433247c2bac9
+Target: source library, synthetic transport and reader; no service or credential.
+Trigger: first publication; transport loses its reply after the fixture changes.
+Before send, durable custody: UNKNOWN
+First call: {"state":"UNKNOWN","sent":true,"transaction":null}
+Restart with the SAME durable directory; reconcile by reading.
+Recovery: {"state":"CONFIRMED","sent":false,"transaction":null}
+Send count: 1
+Changed payload in same revision refused: true
+Observed: UNKNOWN -> CONFIRMED by read-back; one send retained.
+
+Script done on 2026-10-25 18:22:44-04:00 [COMMAND_EXIT_CODE="0"]
