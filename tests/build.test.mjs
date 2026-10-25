@@ -10,3 +10,10 @@ test('deployment assets omit the synthetic demo entry point and fixture payload'
  await assert.rejects(access('dist/demo.mjs'));
  await assert.rejects(access('dist/demo-rows.json'));
 });
+
+
+test('enrollment assets are published together and retain the disabled configuration',async()=>{
+ execFileSync(process.execPath,['scripts/build.mjs']);
+ for(const name of ['index.html','app.mjs','model.mjs','cose.mjs','config.mjs','style.css'])assert.equal(await readFile('dist/enroll/'+name,'utf8'),await readFile('web/enroll/'+name,'utf8'));
+ assert.match(await readFile('dist/enroll/config.mjs','utf8'),/enabled:\s*false/);
+});
