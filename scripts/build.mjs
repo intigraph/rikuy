@@ -5,7 +5,7 @@ const root=resolve(import.meta.dirname,'..'),out=resolve(root,'dist');
 await rm(out,{recursive:true,force:true});await mkdir(out,{recursive:true});
 const filter=p=>!p.endsWith('.test.mjs')&&!p.includes('/fixtures')&&!p.endsWith('/demo.mjs');
 await cp(resolve(root,'web/legacy'),out,{recursive:true,filter});
-for(const name of ['knowledge','offline'])await cp(resolve(root,'web',name),resolve(out,name),{recursive:true,filter});
+for(const name of ['knowledge','offline','deck'])await cp(resolve(root,'web',name),resolve(out,name),{recursive:true,filter});
 const revision=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim();
 await writeFile(resolve(out,'source.json'),JSON.stringify({project:'rikuy',revision,activation:'deployment-owned; experimental readers OFF'},null,2)+'\n');
 console.log('Built static Rikuy assets; experimental readers remain disabled.');
