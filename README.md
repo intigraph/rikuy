@@ -6,6 +6,10 @@
 watches and signed-decision client surfaces. It is a static site, not a new
 knowledge store. Missing evidence stays UNKNOWN.** Rikuy means “to see” in Quechua.
 
+For a reviewed setup of stack tools, start with [Tambo](https://github.com/intigraph/tambo).
+For agent knowledge ingress and vocabulary, see [Camayoc](https://github.com/intigraph/camayoc).
+Rikuy deployment and live-reader admission remain separate.
+
 ## Why you would want it
 
 - See work and its evidence together instead of copying headlines.
@@ -24,6 +28,8 @@ static output into `~/.local/share/rikuy/REVISION`:
 ```sh
 curl -fsSL https://raw.githubusercontent.com/scbrown/rikuy/main/install.sh | sh
 ```
+
+See [installer options, manual source builds and removal](docs/book/src/reference.md#installing-and-removing).
 
 Set `STACK_INSTALL_ROOT` on the receiving shell to choose another prefix. No
 server, credentials or live connection are configured. Deploy the resulting
