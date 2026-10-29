@@ -67,6 +67,14 @@ or real decisions. Stop the local demo with Ctrl-C.
 | Is this graph live? | The explorer labels its dated snapshot separately |
 | Can I enable Watches or offline signing? | Only after the separate admission and enrollment checks |
 
+## Wire it into your agent
+
+Rikuy is a browser client, not an MCP server or agent harness. Agents supply
+knowledge through Quipu and Camayoc; Rikuy reads the admitted graph and named
+queries. Configure that reader through the [source reference](docs/book/src/reference.md).
+Source delivery does not authorize a production query, signing enrollment or
+experimental reader activation.
+
 ## Before you start
 
 | Surface | Requirement |
