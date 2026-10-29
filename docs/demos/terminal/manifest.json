@@ -1,0 +1,64 @@
+{
+  "theme": "stack-terminal-24",
+  "versions": {
+    "node": "v22.22.1"
+  },
+  "binary_sha256": {
+    "node": "d0efb6fcb9d023ba4e2b160ec2384dc28fe4f17732141ef47f676828fa960505"
+  },
+  "version_args": {
+    "node": [
+      "--version"
+    ]
+  },
+  "inputs_sha256": {
+    "render.py": "bebbe000565314f18a58731f2a1a4690577db127b3673fa10a45ce74eef0f23c",
+    "tape": "da281cd4980837c40f4b5c1d2e7a3ad7e05fe5bda0ac7a6e30caead2ded5eaa4",
+    "scripts/build.mjs": "018df7e463119093542fc514f89ff6a9366ce7a3c981500abd4c7b2d0cdf747a",
+    "scripts/demo-data.mjs": "690be69a2921bfdc8d1eec7bf59b23594efa62473be9f201a34973e33605a45a",
+    "web/legacy/model.mjs": "2f4a97575e416b2310b44af2f2a8b80d5d56d797c7755617821f6af9df90c009",
+    "web/legacy/config.mjs": "af13855630244c39da03216ba41d0dfbc6349a4b8cffedca8aa4acce887901d7",
+    "docs/demos/terminal/inspect-demo.mjs": "b548e10a68d19e51933b9c397b1ebfe32c2c740df6c990d6495170650d2513b0"
+  },
+  "duration_seconds": 22.0,
+  "timeline": "deliberate reading holds; execution times recorded separately",
+  "frames_checked": 3,
+  "commands": [
+    {
+      "tool": "node",
+      "args": [
+        "scripts/build.mjs"
+      ],
+      "exit": 0,
+      "seconds": 0.122071,
+      "stdout": "Built static Rikuy assets; experimental readers remain disabled.\n",
+      "stderr": ""
+    },
+    {
+      "tool": "node",
+      "args": [
+        "docs/demos/terminal/inspect-demo.mjs"
+      ],
+      "exit": 0,
+      "seconds": 0.085135,
+      "stdout": "Validated synthetic brief: 2 priorities, 1 decision.\npriorities: Verify the source\npriorities: Keep unknowns visible\nasks: Choose the next bounded step\nNo graph connection, signing or production data.\n",
+      "stderr": ""
+    },
+    {
+      "tool": "node",
+      "args": [
+        "docs/demos/terminal/inspect-demo.mjs",
+        "reject"
+      ],
+      "exit": 0,
+      "seconds": 0.065666,
+      "stdout": "Brief identity UNKNOWN\n",
+      "stderr": ""
+    }
+  ],
+  "sha256": {
+    "demo.svg": "9454d00fe2128603070c93aaffe6d3eb48aabc988785baf776621c00d76d7930",
+    "transcript.txt": "1a8b38b30f5593b3cc430be36835a460bc9232da9d2f799147ca98928821bd50",
+    "demo.cast": "59580e812ed42fa0ec114d67e5876b357c387890c3c7c29fca103ff213b3f662"
+  }
+}

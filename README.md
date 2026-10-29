@@ -12,6 +12,10 @@ For a reviewed setup of stack tools, start with [Tambo](https://github.com/intig
 For agent knowledge ingress and vocabulary, see [Camayoc](https://github.com/intigraph/camayoc).
 Rikuy deployment and live-reader admission remain separate.
 
+<p align="center"><img src="docs/demos/terminal/demo.svg" width="1000" alt="Build a brief from checked rows: native commands and their complete output."/></p>
+
+This 22-second recording builds the real static client and validates public synthetic rows: two priorities and one decision. A foreign-curator control is rejected as Brief identity UNKNOWN. No live reader, signing or production data is enabled. [Reproduce the recording](docs/demos/terminal.md).
+
 ## Why you would want it
 
 - See work and its evidence together instead of copying headlines.
