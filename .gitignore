@@ -4,3 +4,7 @@ artifacts/
 .playwright/
 
 /docs/book/book/
+
+# Local Python and native graph state are not source.
+__pycache__/
+/.quipu/
