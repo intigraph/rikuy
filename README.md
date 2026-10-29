@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/thread-workshop/rikuy.png" width="704" alt="rikuy: An eye-shaped instrument looks across status panes. Original pixel art in the Thread Workshop style."/></p>
+
 <h1 align="center">rikuy</h1>
 <p align="center"><em>👁 Keep status, graphs, watches and decisions in view</em></p>
 <p align="center"><a href="LICENSE">Apache-2.0</a> · <a href="https://github.com/intigraph/rikuy/actions/workflows/ci.yml">CI</a> · <a href="https://github.com/scbrown/tambo">Quipu stack</a></p>
