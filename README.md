@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/thread-workshop/rikuy.png" width="704" alt="rikuy: An eye-shaped instrument looks across status panes. Original pixel art in the Thread Workshop style."/></p>
+
 <h1 align="center">rikuy</h1>
 <p align="center"><em>👁 Keep status, graphs, watches and decisions in view</em></p>
 <p align="center"><a href="LICENSE">Apache-2.0</a> · <a href="https://github.com/intigraph/rikuy/actions/workflows/ci.yml">CI</a> · <a href="https://github.com/scbrown/tambo">Quipu stack</a></p>
@@ -9,6 +11,10 @@ knowledge store. Missing evidence stays UNKNOWN.** Rikuy means “to see” in Q
 For a reviewed setup of stack tools, start with [Tambo](https://github.com/intigraph/tambo).
 For agent knowledge ingress and vocabulary, see [Camayoc](https://github.com/intigraph/camayoc).
 Rikuy deployment and live-reader admission remain separate.
+
+<p align="center"><img src="docs/demos/terminal/demo.svg" width="1000" alt="Build a brief from checked rows: native commands and their complete output."/></p>
+
+This 22-second recording builds the real static client and validates public synthetic rows: two priorities and one decision. A foreign-curator control is rejected as Brief identity UNKNOWN. No live reader, signing or production data is enabled. [Reproduce the recording](docs/demos/terminal.md).
 
 ## Why you would want it
 
@@ -60,6 +66,14 @@ or real decisions. Stop the local demo with Ctrl-C.
 | Which status can I trust? | [Source configuration](docs/book/src/reference.md) |
 | Is this graph live? | The explorer labels its dated snapshot separately |
 | Can I enable Watches or offline signing? | Only after the separate admission and enrollment checks |
+
+## Wire it into your agent
+
+Rikuy is a browser client, not an MCP server or agent harness. Agents supply
+knowledge through Quipu and Camayoc; Rikuy reads the admitted graph and named
+queries. Configure that reader through the [source reference](docs/book/src/reference.md).
+Source delivery does not authorize a production query, signing enrollment or
+experimental reader activation.
 
 ## Before you start
 

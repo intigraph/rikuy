@@ -1,0 +1,49 @@
+{
+  "title": "Rikuy: a brief backed by checked rows",
+  "description": "Build the real static client and validate its public synthetic demo rows; foreign curator refuses. No live reader or signing activation.",
+  "width": 1000,
+  "height": 620,
+  "font_size": 24,
+  "line_height": 32,
+  "inputs": [
+    "scripts/build.mjs",
+    "scripts/demo-data.mjs",
+    "web/legacy/model.mjs",
+    "web/legacy/config.mjs",
+    "docs/demos/terminal/inspect-demo.mjs"
+  ],
+  "steps": [
+    {
+      "tool": "node",
+      "args": [
+        "scripts/build.mjs"
+      ],
+      "hold": 5,
+      "requires": [
+        "Built static Rikuy assets; experimental readers remain disabled."
+      ]
+    },
+    {
+      "tool": "node",
+      "args": [
+        "docs/demos/terminal/inspect-demo.mjs"
+      ],
+      "hold": 10,
+      "requires": [
+        "2 priorities, 1 decision.",
+        "No graph connection"
+      ]
+    },
+    {
+      "tool": "node",
+      "args": [
+        "docs/demos/terminal/inspect-demo.mjs",
+        "reject"
+      ],
+      "hold": 7,
+      "requires": [
+        "Brief identity UNKNOWN"
+      ]
+    }
+  ]
+}

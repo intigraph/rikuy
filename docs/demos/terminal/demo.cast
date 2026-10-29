@@ -1,0 +1,4 @@
+{"version": 2, "width": 65, "height": 14, "title": "Rikuy: a brief backed by checked rows", "env": {"TERM": "dumb"}}
+[0.0, "o", "\u001b[2J\u001b[H$ node scripts/build.mjs\r\nBuilt static Rikuy assets; experimental readers remain disabled.\r\n"]
+[5.0, "o", "\u001b[2J\u001b[H$ node docs/demos/terminal/inspect-demo.mjs\r\nValidated synthetic brief: 2 priorities, 1 decision.\r\npriorities: Verify the source\r\npriorities: Keep unknowns visible\r\nasks: Choose the next bounded step\r\nNo graph connection, signing or production data.\r\n"]
+[15.0, "o", "\u001b[2J\u001b[H$ node docs/demos/terminal/inspect-demo.mjs reject\r\nBrief identity UNKNOWN\r\n"]
