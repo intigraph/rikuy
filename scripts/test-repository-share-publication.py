@@ -79,6 +79,48 @@ class Publication(unittest.TestCase):
             self.revision,
         )
 
+    def test_component_release_tag_uses_exact_assets_and_source(self):
+        tag = "rikuy-v0.2.0"
+        self.archive = self.root / ("rikuy-" + tag + "-repository.pendant.tar.gz")
+        self.prepare()
+        self.proof["release_tag"] = tag
+        self.proof_path.write_text(json.dumps(self.proof))
+        calls = []
+
+        def download(args, **kwargs):
+            calls.append(args)
+            folder = Path(args[args.index("--dir") + 1])
+            for path in (self.archive, self.proof_path,
+                         self.archive.with_name(self.archive.name + ".sha256")):
+                shutil.copyfile(path, folder / path.name)
+            return subprocess.CompletedProcess(args, 0)
+
+        result = verifier.wait(tag, self.revision, attempts=1, run=download)
+        self.assertEqual(result["release_tag"], tag)
+        self.assertEqual(calls[0][3], tag)
+        self.assertIn(self.archive.name, calls[0])
+        with patch.object(publisher, "held", return_value=False), patch.object(
+            publisher, "command", return_value="different-source"
+        ) as command, self.assertRaisesRegex(ValueError, "exact clean release"):
+            publisher.publish(tag, self.revision, self.root / "output")
+        command.assert_called_once()
+        self.assertFalse((self.root / "output").exists())
+
+    def test_foreign_component_tags_refuse_before_lookup(self):
+        for tag in ("bobbin-v0.2.0", "rikuy-v0.2.0/extra", "rikuy-v0.2", "../v0.2.0"):
+            with self.subTest(tag=tag):
+                with self.assertRaisesRegex(ValueError, "invalid release identity"):
+                    verifier.verify(self.root, tag, self.revision)
+                with patch.object(verifier.subprocess, "run") as run:
+                    with self.assertRaisesRegex(ValueError, "invalid release identity"):
+                        verifier.wait(tag, self.revision, run=run)
+                    run.assert_not_called()
+                with patch.object(publisher, "held", return_value=False), patch.object(
+                    publisher, "command"
+                ) as command, self.assertRaisesRegex(ValueError, "release tag"):
+                    publisher.publish(tag, self.revision, self.root / "output")
+                command.assert_not_called()
+
     def test_required_members_and_recipe(self):
         (self.stage / "queries.ttl").unlink()
         with self.assertRaisesRegex(ValueError, "required nonempty"):

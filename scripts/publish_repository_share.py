@@ -107,8 +107,8 @@ def held():
 def publish(tag, revision, output):
     if held():
         raise ValueError("publication held before any lookup/build")
-    if not re.fullmatch(r"v\d+\.\d+\.\d+(?:[.-][A-Za-z0-9.-]+)?", tag):
-        raise ValueError("unexpected Bobbin release tag")
+    if not re.fullmatch(r"(?:rikuy-)?v\d+\.\d+\.\d+(?:[.-][A-Za-z0-9.-]+)?", tag):
+        raise ValueError("unexpected Rikuy release tag")
     if not re.fullmatch("[0-9a-f]{40}", revision):
         raise ValueError("invalid release revision")
     source = Path(__file__).resolve().parents[1]

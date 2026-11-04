@@ -26,7 +26,7 @@ finally:
 
 def verify(folder, tag, revision):
     if not re.fullmatch(
-        r"v\d+\.\d+\.\d+(?:[.-][A-Za-z0-9.-]+)?", tag
+        r"(?:rikuy-)?v\d+\.\d+\.\d+(?:[.-][A-Za-z0-9.-]+)?", tag
     ) or not re.fullmatch("[0-9a-f]{40}", revision):
         raise ValueError("invalid release identity")
     archive = folder / ("rikuy-" + tag + "-repository.pendant.tar.gz")
@@ -69,7 +69,7 @@ def verify(folder, tag, revision):
 
 def wait(tag, revision, attempts=80, pause=time.sleep, run=subprocess.run):
     if not re.fullmatch(
-        r"v\d+\.\d+\.\d+(?:[.-][A-Za-z0-9.-]+)?", tag
+        r"(?:rikuy-)?v\d+\.\d+\.\d+(?:[.-][A-Za-z0-9.-]+)?", tag
     ) or not re.fullmatch("[0-9a-f]{40}", revision):
         raise ValueError("invalid release identity before lookup")
     stem = "rikuy-" + tag + "-repository.pendant.tar.gz"
