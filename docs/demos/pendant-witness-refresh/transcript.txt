@@ -1,0 +1,7 @@
+Script started on 2026-11-04 00:11:53-05:00 [COMMAND="python3 -c 'import json,hashlib,re,subprocess from pathlib import Path base='"'"'2b12b6f0e1205ad5c2bd642d19ab24e48b66d738'"'"' old=json.loads(subprocess.check_output(['"'"'git'"'"','"'"'show'"'"',base+'"'"':docs/knowledge/repository-knowledge.json'"'"'])) new=json.loads(Path('"'"'docs/knowledge/repository-knowledge.json'"'"').read_text()) for label,data in [('"'"'BEFORE registry at '"'"'+base,old),('"'"'AFTER candidate registry'"'"',new)]:  stale=missing=fragments=0  for r in data['"'"'records'"'"']:   raw=Path(r['"'"'source'"'"']).read_bytes()   stale+=hashlib.sha256(raw).hexdigest()!=r['"'"'source_sha256'"'"']   if '"'"'#'"'"' in r['"'"'subject'"'"'] and r['"'"'source'"'"'].endswith('"'"'.md'"'"'):    fragments+=1    anchors={re.sub(r'"'"'[^\w\- ]'"'"','"'"''"'"',h.lower()).replace('"'"' '"'"','"'"'-'"'"') for h in re.findall(r'"'"'^#{1,6} (.+)$'"'"',raw.decode(),re.M)}    missing+=r['"'"'subject'"'"'].split('"'"'#'"'"',1)[1] not in anchors  print(label)  print('"'"'records:'"'"',len(data['"'"'records'"'"']),'"'"'stale hashes:'"'"',stale,'"'"'fragment records:'"'"',fragments,'"'"'missing anchors:'"'"',missing) '" <not executed on terminal>]
+BEFORE registry at 2b12b6f0e1205ad5c2bd642d19ab24e48b66d738
+records: 7 stale hashes: 5 fragment records: 3 missing anchors: 0
+AFTER candidate registry
+records: 7 stale hashes: 0 fragment records: 3 missing anchors: 0
+
+Script done on 2026-11-04 00:11:53-05:00 [COMMAND_EXIT_CODE="0"]

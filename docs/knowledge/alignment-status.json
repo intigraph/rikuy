@@ -1,0 +1,8 @@
+{
+  "status": "no-approved-mappings",
+  "approved_record_count": 0,
+  "carrier_sha256": "44e9d278f79d3148407df4880746a8c8046b5ea092a312bb0202a7ba47716ceb",
+  "scope": "scbrown/rikuy repository pendant source",
+  "basis": "No verified approved artifact or pairs supplied at source review; empty carrier is explicit. This is not a global absence claim.",
+  "curation_contract": "https://github.com/scbrown/quipu/blob/main/docs/design/cross-graph-alignment.md"
+}
