@@ -1,0 +1,13 @@
+$ node scripts/build.mjs
+Built static Rikuy assets; experimental readers remain disabled.
+[exit 0]
+$ node docs/demos/terminal/inspect-demo.mjs
+Validated synthetic brief: 2 priorities, 1 decision.
+priorities: Verify the source
+priorities: Keep unknowns visible
+asks: Choose the next bounded step
+No graph connection, signing or production data.
+[exit 0]
+$ node docs/demos/terminal/inspect-demo.mjs reject
+Brief identity UNKNOWN
+[exit 0]

@@ -1,0 +1,95 @@
+{
+  "candidate": {
+    "features": {
+      "dev-tools": false,
+      "full": true,
+      "jemalloc": true,
+      "lancedb": false,
+      "mcp": true,
+      "onnx": true,
+      "owl": true,
+      "oxicompare": false,
+      "reactive-reasoner": true,
+      "remote": true,
+      "server": true,
+      "shacl": true
+    },
+    "git_dirty": false,
+    "git_sha": "703e2ce83fd42992ded8214ff62320b84204b0d4",
+    "read_contracts": [
+      "quipu-acquisition/v1",
+      "quipu-acquisition/composed-v1",
+      "quipu-eligibility/v1"
+    ],
+    "version": "0.16.3"
+  },
+  "candidate_sha256": "bdba9adb323696e0b32e10cc36f6cd6a7af3f14462fcd4c4e869f85ffd0ce452",
+  "synthetic_loopback_only": true,
+  "real_credential_used": false,
+  "production_authority_proven": false,
+  "results": [
+    {
+      "case": "identical-first-replay",
+      "no_partial_request_mutation": true
+    },
+    {
+      "case": "initial-and-next",
+      "exact_old_manifest_retained": true,
+      "escaped_text_is_data": true
+    },
+    {
+      "case": "stale-revision",
+      "no_partial_request_mutation": true
+    },
+    {
+      "case": "changed-item",
+      "no_partial_request_mutation": true
+    },
+    {
+      "case": "foreign-item",
+      "no_partial_request_mutation": true
+    },
+    {
+      "case": "ambiguous-item-revision",
+      "no_partial_request_mutation": true
+    },
+    {
+      "case": "ambiguous-item-status",
+      "no_partial_request_mutation": true
+    },
+    {
+      "case": "closed-item",
+      "no_partial_request_mutation": true
+    },
+    {
+      "case": "ambiguous-current-head",
+      "no_partial_request_mutation": true
+    },
+    {
+      "case": "occupied-immutable-revision",
+      "no_partial_request_mutation": true
+    },
+    {
+      "case": "concurrent-different-payload",
+      "exactly_one_atomic_publication": true
+    },
+    {
+      "case": "native-commit-lost-response-restart",
+      "read_only_recovery": true,
+      "sends": 1
+    },
+    {
+      "case": "graph-mutation-boundary",
+      "positive_item_control_unchanged": true,
+      "answer_graph_unchanged": true
+    }
+  ],
+  "qualified_curator_source": "5727afd66297160c64006558fe82433247c2bac9",
+  "source_sha256": {
+    "web/deck/curator.mjs": "d6b3fa6a4bfdb7e25b4ec5169150c18714a4ffbf82471d6e4d9f41e9a52c6f8a",
+    "scripts/deck-curator-job.mjs": "9825094b63e6a403e2a8fc144a2da24fb8dba207ddedbe17cde09a26392a5461",
+    "scripts/qualify-deck-curator.mjs": "cbc3520daeba6a905161178c06eea8e31ba604e02ecfa02cd08176adb6c17d04"
+  },
+  "home_guard": "command exit0;157 paths and5 UID resources CLEAN",
+  "owned_server_reaped_and_fixture_removed": true
+}

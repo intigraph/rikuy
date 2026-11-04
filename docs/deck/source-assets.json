@@ -1,0 +1,14 @@
+{
+  "web/deck/app.mjs": "b6067fadf3a8ecc38d078fb8a5c9a2c12cece95d40ac0ded772d3437e0934571",
+  "web/deck/config.mjs": "a1260c00e253f2c36dd6e05f73b322ce3d0759180289c44788e55bd54420ef89",
+  "web/deck/evidence.mjs": "9802076b6ca3d18c8c56a47de206011ea767e51cbc652e8c9ccb503f0f39bfa7",
+  "web/deck/index.html": "893f9cb7a446e97d08ba1895c3930f6037db6cbac80d46733f5b4ffe167040e0",
+  "web/deck/model.mjs": "5cc4b0400d3795207feb9e664908f76363bf335b1329c774f6c1bfad480ea278",
+  "web/deck/pending.mjs": "d01971f6f2b8bbee768624e609037bf203c38cf55098a9d2b27b477331c9bf30",
+  "web/deck/sign.mjs": "4b3cbf761a2fc91f24ff9c69e382b5165f7aed15f6083fcaa9b34dbebdc1a201",
+  "web/deck/storage.mjs": "cb9bd06ae0a2d9d0b311bb41006e9d4420df00029cf804a8d21707aa36f345c4",
+  "web/deck/style.css": "6a8fe7c6fc5a99618bfd9e5d824ba25c92552bf6be689d98877f265ef972dbcf",
+  "web/deck/value.mjs": "f8ecf293993866e9c48b6d4cc79a1598acde120fb6fb237b133302043fda51c7",
+  "web/deck/view.mjs": "830997563eccfd5a3513df7ebb88c5ca48ed1f9ee82e8bc2a95a2f2972d33b65",
+  "tests/deck-fixture.mjs": "94e13282f9b8cbf6c8702f5da7cea428460ceabbc86e8a69f40da782b241048f"
+}
