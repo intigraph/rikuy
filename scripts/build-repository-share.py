@@ -290,6 +290,15 @@ def build(revision, source, tooling, binary, bobbin, output):
         raise ValueError("release lacks a supported public corpus positive control")
     private = output.parent / "build-private"
     private.mkdir(mode=0o700)
+    # Pin one private provider snapshot for Quipu and the indexer.
+    import importlib.util
+
+    provider_spec = importlib.util.spec_from_file_location(
+        "repository_share_embedding", Path(__file__).with_name("repository_share_embedding.py")
+    )
+    provider_contract = importlib.util.module_from_spec(provider_spec)
+    provider_spec.loader.exec_module(provider_contract)
+    expected_provider = provider_contract.configure(private)
 
     def run(args, *, env=None):
         return command(args, env=env, cwd=private)
@@ -327,6 +336,7 @@ entities = false
 model = "all-MiniLM-L6-v2"
 batch_size = 64
 """)
+    provider_contract.configure_indexer(index, private, expected_provider)
     env = isolated_environment(private)
     run(
         [
@@ -450,6 +460,7 @@ batch_size = 64
         or (stage / "shapes.ttl").stat().st_size == 0
     ):
         raise ValueError("repository share omitted receiver shapes")
+    provider_contract.verify_manifest(stage, expected_provider)
     receiver = private / "receiver.db"
     run(
         [
