@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.2](https://github.com/intigraph/rikuy/compare/rikuy-v0.2.1...rikuy-v0.2.2) (2026-11-05)
+
+
+### Bug Fixes
+
+* **pendant:** preserve public policy and stable entity names ([#22](https://github.com/intigraph/rikuy/issues/22)) ([bdd1a49](https://github.com/intigraph/rikuy/commit/bdd1a49d7ea8cadd1dfc6fa3bbad0b3bb594bf4f))
+* **share:** pin a private embedding provider for repository builds ([#20](https://github.com/intigraph/rikuy/issues/20)) ([047dc9c](https://github.com/intigraph/rikuy/commit/047dc9ca7c55a4a0b3f983d0e8d78c30e3bea81f))
+
 ## [0.2.1](https://github.com/intigraph/rikuy/compare/rikuy-v0.2.0...rikuy-v0.2.1) (2026-11-05)
 
 
