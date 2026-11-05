@@ -8,3 +8,6 @@ artifacts/
 # Local Python and native graph state are not source.
 __pycache__/
 /.quipu/
+
+# Legacy local tracker state is never published.
+/.beads/
