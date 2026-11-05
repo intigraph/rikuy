@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/intigraph/rikuy/compare/rikuy-v0.2.0...rikuy-v0.2.1) (2026-11-05)
+
+
+### Bug Fixes
+
+* accept Rikuy component tags in pendant publication ([#17](https://github.com/intigraph/rikuy/issues/17)) ([489cefb](https://github.com/intigraph/rikuy/commit/489cefb34841efaeb870e1cac67e9dcf11646dc1))
+
 ## [0.2.0](https://github.com/intigraph/rikuy/compare/rikuy-v0.1.0...rikuy-v0.2.0) (2026-11-04)
 
 
