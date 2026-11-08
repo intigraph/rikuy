@@ -1,0 +1,4 @@
+Lost reply: {"state":"UNKNOWN","sent":true,"transaction":null} writes=1
+New job read-only recovery: {"state":"CONFIRMED","sent":false,"transaction":null} writes=1
+Foreign store: REFUSED; writes=1
+Restored store positive control: CONFIRMED; writes=1

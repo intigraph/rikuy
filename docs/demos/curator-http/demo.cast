@@ -1,0 +1,5 @@
+{"version": 2, "width": 110, "height": 12, "title": "Synthetic curator HTTP lost-reply recovery"}
+[0.164611, "o", "Lost reply: {\"state\":\"UNKNOWN\",\"sent\":true,\"transaction\":null} writes=1\r\n"]
+[0.17265, "o", "New job read-only recovery: {\"state\":\"CONFIRMED\",\"sent\":false,\"transaction\":null} writes=1\r\n"]
+[0.174252, "o", "Foreign store: REFUSED; writes=1\r\n"]
+[0.178002, "o", "Restored store positive control: CONFIRMED; writes=1\r\n"]
