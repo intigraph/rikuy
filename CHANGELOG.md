@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/intigraph/rikuy/compare/rikuy-v0.2.2...rikuy-v0.3.0) (2026-11-08)
+
+
+### Features
+
+* **deck:** add explicitly configured curator HTTP adapters ([#23](https://github.com/intigraph/rikuy/issues/23)) ([8c92f8d](https://github.com/intigraph/rikuy/commit/8c92f8d311ec955208de489a7fcd2daa92bbb6de))
+
 ## [0.2.2](https://github.com/intigraph/rikuy/compare/rikuy-v0.2.1...rikuy-v0.2.2) (2026-11-05)
 
 
