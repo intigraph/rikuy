@@ -42,9 +42,27 @@ that state to this job or mint a signed receipt. Missing, foreign or changed
 evidence remains UNKNOWN. No accepted decision or answered disposition is
 created by publishing a request.
 
-Production adapters are still owed. They must pin the actual server/store,
-native graph registration, bounded admitted reader definitions and cost, and
-use the sanctioned authenticated write path. A dedicated named credential
+`scripts/deck-curator-http.mjs` now supplies explicit server-side HTTP source
+adapters for inspection, one update and read-back. Importing the module performs
+no request and loads no credential. Construct it with an explicit HTTPS origin,
+store lineage, positive graph generation, retained graph-creation registration,
+boundary, exact request-query definition hash and an already supplied bearer.
+It chooses none of these production values. Pass its methods to `CuratorJob`;
+the durable job remains responsible for authorizing the one send and retaining
+UNKNOWN custody. Calling the transport directly is not an exactly-once lane.
+
+Inspection checks `/watermark` and the exact `/graphs` entry. Read-back brackets
+the named `/ask` request with those same target checks; raw `/query` is never
+used. The bearer is sent only to `/update`, not the reader routes. Each operation
+has one deadline (three seconds by default, at most six), a 262144-byte streamed
+response limit, redirect refusal and no automatic retry. Partial, ambiguous,
+changed or oversized replies remain UNKNOWN. Errors omit credentials and
+response bodies. These separate checks are not an atomic replacement fence;
+the server's graph-generation writer binding remains required at mutation time.
+
+Production adapter admission and configuration are still owed: actual server,
+store and graph pins, registered reader definitions and their cost receipts,
+and the sanctioned authenticated write path. A dedicated named credential
 must be restricted by the server's admitted policy to the request graph.
 The generated query's narrow mutation target is not a security boundary for
 a broad bearer. Declared actor/source fields are attribution, not verified
@@ -58,6 +76,9 @@ union and external-writer/graph-replacement assumptions need admission too.
 durable-before-send ordering, changed-payload refusal, restart/lost-response
 reconciliation, concurrent job instances and unsafe custody. Negative target
 controls reject missing/replaced/overlay graphs and wrong store lineage.
+HTTP adapter controls also cover credential confinement, changed query identity,
+overflow, deadlines and lost-reply reconciliation through the actual custody job.
+Those HTTP replies are synthetic; they prove no production profile or access.
 
 The explicit qualifier starts one loopback native server with a new disposable
 store, private HOME/configuration and a synthetic test bearer. It opens no
