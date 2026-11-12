@@ -21,6 +21,18 @@ test('disabled or unadmitted reader makes no requests',async()=>{
     assert.equal(calls,0);assert.equal(view.state,'UNKNOWN');
   }
 });
+test('known observed-head review latency is qualified and invalid durations refuse',()=>{
+  const source=body();
+  source.records[0].first_review_at='2026-11-12T19:00:00Z';
+  source.records[0].observed_head_to_first_review_seconds=1800;
+  const line=prFlowLine(validatePRFlow(source,admission,NOW));
+  assert.match(line,/observed-head first-review time 30m mean \(n=1\)/);
+  assert.match(line,/main-only refreshes UNKNOWN/);
+  for(const value of [-1,Infinity,31*86400]){
+    source.records[0].observed_head_to_first_review_seconds=value;
+    assert.throws(()=>validatePRFlow(source,admission,NOW));
+  }
+});
 test('admitted reader uses exactly one bounded GET and the caller signal',async()=>{
   const ctl=new AbortController();let calls=0;
   const view=await readPRFlow({config:{prFlow:admission},signal:ctl.signal,now:NOW,

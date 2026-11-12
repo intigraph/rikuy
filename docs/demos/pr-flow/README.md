@@ -7,6 +7,7 @@ transcript, not an installed UI recording or network coverage proof. No browser
 interaction changes; the DOM fixture suite verifies literal rendering. Production
 remains disabled pending producer, registration and read-cost receipts.
 
+The observed-head review duration is shown when its source record supplies it.
 The main-only refresh and lifetime first-review measures remain UNKNOWN until
 the source provides verified history. This reader does not derive policy or
 those measures independently. Demo artifacts are small text fixtures retained

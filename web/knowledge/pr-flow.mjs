@@ -16,7 +16,7 @@ export function validatePRFlow(body,admission,now){
     ||!Array.isArray(records)||records.length>200||!counts||typeof counts!=='object'||Array.isArray(counts)
     ||!Array.isArray(body.unknown_repos)||body.unknown_repos.length)
     throw Error('PR source selection incomplete');
-  const actual={},seen=new Set();let oldest=null;
+  const actual={},seen=new Set(),reviewWaits=[];let oldest=null;
   for(const r of records){
     if(!r||!scope.repos.includes(r.repo)||!integer(r.pr,1,Number.MAX_SAFE_INTEGER)
       ||typeof r.head!=='string'||!(/^[0-9a-f]{40}$/).test(r.head)||!STATES.includes(r.state)
@@ -25,6 +25,13 @@ export function validatePRFlow(body,admission,now){
       ||Math.abs(r.age_seconds-(Date.parse(body.checked_at)-Date.parse(r.since))/1000)>1)
       throw Error('Malformed PR state observation');
     const key=r.repo+'#'+r.pr;if(seen.has(key))throw Error('Ambiguous PR identity');seen.add(key);
+    if(r.observed_head_to_first_review_seconds!=null){
+      const seconds=r.observed_head_to_first_review_seconds;
+      if(!Number.isFinite(seconds)||seconds<0||seconds>scope.window_days*86400
+        ||!time(r.first_review_at)||Date.parse(r.first_review_at)>Date.parse(body.checked_at))
+        throw Error('Malformed observed-head review duration');
+      reviewWaits.push(seconds);
+    }
     actual[r.state]=(actual[r.state]??0)+1;oldest=Math.max(oldest??0,r.age_seconds);
   }
   if(Object.keys(counts).some(s=>!STATES.includes(s)||!integer(counts[s],1,200))
@@ -33,6 +40,8 @@ export function validatePRFlow(body,admission,now){
   // Missing proof for these measures is not zero. The source's explicit
   // nulls stay visible until its historical/proposal coverage is admitted.
   return {state:'observed',counts,oldestAge:oldest,windowDays:scope.window_days,
+    firstReviewMean:reviewWaits.length?reviewWaits.reduce((a,b)=>a+b,0)/reviewWaits.length:null,
+    firstReviewCount:reviewWaits.length,
     checkedAt:body.checked_at,graph:body.graph};
 }
 export async function readPRFlow({config,request,signal,now}){
@@ -51,5 +60,6 @@ export function prFlowLine(view){
   if(view?.state!=='observed')return 'PR state UNKNOWN · '+(view?.reason??'Producer evidence unavailable');
   const counts=STATES.filter(s=>view.counts[s]).map(s=>`${s} ${view.counts[s]}`).join(' · ')||'0 in this observed window';
   const age=view.oldestAge===null?'UNKNOWN':Math.floor(view.oldestAge/60)+'m';
-  return `Observed PRs (${view.windowDays}d activity scope): ${counts} · oldest ${age} · main-only refreshes UNKNOWN · first-review time UNKNOWN`;
+  const review=view.firstReviewMean==null?'UNKNOWN':`${Math.floor(view.firstReviewMean/60)}m mean (n=${view.firstReviewCount})`;
+  return `Observed PRs (${view.windowDays}d activity scope): ${counts} · oldest ${age} · main-only refreshes UNKNOWN · observed-head first-review time ${review}`;
 }
