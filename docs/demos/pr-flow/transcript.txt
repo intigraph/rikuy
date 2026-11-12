@@ -1,0 +1,2 @@
+Disabled: PR state UNKNOWN · PR producer/reader admission pending reads: 0
+Admitted fixture: Observed PRs (30d activity scope): needs-review 1 · oldest 120m · main-only refreshes UNKNOWN · first-review time UNKNOWN reads: 1

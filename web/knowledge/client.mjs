@@ -1,4 +1,5 @@
 import {readWatches} from './watches.mjs';
+import {readPRFlow} from './pr-flow.mjs';
 import {GRAPH,Unknown,registryProof,queryRows,validatePanel,windowParams,summarize} from './model.mjs';
 
 // Uses the existing Brief transport, injected by app.mjs. This class only
@@ -44,8 +45,10 @@ export class KnowledgeClient {
       // Distinct queries are not an atomic store snapshot. Never invent a
       // snapshot tx for the future offline-decision contract.
       const watches=await readWatches({config:this.config,request:(...args)=>this.read(...args),signal:ctl.signal,now:this.now()});
+      const prFlow=await readPRFlow({config:this.config,request:(url,options)=>this.request(url,options),signal:ctl.signal,now:this.now()});
+      if(this.config.prFlow?.enabled&&prFlow.state!=='observed')failed=true;
       if(!this.active||generation!==this.generation)return;
-      const view={coverage,panels,watches,checkedAt:this.now(),snapshotTx:null,
+      const view={coverage,panels,watches,prFlow,checkedAt:this.now(),snapshotTx:null,
         sourceVersion:this.config.sourceVersion,
         summary:panels.closes.state==='observed'&&panels.epics.state==='observed'
           ?summarize(panels.closes.rows,panels.epics.rows):null};

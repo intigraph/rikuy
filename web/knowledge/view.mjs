@@ -1,4 +1,5 @@
 import {renderWatches} from './watches.mjs';
+import {prFlowLine} from './pr-flow.mjs';
 import {GRAPH} from './model.mjs';
 const make=(doc,tag,text)=>{const el=doc.createElement(tag);if(text!==undefined)el.textContent=String(text);return el;};
 const link=(doc,iri,label)=>{const a=make(doc,'a',label);a.href=iri;a.rel='noopener noreferrer';return a;};
@@ -42,6 +43,6 @@ export function renderView(root,view,definitions){
     if(key==='epics'&&view.summary)for(const e of view.summary.epics)section.append(m('p',`${e.title}: ${e.closed}/${e.children} closed in selected-parent child scope; ${e.unknown} unknown status`));
     fragment.append(section);
   }
-  const activity=m('section');activity.append(m('h2','PR / CD / stop evidence'),m('p','UNKNOWN · authoritative typed event/query/producer coverage not yet attributed. No status or throughput is inferred from episode prose.'));
+  const activity=m('section');activity.append(m('h2','PR / CD / stop evidence'),m('p',prFlowLine(view.prFlow)),m('p','CD / stop evidence UNKNOWN · typed event/query/producer coverage not yet attributed'));
   fragment.append(activity,renderWatches(doc,view));root.replaceChildren(fragment);
 }

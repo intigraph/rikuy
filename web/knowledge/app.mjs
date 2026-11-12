@@ -9,7 +9,7 @@ const root=document.getElementById('knowledge-panels'),status=document.getElemen
 // Reuse the bounded transport while attributing this task explicitly. The
 // legacy transport's default task remains unchanged for the fallback page.
 const request=(url,options={})=>readJSON(url,{...options,fetcher:(target,init)=>{
-  const headers=new Headers(init.headers);headers.set('X-Quipu-Task',options.body?.name?.startsWith('daily_brief_watch_')?'aegis-blh.4':'aegis-blh.1');
+  const headers=new Headers(init.headers);headers.set('X-Quipu-Task',options.task??(options.body?.name?.startsWith('daily_brief_watch_')?'aegis-blh.4':'aegis-blh.1'));
   return fetch(target,{...init,headers});
 }});
 try{
