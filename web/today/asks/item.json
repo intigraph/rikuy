@@ -1,0 +1,15 @@
+{
+ "name": "daily_brief_ask_item_v1",
+ "description": "Brief Needs-you (aegis-zmk): one titled ASK seed that carries no human-gate label, with bounded OPTIONS/REC excerpts. Point read by IRI.",
+ "params": [
+  {
+   "name": "seed",
+   "type": "iri",
+   "required": true
+  }
+ ],
+ "graph": "https://seeds.local/project/aegis",
+ "rowCap": 3,
+ "scope": "one seed",
+ "template": "PREFIX schema: <https://schema.org/> PREFIX seeds: <https://seeds.local/ontology/> PREFIX ical: <http://www.w3.org/2002/12/cal/ical#> SELECT ?item ?id ?title ?priority ?rank ?status ?owner ?due ?revision ?modified ?created ?options ?rec WHERE { GRAPH <https://seeds.local/project/aegis> { VALUES ?item { <{seed}> } ?item seeds:priority ?priority ; seeds:status ?status . OPTIONAL { ?item schema:identifier ?id } OPTIONAL { ?item schema:name ?title } OPTIONAL { ?item seeds:rank ?rank } OPTIONAL { ?item schema:version ?revision } OPTIONAL { ?item schema:dateModified ?modified } OPTIONAL { ?item schema:dateCreated ?created } OPTIONAL { ?item schema:agent ?owner } OPTIONAL { ?item ical:due ?due } OPTIONAL { ?item schema:description ?desc } OPTIONAL { ?item seeds:notes ?notes } BIND(CONCAT(COALESCE(?desc, \"\"), \"\\n\", COALESCE(?notes, \"\")) AS ?text) BIND(LCASE(?text) AS ?low) BIND(IF(CONTAINS(?low, \"options:\"), SUBSTR(?text, STRLEN(STRBEFORE(?low, \"options:\")) + 9, 280), \"\") AS ?options) BIND(IF(CONTAINS(?low, \"recommendation:\"), SUBSTR(?text, STRLEN(STRBEFORE(?low, \"recommendation:\")) + 16, 240), IF(CONTAINS(?low, \"rec:\"), SUBSTR(?text, STRLEN(STRBEFORE(?low, \"rec:\")) + 5, 240), \"\")) AS ?rec) } } LIMIT 2"
+}

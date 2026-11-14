@@ -5,10 +5,11 @@ build:
     node scripts/build.mjs
 
 test:
-    node --test tests/*.test.mjs web/knowledge/*.test.mjs web/offline/*.test.mjs
+    node --test tests/*.test.mjs web/knowledge/*.test.mjs web/offline/*.test.mjs web/today/*.test.mjs web/today/*/*.test.mjs
 
 ci: test build
     node scripts/check-readme.mjs
+    sh scripts/check-today-browser.sh
 
 demo: build
     @node scripts/demo.mjs

@@ -1,0 +1,32 @@
+{
+  "name": "daily_brief_pace_releases_v1",
+  "description": "Proposed bounded 24h releases reader. Registry and producer admission required; graph coverage checked by client.",
+  "template": "PREFIX a: <http://aegis.gastown.local/ontology/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?record ?g ?e ?t ?repo ?sha ?actor ?artifact WHERE {\n{ SELECT (\"event\" AS ?record) ?g ?e ?t ?repo ?sha ?actor ?artifact WHERE { VALUES ?g { <{monthNow}> <{monthPrev}> } GRAPH ?g { ?e a a:ReleaseEvent ; a:occurredAt ?t ; a:changeRepository ?repo ; a:commitSha ?sha ; a:eventActor ?actor ; a:artifactId ?artifact . FILTER(xsd:dateTime(?t)>=xsd:dateTime('{since}') && xsd:dateTime(?t)<xsd:dateTime('{until}')) } } ORDER BY DESC(?t) ?e LIMIT 101 }\nUNION { VALUES ?g { <{monthNow}> <{monthPrev}> } GRAPH ?g {} BIND(\"coverage\" AS ?record) }\n} LIMIT 104\n",
+  "params": [
+    {
+      "name": "monthNow",
+      "type": "iri",
+      "required": true
+    },
+    {
+      "name": "monthPrev",
+      "type": "iri",
+      "required": true
+    },
+    {
+      "name": "since",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "until",
+      "type": "text",
+      "required": true
+    }
+  ],
+  "graphPrefix": "https://camayoc.local/window/release/",
+  "windowHours": 24,
+  "rowCap": 104,
+  "kind": "releases",
+  "eventPrefix": "http://aegis.gastown.local/ontology/release-event-"
+}

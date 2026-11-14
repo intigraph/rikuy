@@ -1,0 +1,25 @@
+{
+  "name": "daily_brief_pace_closes_v1",
+  "description": "Proposed bounded done-with-reason closes over two exact native Seeds board graphs; typed timestamp range, inbox excluded. No scan of unrelated boards.",
+  "template": "PREFIX schema: <https://schema.org/>\nPREFIX seeds: <https://seeds.local/ontology/>\nPREFIX q: <https://scbrown.github.io/quechua/ns#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?record ?g ?e ?t ?title ?reason WHERE {\n{ SELECT (\"event\" AS ?record) ?g ?e ?t ?title ?reason WHERE { VALUES ?g { <https://seeds.local/project/aegis> <https://seeds.local/project/aegis#seeds-ephemeral> } GRAPH ?g { ?e schema:endTime ?t ; a schema:Action ; seeds:status \"closed\" ; q:outcome \"done\" ; schema:name ?title ; schema:result ?reason . FILTER(?t>=xsd:dateTime('{since}') && ?t<xsd:dateTime('{until}')) FILTER(STRLEN(STR(?reason))>0) FILTER NOT EXISTS { ?e schema:keywords \"inbox\" } FILTER(!REGEX(STR(?title),'^[[:space:]]*(inbox:|mail:)','i')) } } ORDER BY DESC(?t) ?e LIMIT 101 }\nUNION { VALUES ?g { <https://seeds.local/project/aegis> <https://seeds.local/project/aegis#seeds-ephemeral> } GRAPH ?g {} BIND(\"coverage\" AS ?record) }\n} LIMIT 104\n",
+  "params": [
+    {
+      "name": "since",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "until",
+      "type": "text",
+      "required": true
+    }
+  ],
+  "graphs": [
+    "https://seeds.local/project/aegis",
+    "https://seeds.local/project/aegis#seeds-ephemeral"
+  ],
+  "windowHours": 24,
+  "rowCap": 104,
+  "kind": "closes",
+  "eventPrefix": "https://seeds.local/item/"
+}

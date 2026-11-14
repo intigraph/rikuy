@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Today · Aegis Daily Brief</title>
+<link rel="stylesheet" href="./home.css"><link rel="stylesheet" href="./explorer.css">
+</head><body>
+<div class="wrap">
+<header class="top"><div class="titlerow"><div><p class="eyebrow">AEGIS / DAILY BRIEF</p><h1>Today</h1></div><p id="asof" class="asof">Unavailable: no verified read received yet.</p></div>
+<nav class="tabs" role="tablist" aria-label="Brief sections">
+<button role="tab" id="tab-today" aria-controls="v-today" data-v="today" aria-selected="true">Today <b id="ask-count" hidden></b></button>
+<button role="tab" id="tab-next" aria-controls="v-next" data-v="next">Next</button>
+<button role="tab" id="tab-pace" aria-controls="v-pace" data-v="pace">Pace</button>
+<button role="tab" id="tab-board" aria-controls="v-board" data-v="board">Board</button>
+<button role="tab" id="tab-log" aria-controls="v-log" data-v="log">Log</button>
+<button role="tab" id="tab-explore" aria-controls="v-explore" data-v="explore">Explore</button>
+</nav></header>
+<p id="connection" role="status" aria-live="polite" class="connection">Unavailable: no verified live connection yet.</p>
+<noscript><p class="unavailable">Unavailable: JavaScript is disabled. Live reads require JavaScript.</p></noscript>
+<main>
+<div class="view" id="v-today" role="tabpanel" aria-labelledby="tab-today">
+<div id="overview" class="overview">
+<section class="brief-panel needs-you" aria-labelledby="h-asks"><h2 id="h-asks">Needs you</h2><p id="asks-status" class="source-status" data-panel-fallback="asks">Unavailable: no verified asks read received yet.</p><div id="ask-top" data-panel-fallback="ask-top"></div><p id="ask-rest-count"></p></section>
+<div id="overview-panels" class="overview-panels" data-panel-fallback="overview"><p>Unavailable: no verified brief received yet.</p></div>
+<section class="card" aria-labelledby="h-changes"><h2 id="h-changes">Recently closed work</h2><p id="changes-status" class="source-status" data-panel-fallback="changes-status">Recent closes await activation.</p><div id="recent-closes" data-panel-fallback="recent-closes"></div><p class="changes-gap">Merged pull requests and decisions are not yet shown.</p></section>
+</div>
+<section class="card" aria-labelledby="h-held"><h2 id="h-held">Work held by stopped agents</h2><p id="held-status" class="source-status" data-panel-fallback="held-status">Unavailable: no verified owner evidence yet.</p><div id="held-work" data-panel-fallback="held-work"></div></section>
+<details class="source-details"><summary>Sources and coverage</summary><div id="glance" class="glance" aria-label="At a glance"></div><div id="today" data-panel-fallback="summary"></div><p>Live incidents, a yesterday comparison, merges and releases do not yet have an admitted reader here. Deployment events are not proof that a feature was accepted.</p></details>
+<div id="today-pace" hidden data-panel-fallback="deploys"></div><div class="today-grid">
+<section class="card decision-rest" id="remaining-decisions" aria-labelledby="h-remaining"><div class="section-heading"><h2 id="h-remaining">Other decisions</h2><span class="section-note">Every remaining question and human gate</span></div><div id="asks" class="asks" data-panel-fallback="remaining-asks"></div></section>
+<section class="card" aria-labelledby="h-deferred"><h2 id="h-deferred">Recently deferred</h2><p id="deferred-status" class="source-status" data-panel-fallback="deferred-status">Coverage UNKNOWN: provenance installation has not been verified.</p><div id="recently-deferred" class="asks" data-panel-fallback="recently-deferred"></div></section>
+<section class="card" aria-label="Watches"><p id="watches-status" class="source-status" data-panel-fallback="watches-status">Semweb coverage UNKNOWN: read-cost admission pending.</p><div id="watches" data-panel-fallback="watches"></div></section>
+<section class="card later" aria-labelledby="h-later"><div class="section-heading"><h2 id="h-later">Later</h2><span class="section-note">Stiwi answered later · stays visible</span></div><p id="later-status" class="source-status" data-panel-fallback="later">Unavailable: no verified Later read received yet.</p><div id="later" class="asks"></div></section>
+</div></div>
+<div class="view" id="v-next" role="tabpanel" aria-labelledby="tab-next" hidden><section class="card" aria-labelledby="h-next"><h2 id="h-next">Next · active P0 work</h2><p id="priorities-status" class="source-status" data-panel-fallback="priorities">Unavailable: no verified priorities read received yet.</p><div class="tablebox"><table class="prio"><thead><tr><th>#</th><th>Item</th><th class="who">Owner</th><th>State</th></tr></thead><tbody id="prio"></tbody></table></div></section></div>
+<div class="view" id="v-pace" role="tabpanel" aria-labelledby="tab-pace" hidden><section class="card stack" id="pace" aria-labelledby="h-pace"><h2 id="h-pace">Pace</h2><div class="tiles" id="pace-tiles"></div><div id="pace-detail"></div><p id="pace-src" class="source-status" data-panel-fallback="pace">Unavailable: no verified pace read received yet.</p><p class="pending">Merge and release totals are not yet available. Board history is in the Board tab.</p></section></div>
+<div class="view" id="v-board" role="tabpanel" aria-labelledby="tab-board" hidden><section class="card" aria-labelledby="h-board"><h2 id="h-board">Board · last 31 days</h2><div id="board-summary" data-panel-fallback="stats">Checking board stats…</div><div class="tablebox"><table><thead><tr><th>UTC day</th><th>Created</th><th>Closed</th><th>Closed P0</th><th>Closed P1</th></tr></thead><tbody id="board-daily"></tbody></table></div><p id="board-src" class="source-status">No verified board snapshot yet.</p></section></div>
+<div class="view" id="v-log" role="tabpanel" aria-labelledby="tab-log" hidden><section class="card" aria-labelledby="h-log"><h2 id="h-log">Deploy log · last 24 hours</h2><div id="log" class="log" data-panel-fallback="log"><p class="unavailable">Unavailable: no verified deploy-log read received yet.</p></div></section></div>
+<div class="view" id="v-explore" role="tabpanel" aria-labelledby="tab-explore" hidden><section class="card"><h2>Explore the dated snapshot</h2><p class="source-status">This is the bundled snapshot, not the live board. Open a record from Needs you or Next to inspect its retained details.</p><section id="quipu-explorer" aria-label="Explore the bundled work items"><p class="unavailable">Unavailable: snapshot has not been opened in this view.</p></section></section></div>
+</main><footer>Read-only brief · Live sources are checked independently. Unknown never means zero.</footer>
+</div>
+<script defer src="./home-fallback.js"></script><script id="brief-home-module" type="module" src="./home.mjs"></script>
+</body></html>

@@ -44,7 +44,7 @@
       "source": "docs/book/src/how-it-works.md",
       "subject": "http://aegis.gastown.local/ontology/doc/rikuy/docs%2Fbook%2Fsrc%2Fhow-it-works.md",
       "summary": "The source keeps Knowledge, Watches and offline signing disabled until separate admission; operator snapshots and private keys are not included. Missing snapshots stay unavailable.",
-      "source_sha256": "c04216382ad2bde07c8a01f045fd422f1e5d5309119d3d2c197d21d9e4b119bd",
+      "source_sha256": "95055e19c6d03716ab68aae6a2336bf16f6c70c1cf6347b5529da6eb90e81499",
       "type": "DecisionRecord",
       "properties": {
         "status": "active",

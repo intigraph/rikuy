@@ -9,8 +9,12 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node --test tests/*.test.mjs web/knowledge/*.test.mjs web/offline/*.test.mjs",
-    "ci": "npm test && npm run build && node scripts/check-readme.mjs",
-    "demo": "node scripts/demo.mjs"
+    "test": "node --test tests/*.test.mjs web/knowledge/*.test.mjs web/offline/*.test.mjs web/today/*.test.mjs web/today/*/*.test.mjs",
+    "ci": "npm test && npm run build && node scripts/check-readme.mjs && sh scripts/check-today-browser.sh",
+    "demo": "node scripts/demo.mjs",
+    "test:browser": "node scripts/test-today-browser.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.65.1"
   }
 }

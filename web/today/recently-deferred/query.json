@@ -1,0 +1,14 @@
+{
+  "name": "daily_brief_recently_deferred_v1",
+  "description": "Latest recorded deferral per seed since verified installed provenance coverage, latest20 plus validated sentinel; no historical backfill or event-log claim.",
+  "template": "PREFIX s: <https://schema.org/>\nPREFIX seed: <https://seeds.local/ontology/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?item ?id ?title ?status ?revision ?modified ?deferredAt ?deferredBy WHERE {\n GRAPH <https://seeds.local/project/aegis> {\n  ?item seed:deferredAt ?deferredAt .\n  FILTER(?deferredAt >= '{since}'^^xsd:dateTime)\n  OPTIONAL { ?item seed:deferredBy ?deferredBy }\n  OPTIONAL { ?item s:identifier ?id }\n  OPTIONAL { ?item s:name ?title }\n  OPTIONAL { ?item seed:status ?status }\n  OPTIONAL { ?item s:version ?revision }\n  OPTIONAL { ?item s:dateModified ?modified }\n }\n} ORDER BY DESC(?deferredAt) ?item LIMIT 21\n",
+  "params": [
+    {
+      "name": "since",
+      "type": "text",
+      "required": true
+    }
+  ],
+  "graph": "https://seeds.local/project/aegis",
+  "rowCap": 21
+}

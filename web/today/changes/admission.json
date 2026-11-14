@@ -1,0 +1,12 @@
+{
+  "enabled": false,
+  "scope": "https://seeds.local/project/aegis",
+  "windowHours": 24,
+  "maxRows": 20,
+  "deadlineMs": 6000,
+  "refreshMs": 15000,
+  "capBytes": 262144,
+  "registrationSHA": "ccbcc8239d60e4386272e65961cb8a0efb50c986bcdf47e3a2b3b125a334702b",
+  "registrationReceipt": null,
+  "readCostReceipt": null
+}
