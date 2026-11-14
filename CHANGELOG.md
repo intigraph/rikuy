@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/intigraph/rikuy/compare/rikuy-v0.3.0...rikuy-v0.4.0) (2026-11-14)
+
+
+### Features
+
+* **brief:** consolidate Today source with a retained legacy route ([#27](https://github.com/intigraph/rikuy/issues/27)) ([3ee94bc](https://github.com/intigraph/rikuy/commit/3ee94bc2409eab4c9cdbe435768c9381721819b6))
+* **brief:** show admitted observed PR flow summary ([#25](https://github.com/intigraph/rikuy/issues/25)) ([6773a2a](https://github.com/intigraph/rikuy/commit/6773a2a5164bdb3ca0ffecb11184d84a31761f7f))
+
 ## [0.3.0](https://github.com/intigraph/rikuy/compare/rikuy-v0.2.2...rikuy-v0.3.0) (2026-11-08)
 
 
