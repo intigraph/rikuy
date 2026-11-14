@@ -1,0 +1,9 @@
+{
+  "name": "daily_brief_priorities_v3",
+  "description": "Fixed Seeds graph P0 selection, open/in-progress, up to20 displayed records plus one fully validated overflow sentinel. More than20 is a bounded-selection notice; empty/malformed/truncated remains UNKNOWN.",
+  "template": "PREFIX s: <https://schema.org/>\nPREFIX seed: <https://seeds.local/ontology/>\nSELECT ?item ?id ?title ?priority ?rank ?status ?owner ?revision ?modified WHERE {\n GRAPH <https://seeds.local/project/aegis> {\n  ?item seed:priority 0 ; s:identifier ?id ; s:name ?title ;\n    seed:priority ?priority ; seed:status ?status ;\n    s:version ?revision ; s:dateModified ?modified .\n  OPTIONAL { ?item seed:rank ?rank }\n  OPTIONAL { ?item s:agent ?owner }\n  FILTER(?status = \"open\" || ?status = \"in_progress\")\n  FILTER NOT EXISTS { ?item s:keywords \"inbox\" }\n }\n} ORDER BY ?id LIMIT 21\n",
+  "params": [],
+  "graph": "https://seeds.local/project/aegis",
+  "rowCap": 21,
+  "scope": "up to20 open/in-progress P0 items from the ID-ordered source, ranked within the shown selection; the21st row marks more than20"
+}

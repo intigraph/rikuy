@@ -1,0 +1,9 @@
+{
+ "name": "daily_brief_later_v1",
+ "description": "Brief Later (aegis-zmk): open seeds Stiwi has answered later (label stiwi-later). They stay visible; measured 0.69s.",
+ "params": [],
+ "graph": "https://seeds.local/project/aegis",
+ "rowCap": 101,
+ "scope": "every open stiwi-later seed, up to 100; overflow is UNKNOWN",
+ "template": "PREFIX schema: <https://schema.org/> PREFIX seeds: <https://seeds.local/ontology/> SELECT ?item ?id ?title ?priority ?status ?revision ?modified ?created WHERE { GRAPH <https://seeds.local/project/aegis> { ?item schema:keywords \"stiwi-later\" ; seeds:status ?status ; seeds:priority ?priority . FILTER(?status != \"closed\" && ?status != \"tombstone\") OPTIONAL { ?item schema:identifier ?id } OPTIONAL { ?item schema:name ?title } OPTIONAL { ?item schema:version ?revision } OPTIONAL { ?item schema:dateModified ?modified } OPTIONAL { ?item schema:dateCreated ?created } } } ORDER BY ?priority ?id LIMIT 101"
+}

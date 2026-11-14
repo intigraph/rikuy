@@ -1,0 +1,14 @@
+BASE
+root opens Today: False
+today/home.mjs absent
+today/home.css absent
+today/home-fallback.js absent
+legacy/index.html absent
+source.json present
+CANDIDATE
+root opens Today: True
+today/home.mjs present
+today/home.css present
+today/home-fallback.js present
+legacy/index.html present
+source.json present

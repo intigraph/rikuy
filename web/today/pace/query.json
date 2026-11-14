@@ -1,0 +1,14 @@
+{
+  "name": "daily_brief_deploys_v1",
+  "description": "Brief Status/Pace: governed aegis:DeploymentEvent records in two explicit camayoc monthly deployment window graphs (current and previous month) at or after a client-supplied UTC time. Bounded LIMIT 101; overflow is UNKNOWN. Merges, releases and closes have no in-budget governed source and are not read.",
+  "template": "PREFIX a: <http://aegis.gastown.local/ontology/>\nSELECT ?e ?t ?outcome ?service ?artifact ?env WHERE { VALUES ?g { <{monthNow}> <{monthPrev}> } GRAPH ?g { ?e a a:DeploymentEvent ; a:occurredAt ?t ; a:deploymentOutcome ?outcome . FILTER(STR(?t) >= '{since}') OPTIONAL { ?e a:deployedService ?service } OPTIONAL { ?e a:artifactId ?artifact } OPTIONAL { ?e a:environment ?env } } } ORDER BY DESC(?t) ?e LIMIT 101\n",
+  "params": [
+    {"name": "monthNow", "type": "iri", "required": true},
+    {"name": "monthPrev", "type": "iri", "required": true},
+    {"name": "since", "type": "text", "required": true}
+  ],
+  "graphPrefix": "https://camayoc.local/window/deployment/",
+  "windowHours": 24,
+  "rowCap": 101,
+  "scope": "deployments in the last 24 hours, up to 100; overflow is UNKNOWN"
+}

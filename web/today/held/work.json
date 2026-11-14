@@ -1,0 +1,22 @@
+{
+  "name": "daily_brief_held_work_v1",
+  "projection": "board",
+  "graph": "https://seeds.local/project/aegis",
+  "principalPrefix": "https://seeds.local/principal/",
+  "itemPrefix": "https://seeds.local/item/",
+  "key_in": [
+    "open",
+    "in_progress",
+    "hooked",
+    "blocked",
+    "deferred"
+  ],
+  "columns": [
+    "assignee",
+    "priority",
+    "updated"
+  ],
+  "rowCap": 50,
+  "description": "Indexed owner-scoped rows; at most100 shown per batch plus explicit more notice. Titles and due dates are available in source records.",
+  "maxPages": 2
+}

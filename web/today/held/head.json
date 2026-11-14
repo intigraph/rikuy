@@ -1,0 +1,13 @@
+{
+  "name": "daily_brief_held_head_v1",
+  "description": "Point read of the authenticated single-host lifecycle writer head; missing or expired evidence is UNKNOWN. No lifecycle history scan.",
+  "template": "PREFIX a: <http://aegis.gastown.local/ontology/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?payload WHERE { <http://aegis.gastown.local/ontology/owned-work-head-42a4cb232b38fd13a29b0ab05ea902ec8322ac672317b9622ea328b82a24dd83> a a:OperationalFact ; a:sourceKind \"observed\" ; a:source \"urn:shantytown:owned-work:3c43d438467df81cf1a7ccb80750a20f2d506ce5553786f308cbbf05289e4ce1\" ; rdfs:comment ?payload } LIMIT 2\n",
+  "params": [],
+  "rowCap": 2,
+  "headIRI": "http://aegis.gastown.local/ontology/owned-work-head-42a4cb232b38fd13a29b0ab05ea902ec8322ac672317b9622ea328b82a24dd83",
+  "producer": "urn:shantytown:owned-work:3c43d438467df81cf1a7ccb80750a20f2d506ce5553786f308cbbf05289e4ce1",
+  "host": "vati",
+  "onto": "http://aegis.gastown.local/ontology/",
+  "maxAgeSeconds": 1800,
+  "principalPrefix": "https://seeds.local/principal/"
+}

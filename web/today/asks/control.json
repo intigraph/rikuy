@@ -1,0 +1,9 @@
+{
+  "name": "daily_brief_source_control_v3",
+  "params": [],
+  "description": "Brief coverage: fixed Seeds graph, bounded output; production cost separately measured.",
+  "template": "PREFIX schema: <https://schema.org/>\nPREFIX seeds: <https://seeds.local/ontology/>\nPREFIX q: <https://scbrown.github.io/quechua/ns#>\nPREFIX ical: <http://www.w3.org/2002/12/cal/ical#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?item ?revision WHERE { GRAPH <https://seeds.local/project/aegis> { VALUES ?item { <https://seeds.local/item/aegis-blh.1> } ?item schema:version ?revision . } } LIMIT 2\n",
+  "graph": "https://seeds.local/project/aegis",
+  "rowCap": 2,
+  "scope": "exact known source item population control"
+}

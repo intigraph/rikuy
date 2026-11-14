@@ -1,0 +1,9 @@
+{
+ "name": "daily_brief_ask_titles_v1",
+ "description": "Brief Needs-you (aegis-zmk): open seeds titled \"ASK Stiwi\", found from the rdfs:label index. Item, title and status only; measured ~1-3s on 45b2333e.",
+ "params": [],
+ "graph": "https://seeds.local/project/aegis",
+ "rowCap": 301,
+ "scope": "every open seed whose title starts with ASK Stiwi; overflow is UNKNOWN",
+ "template": "PREFIX seeds: <https://seeds.local/ontology/> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> SELECT ?item ?title ?status WHERE { GRAPH <https://seeds.local/project/aegis> { ?item rdfs:label ?title . FILTER(STRSTARTS(?title, \"ASK Stiwi\")) ?item seeds:status ?status . FILTER(?status != \"closed\" && ?status != \"tombstone\") } } LIMIT 300"
+}

@@ -24,3 +24,17 @@ test('enrollment assets are published together and retain the disabled configura
  for(const name of ['index.html','app.mjs','model.mjs','cose.mjs','config.mjs','style.css'])assert.equal(await readFile('dist/enroll/'+name,'utf8'),await readFile('web/enroll/'+name,'utf8'));
  assert.match(await readFile('dist/enroll/config.mjs','utf8'),/enabled:\s*false/);
 });
+
+test('Today publishes beside the retained legacy and experimental surfaces with live readers off',async()=>{
+ execFileSync(process.execPath,['scripts/build.mjs']);
+ assert.match(await readFile('dist/index.html','utf8'),/url=\.\/today\//);
+ const today=await readFile('dist/today/index.html','utf8');
+ for(const panel of ['Needs you','Recently deferred','Work held by stopped agents','Explore'])assert.ok(today.includes(panel),panel);
+ for(const name of ['home.mjs','home.css','home-fallback.js','feed.mjs','reader-config.mjs'])assert.equal(await readFile('dist/today/'+name,'utf8'),await readFile('web/today/'+name,'utf8'));
+ assert.match(await readFile('dist/today/reader-config.mjs','utf8'),/enabled=false/);
+ assert.match(await readFile('dist/today/home.mjs','utf8'),/readerConfig.enabled===true\?main\(\)/);
+ await access('dist/legacy/index.html');
+ assert.equal(JSON.parse(await readFile('dist/today/changes/admission.json','utf8')).enabled,false);
+ await assert.rejects(access('dist/today/home-model.test.mjs'));
+ assert.equal(JSON.parse(await readFile('dist/source.json','utf8')).project,'rikuy');
+});

@@ -1,0 +1,23 @@
+{
+  "name": "daily_brief_changes_v1",
+  "description": "gah3 Sattler scoped admission: newest at most20 currently closed work items in one rolling24h window, explicit Seeds graph, no inbox and no aggregate/producer. Close timestamps are facts, not modification times or proof of delivery. This does not measure merged PRs or answered decisions. Limit20 bounds output, read cost measured separately.",
+  "template": "PREFIX schema: <https://schema.org/>\nPREFIX seeds: <https://seeds.local/ontology/>\nPREFIX q: <https://scbrown.github.io/quechua/ns#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?item ?id ?title ?closed ?revision ?reason WHERE {\n GRAPH <https://seeds.local/project/aegis> {\n  { SELECT ?item ?closed WHERE {\n    ?item schema:endTime ?closed .\n    FILTER(?closed >= xsd:dateTime('{start}') && ?closed < xsd:dateTime('{end}'))\n  } }\n  ?item a schema:Action ; seeds:status \"closed\" ; schema:identifier ?id ; schema:name ?title ; schema:version ?revision .\n  FILTER NOT EXISTS { ?item schema:keywords \"inbox\" }\n  FILTER(!REGEX(STR(?title), '^[[:space:]]*(inbox:|mail:)', 'i'))\n  OPTIONAL { ?item q:closeReason ?rawReason . BIND(SUBSTR(STR(?rawReason), 1, 240) AS ?reason) }\n }\n} ORDER BY DESC(?closed) ?id LIMIT 20\n",
+  "params": [
+    {
+      "name": "start",
+      "type": "text",
+      "required": true,
+      "description": "RFC3339 UTC inclusive rolling24h start"
+    },
+    {
+      "name": "end",
+      "type": "text",
+      "required": true,
+      "description": "RFC3339 UTC exclusive end; client enforces24h"
+    }
+  ],
+  "graph": "https://seeds.local/project/aegis",
+  "rowCap": 21,
+  "maxRows": 20,
+  "windowHours": 24
+}

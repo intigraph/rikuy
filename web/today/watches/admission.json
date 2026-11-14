@@ -1,0 +1,9 @@
+{
+  "enabled": false,
+  "scope": "default ROOT",
+  "windowDays": 30,
+  "capBytes": 262144,
+  "deadlineMs": 6000,
+  "registrationSHA": "b47c636df47dad8a2896fd753f6d486a90ef651dc0ffe06dcea77c6ad6334084",
+  "readCostReceipt": null
+}
