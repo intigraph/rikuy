@@ -1,4 +1,4 @@
-import { GRAPH, ROW_QUERY, STATS_QUERY, validateRows, validateStats, validatePage, integer } from './model.mjs';
+import { GRAPH, ROW_QUERY, STATS_QUERY, validateRows, validateStats, validatePage, integer } from '../legacy/model.mjs';
 
 export class ProtocolError extends Error {}
 export function validateEndpoint(endpoint, pageOrigin) {

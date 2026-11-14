@@ -163,7 +163,7 @@ function update(key){return value=>{
 };}
 function status(key){return text=>{if(text.startsWith('UNKNOWN · ')){reasons[key]=text.replace(/^UNKNOWN · /,'').replace(/ · retrying$/,'');render();}};}
 async function main(){
-  tabs();render();
+  render();
   const endpoint=validateEndpoint(readerConfig.readerOrigin,location.origin),def=path=>request(new URL(path,import.meta.url),{cap:16384});
   setRecordReader(makeRecordReader({query:query=>request(endpoint+'/query',{body:{query},cap:262144})}));
   // Each panel boots on its own: one missing manifest never cancels its peers.
@@ -193,6 +193,8 @@ async function main(){
     boot('held',['./held/head.json','./held/work.json','./asks/control.json'],([head,work,control])=>new PriorityClient({definition:expect(head,'daily_brief_held_head_v1'),decode:body=>body,deadlineMs:10000,status:status('held'),render:update('held'),read:heldReader({request,endpoint,head,work:expect(work,'daily_brief_held_work_v1'),control:expect(control,'daily_brief_source_control_v3')})})),
   ]);
 }
+// Navigation is local and remains usable before live-reader admission.
+tabs();
 // Keep normal read budgets and late valid responses, but settle the interface
 // within four seconds. Unavailable is honest, even while a read is in flight.
 const deadline=setTimeout(()=>{for(const key of ['asks','priorities','deploys','stats'])if(state[key]===undefined){reasons[key]='no verified response within 4 seconds; reader may still finish';state[key]=null;checked[key]=now();}render();},4000);

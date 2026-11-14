@@ -9,6 +9,7 @@ test:
 
 ci: test build
     node scripts/check-readme.mjs
+    sh scripts/check-today-browser.sh
 
 demo: build
     @node scripts/demo.mjs
