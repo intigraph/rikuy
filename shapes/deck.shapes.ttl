@@ -8,11 +8,15 @@ r:Comment a rdfs:Class ; rdfs:label "Rikuy comment" .
 
 # Membership in the declared options, cross-graph current revision and
 # attestation provenance are checked by the reader and signed expectations.
+# The optional settlement pair and both-item revision binding are checked by
+# the exact manifest reader and native Seeds admission; SHACL alone is insufficient.
 # Loading these shapes does not authorize a writer or protect a graph.
 r:DecisionShape a sh:NodeShape ; sh:targetClass r:Decision ;
     sh:property [ sh:path r:request ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path r:revision ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 1 ] ;
     sh:property [ sh:path r:seed ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path r:settlementTarget ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path r:settlementTargetRevision ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 1 ] ;
     sh:property [ sh:path r:action ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "choose" "later" ) ] ;
     sh:property [ sh:path r:operationId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ] ;
     sh:property [ sh:path r:optionLabel ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:maxLength 256 ] ;
@@ -22,6 +26,8 @@ r:CommentShape a sh:NodeShape ; sh:targetClass r:Comment ;
     sh:property [ sh:path r:request ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path r:revision ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 1 ] ;
     sh:property [ sh:path r:seed ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path r:settlementTarget ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path r:settlementTargetRevision ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 1 ] ;
     sh:property [ sh:path r:action ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "comment" ) ] ;
     sh:property [ sh:path r:operationId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ] ;
     sh:property [ sh:path r:comment ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ; sh:maxLength 4096 ] .

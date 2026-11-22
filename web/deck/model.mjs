@@ -7,13 +7,21 @@ export function scope(value) {
 }
 export function request(value, boundary) {
   scope(boundary);
-  exact(value, ['id', 'revision', 'seed', 'itemRevision', 'title', 'options', 'actions', 'expiresAt']);
+  const bound = Object.hasOwn(value ?? {}, 'settlement');
+  exact(value, ['id', 'revision', 'seed', 'itemRevision', 'title', 'options', 'actions', 'expiresAt', ...(bound ? ['settlement'] : [])]);
   const result = {id: iri(value.id), revision: integer(value.revision), seed: iri(value.seed), itemRevision: integer(value.itemRevision), title: text(value.title, 4096, true)};
   if (result.id.includes('#') || !result.seed.startsWith(boundary.itemPrefix) || result.seed === boundary.itemPrefix) throw new Unknown('Foreign request or item');
   if (!Array.isArray(value.options) || value.options.length > 8 || new Set(value.options).size !== value.options.length) throw new Unknown('Invalid options');
   result.options = value.options.map(v => text(v, 256));
   if (!Array.isArray(value.actions) || !value.actions.length || value.actions.length > 3 || new Set(value.actions).size !== value.actions.length || value.actions.some(v => !['choose', 'later', 'comment'].includes(v)) || value.actions.includes('choose') && !result.options.length) throw new Unknown('Invalid declared actions');
   result.actions = [...value.actions]; result.expiresAt = integer(value.expiresAt);
+  if (bound) {
+    exact(value.settlement, ['target', 'targetRevision']);
+    const target = iri(value.settlement.target);
+    if (result.itemRevision === Number.MAX_SAFE_INTEGER || value.settlement.targetRevision === Number.MAX_SAFE_INTEGER) throw new Unknown('Settlement revision exhausted');
+    if (!/^[A-Za-z0-9_.-]{1,256}$/.test(result.seed.slice(boundary.itemPrefix.length)) || !/^[A-Za-z0-9_.-]{1,256}$/.test(target.slice(boundary.itemPrefix.length)) || !target.startsWith(boundary.itemPrefix) || target === boundary.itemPrefix || target === result.seed) throw new Unknown('Foreign or self settlement target');
+    result.settlement = {target, targetRevision: integer(value.settlement.targetRevision)};
+  }
   return result;
 }
 export const revisionIri = value => `${value.id}#revision-${value.revision}`;
@@ -62,10 +70,14 @@ export function decodeProposal(raw) {
   if (JSON.stringify(normalized) !== raw) throw new Unknown('Noncanonical or duplicate manifest field');
   return normalized;
 }
-export function buildProposal({boundary, ask, freshItem, signer, action, now}) {
+export function buildProposal({boundary, ask, freshItem, freshTarget, signer, action, now}) {
   const b = scope(boundary), r = request(ask, b), a = intent(action, r);
   exact(freshItem, ['graph', 'seed', 'revision', 'status']);
   if (freshItem.graph !== b.itemGraph || freshItem.seed !== r.seed || freshItem.revision !== r.itemRevision || freshItem.status !== b.openStatus || !Number.isSafeInteger(now) || now >= r.expiresAt) throw new Unknown('Changed, closed or expired request');
+  if (r.settlement) {
+    exact(freshTarget, ['graph', 'seed', 'revision']);
+    if (freshTarget.graph !== b.itemGraph || freshTarget.seed !== r.settlement.target || freshTarget.revision !== r.settlement.targetRevision) throw new Unknown('Changed or foreign settlement target');
+  } else if (freshTarget !== undefined) throw new Unknown('Undeclared settlement target');
   const op = operationIri(a.operationId), rev = revisionIri(r);
   const datums = [
     {s: op, p: RDF_TYPE, o: ref(NS + (a.action === 'comment' ? 'Comment' : 'Decision'))},
@@ -73,6 +85,10 @@ export function buildProposal({boundary, ask, freshItem, signer, action, now}) {
     {s: op, p: NS + 'seed', o: ref(r.seed)}, {s: op, p: NS + 'action', o: str(a.action)},
     {s: op, p: NS + 'operationId', o: str(a.operationId)}
   ];
+  if (r.settlement) datums.push(
+    {s: op, p: NS + 'settlementTarget', o: ref(r.settlement.target)},
+    {s: op, p: NS + 'settlementTargetRevision', o: int(r.settlement.targetRevision)}
+  );
   if (a.optionLabel !== null) datums.push({s: op, p: NS + 'optionLabel', o: str(a.optionLabel)});
   if (a.comment !== '') datums.push({s: op, p: NS + 'comment', o: str(a.comment)});
   if (a.action !== 'comment') datums.push({s: rev, p: NS + 'decided', o: ref(op)});
@@ -81,6 +97,7 @@ export function buildProposal({boundary, ask, freshItem, signer, action, now}) {
     {graph: b.answerGraph, s: rev, p: NS + 'decided', o: null},
     {graph: b.itemGraph, s: r.seed, p: b.revisionPredicate, o: int(r.itemRevision)},
     {graph: b.itemGraph, s: r.seed, p: b.statusPredicate, o: ref(b.openStatus)},
-    {graph: b.answerGraph, s: op, p: RDF_TYPE, o: null}
+    {graph: b.answerGraph, s: op, p: RDF_TYPE, o: null},
+    ...(r.settlement ? [{graph: b.itemGraph, s: r.settlement.target, p: b.revisionPredicate, o: int(r.settlement.targetRevision)}] : [])
   ]});
 }

@@ -1,4 +1,5 @@
 import {decisionView,questionLabel,deploymentGroups} from './home-model.mjs';
+import {mountAskDecision} from './ask-decisions.mjs';
 // Presentation only. Decoded source data stays textContent, including titles.
 export const $=id=>document.getElementById(id);
 export const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
@@ -11,7 +12,8 @@ export function cite(node,href,label='Query definition'){
 export function unavailable(node,reason,at=Date.now()){
   mark(node).replaceChildren(el('p','Unavailable: '+reason,'unavailable'),el('time','Checked '+stamp(at),'source-time'));
 }
-let explorerPromise,recordReader,recordPanel,recordRoot;
+let explorerPromise,recordReader,recordPanel,recordRoot,askDecisionAdapter;
+export function setAskDecisionAdapter(adapter){askDecisionAdapter=adapter;}
 export function setRecordReader(read){recordReader=read;}
 export async function openRecord(id,title){
   if(!/^aegis-[a-z0-9]+(?:\.[0-9]+)*$/.test(id))throw Error('Invalid record selection');
@@ -83,7 +85,12 @@ export function renderAsks(view,reason,at){
     }
     details.append(el('div',[row.id,'P'+row.priority,row.status,'age '+(row.created?age(row.created):'unknown'),row.owner?.split('/').at(-1)||'unassigned'].join(' · '),'meta'));
     details.addEventListener('toggle',()=>{details.open?opened.add(row.id):opened.delete(row.id);root.dataset.openIds=JSON.stringify([...opened]);});
-    card.append(details,recordButton(row.id,row.title));return card;
+    card.append(details,recordButton(row.id,row.title));
+    if(row.kind==='ask'&&askDecisionAdapter){
+      const actions=el('section');card.append(actions);
+      mountAskDecision(actions,row,askDecisionAdapter).catch(()=>actions.replaceChildren(el('p','Decision unavailable · admitted request or settlement evidence is missing.','unavailable')));
+    }
+    return card;
   };
   for(const [index,row] of decisions.featured.entries())top.append(cardFor(row,index));
   for(const row of decisions.remaining)root.append(cardFor(row));
