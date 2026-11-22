@@ -9,18 +9,13 @@ import {NS} from '../web/deck/value.mjs';
 import {buildProposal, canonicalProposal, operationIri, requestPublication, readRequest, revisionIri} from '../web/deck/model.mjs';
 import {admittedChallenge, readAnswer, disposition, readbackProof} from '../web/deck/evidence.mjs';
 import {DeckReader, readerDefinitions} from '../web/deck/reader.mjs';
+import {nativeLibraries} from './admission/native-libraries.mjs';
 const cli = process.env.QUIPU_CLI, artifacts = process.env.QUIPU_ARTIFACTS;
 if (!cli || !artifacts) throw Error('Explicit candidate QUIPU_CLI and fresh QUIPU_ARTIFACTS JSONL required');
+const libraries = nativeLibraries(readFileSync(artifacts, 'utf8'),
+  {path: process.env.QUIPU_SERDE_JSON_ARTIFACT, sha256: process.env.QUIPU_SERDE_JSON_SHA256},
+  path => createHash('sha256').update(readFileSync(path)).digest('hex'));
 const root = mkdtempSync(join(tmpdir(), 'rikuy-native-')), source = resolve(import.meta.dirname, '..');
-const libraries = new Map();
-for (const line of readFileSync(artifacts, 'utf8').split('\n')) {
-  let record; try {record = JSON.parse(line);} catch {continue;}
-  if (record.reason !== 'compiler-artifact' || record.profile?.test || !record.target?.kind?.includes('lib') || !['quipu', 'serde_json'].includes(record.target.name)) continue;
-  const paths = record.filenames.filter(p => p.endsWith('.rlib'));
-  if (paths.length !== 1 || libraries.has(record.target.name) && libraries.get(record.target.name) !== paths[0]) throw Error('Ambiguous candidate library population');
-  libraries.set(record.target.name, paths[0]);
-}
-if (libraries.size !== 2) throw Error('Candidate quipu and serde_json library artifacts missing');
 const buildAt = process.argv[2] === '--build-helper' ? process.argv[3] : null;
 const native = buildAt || process.env.QUIPU_NATIVE_FIXTURE || join(root, 'native-fixture');
 const results = [], sha = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -34,8 +29,9 @@ function cliRun(db, args) {
 }
 function put(db, graph, datums, retract = false) {return command(db, 'seed', {graph, datums, retract});}
 function replace(db, graph, s, p, old, value) {put(db, graph, [{s, p, o: old}], true); put(db, graph, [{s, p, o: value}]);}
-function setup(index, kind = 'choose') {
+function setup(index, kind = 'choose', bound = false) {
   const db = join(root, `case-${index}.db`), r = ask();
+  if (bound) r.settlement = {target: boundary.itemPrefix + 'linked', targetRevision: 12};
   const {privateKey, publicKey} = generateKeyPairSync('ed25519');
   const x = Buffer.from(publicKey.export({format: 'jwk'}).x, 'base64url');
   const cose = Buffer.concat([Buffer.from([0xa4, 1, 1, 3, 0x27, 0x20, 6, 0x21, 0x58, 0x20]), x]);
@@ -45,6 +41,7 @@ function setup(index, kind = 'choose') {
   const requestRow = {graph: boundary.requestGraph, requestId: r.id, currentRevision: requestFacts.find(d => d.s === r.id && d.p === NS + 'currentRevision').o.value, revisionIri: revisionIri(r), manifest: requestFacts.find(d => d.s === revisionIri(r) && d.p === NS + 'requestManifest').o.value, complete: true};
   assert.deepEqual(readRequest(requestRow, boundary), r);
   put(db, boundary.itemGraph, [{s: r.seed, p: boundary.revisionPredicate, o: {kind: 'int', value: r.itemRevision}}, {s: r.seed, p: boundary.statusPredicate, o: {kind: 'iri', value: boundary.openStatus}}]);
+  if (r.settlement) put(db, boundary.itemGraph, [{s: r.settlement.target, p: boundary.revisionPredicate, o: {kind: 'int', value: r.settlement.targetRevision}}, {s: r.settlement.target, p: boundary.statusPredicate, o: {kind: 'iri', value: boundary.openStatus}}]);
   cliRun(db, ['shapes', 'load', 'rikuy-deck', join(source, 'shapes/deck.shapes.ttl')]);
   cliRun(db, ['signer', 'enroll', '--credential-id', 'dGVzdA', '--cose-key', cose.toString('base64url'), '--scheme', 'webauthn-eddsa', '--origin', 'https://sign.example.test', '--rp-id', 'sign.example.test', '--actor', 'fixture-operator', '--graph', boundary.answerGraph, '--expires-at', String(r.expiresAt)]);
   assert.equal(JSON.parse(cliRun(db, ['signer', 'status'])).enabled, false);
@@ -52,7 +49,7 @@ function setup(index, kind = 'choose') {
   cliRun(db, ['signer', 'enable']); // Synthetic temporary database only.
   const who = {signer: 'dGVzdA', audience: command(db, 'store-id', {}).store_id, origin: 'https://sign.example.test', rpId: 'sign.example.test', actor: 'fixture-operator'};
   const action = {operationId: String(index + 1).padStart(64, '0'), action: kind, optionLabel: kind === 'choose' ? 'Yes' : null, comment: 'Synthetic native comment\non two lines'};
-  const p = buildProposal({boundary, ask: r, freshItem: {graph: boundary.itemGraph, seed: r.seed, revision: r.itemRevision, status: boundary.openStatus}, signer: who.signer, action, now: Math.floor(Date.now() / 1000)});
+  const p = buildProposal({boundary, ask: r, freshItem: {graph: boundary.itemGraph, seed: r.seed, revision: r.itemRevision, status: boundary.openStatus}, ...(r.settlement ? {freshTarget: {graph: boundary.itemGraph, seed: r.settlement.target, revision: r.settlement.targetRevision}} : {}), signer: who.signer, action, now: Math.floor(Date.now() / 1000)});
   assert.equal(command(db, 'canonical', p).canonical, canonicalProposal(p));
   return {db, r, who, action, p, privateKey};
 }
@@ -79,17 +76,21 @@ async function admit(state, p = state.p) {
   return {issued, body, receipt, facts, row};
 }
 try {
-  const compile = ['--edition=2024', join(source, 'tests/native/deck-fixture.rs'), '-L', 'dependency=' + dirname(libraries.get('quipu')), ...[...libraries].flatMap(([name, path]) => ['--extern', `${name}=${path}`]), '-o', native];
-  const metadata = () => ({source_sha256: sha(readFileSync(join(source, 'tests/native/deck-fixture.rs'))), library_sha256: sha(readFileSync(libraries.get('quipu'))), executable_sha256: sha(readFileSync(native))});
-  if (buildAt || !process.env.QUIPU_NATIVE_FIXTURE) execFileSync('rustc', compile, {stdio: ['ignore', 'pipe', 'pipe']});
+  const dependencyDirs = [...new Set([...libraries.values()].map(path => dirname(path)))];
+  const compile = ['--edition=2024', join(source, 'tests/native/deck-fixture.rs'), ...dependencyDirs.flatMap(path => ['-L', 'dependency=' + path]), ...[...libraries].flatMap(([name, path]) => ['--extern', `${name}=${path}`]), '-o', native];
+  const metadata = () => ({source_sha256: sha(readFileSync(join(source, 'tests/native/deck-fixture.rs'))), library_sha256: sha(readFileSync(libraries.get('quipu'))), serde_json_sha256: sha(readFileSync(libraries.get('serde_json'))), executable_sha256: sha(readFileSync(native))});
+  if (buildAt || !process.env.QUIPU_NATIVE_FIXTURE) {
+    try {execFileSync('rustc', compile, {stdio: ['ignore', 'pipe', 'pipe']});}
+    catch (error) {throw Error('Native fixture compile failed: ' + String(error.stderr).slice(0, 16384));}
+  }
   if (buildAt) {
     writeFileSync(native + '.json', JSON.stringify(metadata(), null, 2) + '\n', {mode: 0o600});
     console.log(JSON.stringify(metadata()));
   } else {
   if (process.env.QUIPU_NATIVE_FIXTURE) assert.deepEqual(JSON.parse(readFileSync(native + '.json', 'utf8')), metadata(), 'Stale native fixture artifact');
   const candidate = execFileSync(cli, ['--version'], {encoding: 'utf8'}).trim();
-  for (const [index, kind] of ['choose', 'later', 'comment'].entries()) {
-    const state = setup(index, kind), e = await admit(state);
+  for (const [index, kind] of ['choose', 'later', 'comment', 'choose'].entries()) {
+    const state = setup(index, kind, index === 3), e = await admit(state);
     const answer = await readAnswer(e.row, e.receipt, state.r, boundary, state.who);
     assert.equal(disposition([answer], state.r, boundary).state, {choose: 'ANSWERED', later: 'LATER', comment: 'WAITING'}[kind]);
     const subjects = new Set(state.p.datums.map(d => d.s));
@@ -98,7 +99,7 @@ try {
     assert.throws(() => command(state.db, 'commit', e.body));
     assert.deepEqual(footprint(state, e.body.nonce), before);
     assert.throws(() => command(state.db, 'challenge', state.p)); // Decided or operation slot is spent.
-    results.push({case: kind, state: disposition([answer], state.r, boundary).state, canonical_native_match: true, native_verified: e.receipt.verified, replay_no_mutation: true});
+    results.push({case: index === 3 ? 'bound-choose' : kind, state: disposition([answer], state.r, boundary).state, canonical_native_match: true, native_verified: e.receipt.verified, replay_no_mutation: true});
     const nativeNamespace = e.facts.find(d => d.p.endsWith('attestedBy')).p.slice(0, -'attestedBy'.length);
     const definitions = readerDefinitions(boundary, nativeNamespace);
     const queryHashes = Object.fromEntries(Object.entries(definitions).map(([role, def]) => [role, sha(Buffer.from(JSON.stringify(def)))]));
@@ -116,14 +117,15 @@ try {
     const observed = await reader.read(state.r.id);
     assert.equal(observed.rows.length, 1);
     assert.equal(observed.rows[0].receipt.receipt_iri, e.receipt.receipt_iri);
-    results.push({case: `${kind}-stored-reader`, native_registered_queries: true, graph_creation_bound: true, typed_facts_and_provenance: true});
+    results.push({case: `${index === 3 ? 'bound-choose' : kind}-stored-reader`, native_registered_queries: true, graph_creation_bound: true, typed_facts_and_provenance: true});
   }
-  for (const [index, kind] of ['forged', 'wrong-origin', 'item-revision', 'closed-item', 'request-revision'].entries()) {
-    const state = setup(index + 10), issued = command(state.db, 'challenge', state.p);
+  for (const [index, kind] of ['forged', 'wrong-origin', 'item-revision', 'closed-item', 'request-revision', 'target-revision'].entries()) {
+    const state = setup(index + 10, 'choose', kind === 'target-revision'), issued = command(state.db, 'challenge', state.p);
     let restore = () => {};
     if (kind === 'item-revision') {replace(state.db, boundary.itemGraph, state.r.seed, boundary.revisionPredicate, {kind: 'int', value: 7}, {kind: 'int', value: 8}); restore = () => replace(state.db, boundary.itemGraph, state.r.seed, boundary.revisionPredicate, {kind: 'int', value: 8}, {kind: 'int', value: 7});}
     if (kind === 'closed-item') {const closed = 'https://schema.org/CompletedActionStatus'; replace(state.db, boundary.itemGraph, state.r.seed, boundary.statusPredicate, {kind: 'iri', value: boundary.openStatus}, {kind: 'iri', value: closed}); restore = () => replace(state.db, boundary.itemGraph, state.r.seed, boundary.statusPredicate, {kind: 'iri', value: closed}, {kind: 'iri', value: boundary.openStatus});}
     if (kind === 'request-revision') {replace(state.db, boundary.requestGraph, state.r.id, NS + 'currentRevision', {kind: 'int', value: 3}, {kind: 'int', value: 4}); restore = () => replace(state.db, boundary.requestGraph, state.r.id, NS + 'currentRevision', {kind: 'int', value: 4}, {kind: 'int', value: 3});}
+    if (kind === 'target-revision') {replace(state.db, boundary.itemGraph, state.r.settlement.target, boundary.revisionPredicate, {kind: 'int', value: 12}, {kind: 'int', value: 13}); restore = () => replace(state.db, boundary.itemGraph, state.r.settlement.target, boundary.revisionPredicate, {kind: 'int', value: 13}, {kind: 'int', value: 12});}
     const before = footprint(state, issued.challenge.nonce), body = assertion(state, issued, kind === 'wrong-origin' ? 'https://other.example.test' : state.who.origin, kind === 'forged');
     assert.throws(() => command(state.db, 'commit', body));
     assert.deepEqual(footprint(state, issued.challenge.nonce), before);
@@ -136,6 +138,14 @@ try {
     const e = await admit(state, p); assert.equal(e.receipt.verified, true); // Domain-free native primitive permits it.
     await assert.rejects(readAnswer(e.row, e.receipt, state.r, boundary, state.who));
     results.push({case: `missing-expectation-${slot}`, native_verified: true, deck_reader_refused: true});
+  }
+  {
+    const state = setup(50, 'choose', true), p = structuredClone(state.p);
+    p.expect.pop();
+    const e = await admit(state, p);
+    assert.equal(e.receipt.verified, true);
+    await assert.rejects(readAnswer(e.row, e.receipt, state.r, boundary, state.who));
+    results.push({case: 'missing-linked-expectation', native_verified: true, deck_reader_refused: true});
   }
   {
     const state = setup(35, 'comment'), p = structuredClone(state.p);

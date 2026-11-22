@@ -1,0 +1,7 @@
+Script started on 2026-11-22 17:33:04-05:00 [COMMAND="node docs/probes/ask-admission/demo.mjs" <not executed on terminal>]
+Preparation source fixture; no endpoint, credential or key operation
+Complete inventory: 0 selected, 24 UNKNOWN; runtimeAuthorized=false
+Guessed UNKNOWN value refused: UNKNOWN has no guessed value
+Runtime GO refused: Preparation-only schema required
+
+Script done on 2026-11-22 17:33:04-05:00 [COMMAND_EXIT_CODE="0"]
