@@ -1,0 +1,10 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Ephemeral job economics · Rikuy</title>
+<link rel="stylesheet" href="style.css"><main><nav><a href="../today/">Today</a></nav><h1>Ephemeral job economics</h1><p>Measured work, elapsed time and budget endings. Savings require a comparable crew baseline.</p>
+<label class="load">Open a ledger snapshot <input id="file" type="file" accept="application/json,.json"></label><p id="status" role="status">UNKNOWN · No snapshot loaded. This page makes no network requests.</p>
+<section id="report" hidden><p id="scope"></p><div class="tiles" id="tiles"></div>
+<h2>Jobs by UTC day</h2><div class="scroll"><table><thead><tr><th>Day</th><th>Job</th><th>Attempts</th></tr></thead><tbody id="daily"></tbody></table></div>
+<h2>Duration and exhaustion by effective budget</h2><p>Elapsed wall time includes setup and waiting. Percentiles use nearest rank. Live attempts are censored and excluded. Cohorts below 20 ended durations are marked low n.</p>
+<div class="scroll"><table><thead><tr><th>Job / harness / model</th><th>Budget: seconds / turns / context k</th><th>Ended / live</th><th>Duration n</th><th>Median seconds</th><th>p90 seconds</th><th>Budget exhausted / ended</th><th>Upper bound incl. unknown</th><th>Primary causes</th><th>Teardown median (n)</th></tr></thead><tbody id="cohorts"></tbody></table></div>
+<h2>Tokens and savings</h2><p id="unknown"></p>
+<h2>Attempt evidence</h2><p>Retries count as attempts, never additional delivered work. A verdict is not proof of a merged or installed result.</p><div class="scroll"><table><thead><tr><th>Attempt / item</th><th>Retry of</th><th>Verdict / primary cause</th><th>Elapsed seconds / live age</th></tr></thead><tbody id="attempts"></tbody></table></div>
+<h2>Coverage</h2><pre id="coverage"></pre></section></main><script type="module" src="app.mjs"></script></html>
