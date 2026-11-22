@@ -1,0 +1,91 @@
+Script started on 2026-11-22 18:44:38-05:00 [COMMAND="node scripts/qualify-deck-origin.mjs" <not executed on terminal>]
+{
+  "target": "disposable native loopback listener",
+  "binary_sha256": "e915437962231bca15c237ab40e16da8cbd3f29bd83f1a21ac4b1c432e59e02c",
+  "version": {
+    "features": {
+      "bundled-onnx": true,
+      "dev-tools": false,
+      "docgen": false,
+      "full": true,
+      "ha-read-profile": false,
+      "jemalloc": true,
+      "lancedb": false,
+      "mcp": true,
+      "merge-benchmark": false,
+      "onnx": true,
+      "owl": true,
+      "ownership-witness-s3": false,
+      "oxicompare": false,
+      "reactive-reasoner": true,
+      "remote": true,
+      "server": true,
+      "shacl": true
+    },
+    "git_dirty": false,
+    "git_sha": "97d1a973e843e0fb1f38b269367ead878ddb9e19",
+    "read_contracts": [
+      "quipu-acquisition/v1",
+      "quipu-acquisition/composed-v1",
+      "quipu-eligibility/v1",
+      "quipu-entity-history/main-v1",
+      "quipu-entity-history/observation-v1"
+    ],
+    "version": "0.19.1",
+    "write_contracts": [
+      "quipu.knot-completion/v1",
+      "quipu.knot-completion/v2",
+      "quipu.episode-addresses/v1",
+      "quipu.episode-strict-new/v1"
+    ]
+  },
+  "cases": [
+    {
+      "path": "/ask",
+      "case": "trusted",
+      "browser_origin_admitted": true
+    },
+    {
+      "path": "/ask",
+      "case": "foreign",
+      "browser_origin_admitted": false
+    },
+    {
+      "path": "/ask",
+      "case": "null-origin",
+      "browser_origin_admitted": false
+    },
+    {
+      "path": "/attest/challenge",
+      "case": "trusted",
+      "browser_origin_admitted": true
+    },
+    {
+      "path": "/attest/challenge",
+      "case": "foreign",
+      "browser_origin_admitted": false
+    },
+    {
+      "path": "/attest/challenge",
+      "case": "null-origin",
+      "browser_origin_admitted": false
+    },
+    {
+      "path": "/health",
+      "case": "trusted",
+      "http_status": 200,
+      "browser_origin_admitted": true
+    },
+    {
+      "path": "/health",
+      "case": "foreign",
+      "http_status": 200,
+      "browser_origin_admitted": false
+    }
+  ],
+  "production_mutations": 0,
+  "enrollment": false,
+  "runtimeAuthorized": false
+}
+
+Script done on 2026-11-22 18:44:39-05:00 [COMMAND_EXIT_CODE="0"]
