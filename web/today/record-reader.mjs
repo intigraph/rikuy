@@ -34,6 +34,7 @@ export function makeRecordReader({query,now=()=>Date.now()}={}){
       links.set(row.value,{iri:row.value,label:row.label||label(row.value),relation:label(row.predicate)});
     }
     return {iri:entity,title,status:one(SEEDS+'status'),owner:one(S+'agent')?label(one(S+'agent')):null,
+      kind:one(SEEDS+'issueType'),default:one(SEEDS+'askDefault'),expires:one(SEEDS+'expiresAt'),
       created:one(S+'dateCreated'),modified:one(S+'dateModified'),description:one(S+'description'),
       comments:comments.slice(0,25).map(row=>({id:row.comment,text:row.text,author:row.author?label(row.author):null,created:row.created})),commentsMore:comments.length>25,
       links:[...links.values()],asOf:{at:new Date(now()).toISOString(),stale:false},

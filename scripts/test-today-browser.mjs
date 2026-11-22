@@ -47,9 +47,36 @@ async function loadToday({breakDependency=false}={}){
     assert.deepEqual(live,[],'default readers must remain off');
   } finally {await context.close();}
 }
+async function explicitAskRecord(){
+  const context=await browser.newContext(),page=await context.newPage(),remote=[];
+  await page.route('**/*',route=>{if(new URL(route.request().url()).origin!==origin){remote.push(route.request().url());return route.abort();}return route.continue();});
+  try{
+    await page.goto(origin+'/today/');
+    await page.waitForFunction(()=>document.querySelector('#connection')?.textContent.includes('Live readers await deployment admission'));
+    await page.evaluate(async()=>{
+      const view=await import('./home-view.mjs');
+      const ask={id:'aegis-synthetic',title:'Choose a color',kind:'ask',priority:1,status:'open',created:'2026-11-01T00:00:00Z',gates:['ask-type'],options:'Blue | Green',rec:'Blue',unblocks:'https://seeds.local/item/aegis-linked',default:'Keep <script>current</script>',expires:'2026-12-01T12:00:00Z'};
+      view.setRecordReader(async iri=>({iri,title:iri.endsWith('aegis-linked')?'Work awaiting the decision':'Choose a color',status:'open',kind:'ask',default:ask.default,expires:ask.expires,description:'A readable synthetic record.',comments:[{text:'Synthetic source evidence',author:'demo'}],links:iri.endsWith('aegis-linked')?[]:[{iri:ask.unblocks,label:'Linked work'}],asOf:{at:'2026-11-22T00:00:00Z'},raw:{fixture:true}}));
+      view.renderAsks({rows:[ask],incomplete:false},null,Date.now());
+    });
+    assert.equal(await page.locator('#ask-top .ask').count(),1,'explicit Ask is featured without a legacy title');
+    assert.match(await page.locator('#ask-top .ask-metadata').textContent(),/Keep <script>current<\/script>/);
+    assert.equal(await page.locator('#ask-top script').count(),0);
+    await page.getByRole('button',{name:'Open record: Choose a color',exact:true}).click();
+    await page.waitForFunction(()=>document.querySelector('#readable-record h2')?.textContent==='Choose a color');
+    assert.match(await page.locator('.record-description').textContent(),/readable synthetic/);
+    assert.match(await page.locator('.record-meta').textContent(),/Reply by/);
+    assert.equal(await page.locator('#readable-record details').getAttribute('open'),null,'technical JSON is collapsed');
+    await page.getByRole('button',{name:'Open Linked work',exact:true}).press('Enter');
+    await page.waitForFunction(()=>document.querySelector('#readable-record h2')?.textContent==='Work awaiting the decision');
+    assert.deepEqual(remote,[]);
+  }finally{await context.close();}
+}
 try {
   browser=await chromium.launch({headless:process.env.RIKUY_BROWSER_HEADED!=='1',...(process.env.RIKUY_BROWSER_EXECUTABLE?{executablePath:process.env.RIKUY_BROWSER_EXECUTABLE}:{})});
   await loadToday();
+  await explicitAskRecord();
+  console.log('PASS explicit Ask metadata, readable record and keyboard graph navigation; zero nonlocal requests');
   console.log('PASS built Today module graph, disabled-reader startup and tab transition');
   await assert.rejects(loadToday({breakDependency:true}),/Timeout|built module imports/);
   console.log('PASS missing model dependency is detected despite fallback HTML');

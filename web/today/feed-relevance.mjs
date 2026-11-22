@@ -4,7 +4,7 @@ const S='https://schema.org/',D='https://seeds.local/ontology/';
 const R='http://www.w3.org/2000/01/rdf-schema#label';
 const known=new Set([
   ...['identifier','name','description','keywords','agent','creator','version','dateModified','dateCreated','actionStatus','parentItem','author','position','text','endTime'].map(x=>S+x),
-  ...['priority','rank','status','notes','deferredAt','deferredBy','workflowRun','issueType'].map(x=>D+x),
+  ...['priority','rank','status','notes','deferredAt','deferredBy','workflowRun','issueType','unblocks','askDefault','expiresAt'].map(x=>D+x),
   R,'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
   'https://scbrown.github.io/quechua/ns#sourceKind','https://scbrown.github.io/quechua/ns#outcome',
   'http://www.w3.org/2002/12/cal/ical#due',
@@ -12,6 +12,7 @@ const known=new Set([
 const families={
   daily_brief_priorities_v3:{membership:[D+'priority',D+'status',S+'keywords',S+'identifier',S+'name'],fields:[S+'identifier',S+'name',D+'priority',D+'rank',D+'status',S+'agent',S+'version',S+'dateModified']},
   daily_brief_later_v1:{membership:[S+'keywords',D+'status',D+'priority'],fields:[S+'identifier',S+'name',D+'priority',D+'status',S+'version',S+'dateModified',S+'dateCreated']},
+  daily_brief_asks_v5:{membership:[D+'issueType',D+'unblocks',D+'askDefault',D+'expiresAt',S+'keywords',D+'status',D+'priority',R],fields:[D+'issueType',D+'unblocks',D+'askDefault',D+'expiresAt',S+'identifier',S+'name',D+'priority',D+'rank',D+'status',S+'agent',S+'version',S+'dateModified',S+'dateCreated',S+'description',D+'notes','http://www.w3.org/2002/12/cal/ical#due',R,S+'keywords']},
   daily_brief_asks_v4:{membership:[S+'keywords',D+'status',D+'priority',R],fields:[S+'identifier',S+'name',D+'priority',D+'rank',D+'status',S+'agent',S+'version',S+'dateModified',S+'dateCreated',S+'description',D+'notes','http://www.w3.org/2002/12/cal/ical#due',R,S+'keywords']},
   daily_brief_recently_deferred_v1:{membership:[D+'deferredAt'],fields:[S+'identifier',S+'name',D+'status',S+'version',S+'dateModified',D+'deferredAt',D+'deferredBy']},
 };

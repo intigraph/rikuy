@@ -69,3 +69,18 @@ test('later lists stiwi-later seeds and refuses an invalid priority',()=>{
   assert.equal(later(l([row('aegis-two',{priority:2})]),laterDef,now)[0].priority,2);
   assert.throws(()=>later(l([row('aegis-two',{priority:9})]),laterDef,now));
 });
+
+
+test('explicit overseer Asks need no legacy title or human-gate label',()=>{
+  const one=row('aegis-new',{gate:'ask-type',kind:'ask',title:'Choose a color',unblocks:IRI('aegis-work'),linkedResource:true,default:'Keep the current color',expires:'2026-12-01T12:00:00Z'});
+  const result=asks(composite([one]),definitions,now);
+  assert.equal(result.rows.length,1);
+  assert.equal(result.rows[0].unblocks,IRI('aegis-work'));
+  assert.equal(result.rows[0].default,'Keep the current color');
+  for(const change of [{kind:'task'},{linkedResource:false},{linkedResource:undefined},{unblocks:undefined},{unblocks:one.item},{unblocks:'https://other.test/item/1'},{default:''},{expires:'yesterday'}])assert.throws(()=>asks(composite([{...one,...change}]),definitions,now));
+});
+
+test('conflicting metadata across gates refuses rather than choosing one',()=>{
+  const one=row('aegis-new',{gate:'ask-type',kind:'ask',unblocks:IRI('aegis-work'),linkedResource:true,default:'Wait',expires:'2026-12-01T12:00:00Z'});
+  assert.throws(()=>asks(composite([one,{...one,gate:'desk',default:'Proceed'}]),definitions,now),/Conflicting Ask metadata/);
+});

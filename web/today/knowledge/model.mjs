@@ -52,7 +52,11 @@ export function validatePanel(panel,rows,now,params={}){
       // One row per gate is legitimate; no duplicate row may silently replace
       // a different version of the same item.
       const key=r.item+(panel==='asks'?'|'+r.gate:'');if(ids.has(key))throw new Unknown('Duplicate item/gate');ids.add(key);
-      if(panel==='asks'&&!['blocked:human','needs-stiwi','decision-stiwi','desk','decision-needed','ask-title'].includes(r.gate))throw new Unknown('Foreign human gate');
+      if(panel==='asks'&&(r.kind==='ask'||r.gate==='ask-type')){
+        if(r.kind!=='ask'||![true,'true'].includes(r.linkedResource)||typeof r.unblocks!=='string'||!/^https:\/\/seeds\.local\/item\/aegis-[a-z0-9]+(?:\.[0-9]+)*$/.test(r.unblocks)||r.unblocks===r.item||typeof r.default!=='string'||!r.default.trim()||r.default.length>4096||typeof r.expires!=='string')throw new Unknown('Incomplete overseer Ask metadata');
+        timestamp(r.expires);
+      }
+      if(panel==='asks'&&!['blocked:human','needs-stiwi','decision-stiwi','desk','decision-needed','ask-title','ask-type'].includes(r.gate))throw new Unknown('Foreign human gate');
     }
     result.sort((a,b)=>a.priority-b.priority||(a.rank??Infinity)-(b.rank??Infinity)||a.id.localeCompare(b.id));
   }
