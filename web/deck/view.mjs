@@ -1,10 +1,11 @@
 import {Unknown, NS, sha256} from './value.mjs';
 import {scope, readRequest, buildProposal} from './model.mjs';
 import {identity, readAnswer, disposition} from './evidence.mjs';
+import {applySettlement} from './settlement.mjs';
 
 // The deployment supplies bounded admitted readers and a durable PendingWrite.
 // No endpoint, raw query, credential, enrollment or automatic retry is here.
-export async function mount(root, {enabled = false, boundary, identity: who, read, writer, now = () => Math.floor(Date.now() / 1000)} = {}) {
+export async function mount(root, {enabled = false, boundary, identity: who, read, writer, nativeSettlement, now = () => Math.floor(Date.now() / 1000)} = {}) {
   const document = root.ownerDocument;
   const node = (tag, text) => {const n = document.createElement(tag); if (text !== undefined) n.textContent = text; return n;};
   const status = node('p', 'Preview · signing is not configured.'), body = node('section');
@@ -16,12 +17,17 @@ export async function mount(root, {enabled = false, boundary, identity: who, rea
   let bundle, r, admitted = [], busy = false;
   const pending = () => writer.store.get();
   const disable = () => body.querySelectorAll('button').forEach(button => button.disabled = true);
-  const settle = async result => {
+  const settle = async (result, recover = false) => {
     if (result?.state !== 'ACCEPTED') {status.textContent = 'Pending · receipt or read-back UNKNOWN. Use Recover receipt; do not sign again.'; return;}
     await refresh();
     const op = result.proposal.datums.find(d => d.p === NS + 'operationId')?.o.value;
-    if (!admitted.some(a => a.operationId === op && a.receiptIri === result.proof.receiptIri)) throw new Unknown('Accepted intent is not in the current reader view');
-    await writer.acknowledge(); await refresh();
+    const answer = admitted.find(a => a.operationId === op && a.receiptIri === result.proof.receiptIri);
+    if (!answer) throw new Unknown('Accepted intent is not in the current reader view');
+    if (r.settlement && answer.action === 'choose') {
+      await applySettlement({enabled: true, native: nativeSettlement, answer, ask: r, boundary: b, recover});
+      await writer.acknowledge(); await refresh();
+      status.textContent = 'Decision recorded on linked work · Ask closed.';
+    } else {await writer.acknowledge(); await refresh();}
   };
   const run = async operation => {
     if (busy) return;
@@ -39,6 +45,7 @@ export async function mount(root, {enabled = false, boundary, identity: who, rea
     body.querySelectorAll('[data-action]').forEach(button => button.disabled = busy || !!record || body.dataset.state !== 'WAITING');
     const recover = body.querySelector('[data-recover]'); if (recover) recover.disabled = busy || !record;
     const cancel = body.querySelector('[data-cancel]'); if (cancel) cancel.disabled = busy || record?.state !== 'PENDING';
+    const check = body.querySelector('[data-check]'); if (check) check.disabled = busy;
   }
   async function refresh() {
     const next = await read();
@@ -56,7 +63,8 @@ export async function mount(root, {enabled = false, boundary, identity: who, rea
       button.addEventListener('click', () => run(async () => {
         const bytes = new Uint8Array(32); crypto.getRandomValues(bytes);
         const operationId = await sha256(bytes);
-        const p = buildProposal({boundary: b, ask: r, freshItem: bundle.freshItem, signer: operator.signer, action: {operationId, action, optionLabel, comment: note.value}, now: now()});
+        if (r.settlement && action === 'choose' && (!nativeSettlement || typeof nativeSettlement.settle !== 'function' || typeof nativeSettlement.reconcile !== 'function')) throw new Unknown('Seeds settlement is not admitted');
+        const p = buildProposal({boundary: b, ask: r, freshItem: bundle.freshItem, ...(r.settlement ? {freshTarget: bundle.freshTarget} : {}), signer: operator.signer, action: {operationId, action, optionLabel, comment: note.value}, now: now()});
         status.textContent = 'Waiting for your authenticator. A lost response stays pending.';
         await settle(await writer.submit(p, r.expiresAt));
       }));
@@ -66,12 +74,20 @@ export async function mount(root, {enabled = false, boundary, identity: who, rea
     if (r.actions.includes('later')) addAction('Later', 'later');
     if (r.actions.includes('comment')) addAction('Add comment', 'comment');
     const recover = node('button', 'Recover receipt'); recover.dataset.recover = ''; recover.disabled = true;
-    recover.addEventListener('click', () => run(async () => settle(await writer.reconcile())));
+    recover.addEventListener('click', () => run(async () => settle(await writer.reconcile(), true)));
     const cancel = node('button', 'Cancel unsigned attempt'); cancel.dataset.cancel = ''; cancel.disabled = true;
     cancel.addEventListener('click', () => run(async () => {await writer.cancelUnsigned(); await refresh();}));
     body.append(recover, cancel);
+    if (r.settlement && view.state === 'ANSWERED') {
+      const check = node('button', 'Check linked ruling'); check.dataset.check = '';
+      check.addEventListener('click', () => run(async () => {
+        await applySettlement({enabled: true, native: nativeSettlement, answer: view.answer, ask: r, boundary: b, recover: true});
+        status.textContent = 'Decision recorded on linked work · Ask closed.';
+      }));
+      body.append(check);
+    }
     for (const comment of view.comments) body.append(node('p', `${comment.actor} · ${new Date(comment.recordedAt * 1000).toISOString()}: ${comment.text}`));
-    status.textContent = view.state === 'WAITING' ? 'Current request · no admitted decision.' : view.state === 'LATER' ? 'Later · retained in the visible Later state.' : `Answered · ${view.answer.actor} · ${new Date(view.answer.recordedAt * 1000).toISOString()}`;
+    status.textContent = view.state === 'WAITING' ? 'Current request · no admitted decision.' : view.state === 'LATER' ? 'Later · retained in the visible Later state.' : r.settlement ? 'Decision signed · linked work has not been confirmed.' : `Answered · ${view.answer.actor} · ${new Date(view.answer.recordedAt * 1000).toISOString()}`;
     await controls();
   }
   try {await refresh();}

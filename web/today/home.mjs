@@ -15,7 +15,8 @@ import {digest,logEntries} from './home-model.mjs';
 import {StatsClient} from './projection-metrics.mjs';
 import {heldReader} from './held/model.mjs';
 import {coverageParams,recentlyDeferred,deferredReader} from './recently-deferred/model.mjs';
-import {$,el,stamp,mark,unavailable,renderAsks,renderLater,renderPriorities,deployRows,tabs,renderOverview,setRecordReader,recordButton,cite} from './home-view.mjs';
+import {$,el,stamp,mark,unavailable,renderAsks,renderLater,renderPriorities,deployRows,tabs,renderOverview,setRecordReader,recordButton,cite,setAskDecisionAdapter} from './home-view.mjs';
+if(readerConfig.askDecisionsEnabled===true&&typeof readerConfig.askDecisionAdapter==='function')setAskDecisionAdapter(readerConfig.askDecisionAdapter);
 const state={asks:undefined,later:undefined,priorities:undefined,deploys:undefined,stats:undefined,held:undefined,deferred:undefined,watches:undefined,changes:undefined},checked={},reasons={};
 const now=()=>Date.now();
 const request=async(url,options={})=>{

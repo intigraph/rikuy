@@ -1,6 +1,6 @@
 import {Unknown, NS, RDF_TYPE, exact, text, integer, iri, hexId, utf8, sha256, base64url, unbase64url} from './value.mjs';
 import {scope, request, operationIri, proposal, canonicalProposal, decodeProposal, buildProposal} from './model.mjs';
-const admittedAnswers = new WeakSet();
+const admittedAnswers = new WeakMap();
 export function identity(value) {
   exact(value, ['signer', 'audience', 'origin', 'rpId', 'actor']);
   const result = {signer: text(value.signer, 1024), audience: text(value.audience, 256), origin: text(value.origin, 2048), rpId: text(value.rpId, 253), actor: text(value.actor, 256)};
@@ -50,6 +50,13 @@ export function readbackProof(observed, proof) {
   if (JSON.stringify(observed.attestedBy.map(x => x.s).sort()) !== JSON.stringify(subjects)) throw new Unknown('Conflicting answer provenance');
   return proof;
 }
+function answerProposal(r, b, signer, action) {
+  return buildProposal({boundary: b, ask: r, signer,
+    action: {operationId: action.operationId, action: action.action, optionLabel: action.optionLabel, comment: action.comment},
+    freshItem: {graph: b.itemGraph, seed: r.seed, revision: r.itemRevision, status: b.openStatus},
+    ...(r.settlement ? {freshTarget: {graph: b.itemGraph, seed: r.settlement.target, revision: r.settlement.targetRevision}} : {}),
+    now: r.expiresAt - 1});
+}
 export async function readAnswer(row, response, ask, boundary, who) {
   const b = scope(boundary), r = request(ask, b);
   exact(row, ['graph', 'subject', 'receiptIri', 'manifest']);
@@ -68,22 +75,22 @@ export async function readAnswer(row, response, ask, boundary, who) {
   const action = {operationId, action: scalar(NS + 'action', 'str'), optionLabel: scalar(NS + 'optionLabel', 'str', false), comment: scalar(NS + 'comment', 'str', false) ?? ''};
   // Reconstruct the entire permitted manifest, not just the field that the
   // renderer was studying: no omitted precondition or extra datum can pass.
-  const expected = buildProposal({boundary: b, ask: r, signer: p.signer, action,
-    freshItem: {graph: b.itemGraph, seed: r.seed, revision: r.itemRevision, status: b.openStatus}, now: r.expiresAt - 1});
+  const expected = answerProposal(r, b, p.signer, action);
   if (canonicalProposal(expected) !== row.manifest || values(RDF_TYPE).length !== 1) throw new Unknown('Invalid Deck manifest');
   if (!/^urn:quipu:attest:[0-9a-f]{64}$/.test(row.receiptIri)) throw new Unknown('Missing server provenance');
   const proof = await receiptProof(response, expected, who, row.receiptIri.slice('urn:quipu:attest:'.length));
   if (proof.expiresAt > r.expiresAt || proof.recordedAt >= r.expiresAt) throw new Unknown('Signed deadline exceeds the curated request deadline');
   const answer = Object.freeze({...action, requestId: r.id, seed: r.seed, revision: r.revision, ...proof});
-  admittedAnswers.add(answer);
+  admittedAnswers.set(answer, {request: JSON.stringify(r), boundary: JSON.stringify(b), proposal: canonicalProposal(p)});
   return answer;
 }
 export function disposition(answers, ask, boundary) {
-  const r = request(ask, boundary);
+  const b = scope(boundary), r = request(ask, b);
   if (!Array.isArray(answers) || answers.length > 100) throw new Unknown('Incomplete answer population');
   const operations = new Set(), comments = [], decisions = [];
   for (const answer of answers) {
-    if (!admittedAnswers.has(answer) || answer.requestId !== r.id || answer.seed !== r.seed || answer.revision !== r.revision) throw new Unknown('Unadmitted or foreign answer');
+    const admission = admittedAnswers.get(answer);
+    if (!admission || admission.request !== JSON.stringify(r) || admission.boundary !== JSON.stringify(b) || admission.proposal !== canonicalProposal(answer.proposal) || answer.requestId !== r.id || answer.seed !== r.seed || answer.revision !== r.revision) throw new Unknown('Unadmitted or foreign answer');
     if (operations.has(answer.operationId)) throw new Unknown('Duplicate operation in answer population');
     operations.add(answer.operationId);
     if (answer.comment !== '') comments.push({text: answer.comment, actor: answer.actor, recordedAt: answer.recordedAt, receiptIri: answer.receiptIri});

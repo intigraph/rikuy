@@ -1,6 +1,6 @@
 import {Unknown, NS, exact, iri, integer, text, utf8, sha256} from './value.mjs';
 import {scope, readRequest, decodeProposal} from './model.mjs';
-import {identity, readAnswer, receiptProof, readbackProof} from './evidence.mjs';
+import {identity, readAnswer, receiptProof, readbackProof, disposition} from './evidence.mjs';
 
 // Native provenance vocabulary identifier, fixed by the primitive's contract.
 // A configurable lookalike would turn existing answers into a false empty set.
@@ -113,11 +113,11 @@ export class DeckReader {
       const row = {graph: this.boundary.requestGraph, requestId, currentRevision: rows[0].revision, revisionIri: rows[0].revisionIri, manifest: rows[0].manifest, complete: true};
       readRequest(row, this.boundary); return row;
     };
-    const itemRow = async askValue => {
+    const itemRow = async (askValue, permitChanged = false) => {
       const items = await ask('item', {seed: askValue.seed});
       if (items.length !== 1) throw new Unknown('Item revision/status ambiguous');
       exact(items[0], ['revision', 'status']); integer(items[0].revision); iri(items[0].status);
-      if (items[0].revision !== askValue.itemRevision || items[0].status !== this.boundary.openStatus) throw new Unknown('Changed or closed item');
+      if (!permitChanged && (items[0].revision !== askValue.itemRevision || items[0].status !== this.boundary.openStatus)) throw new Unknown('Changed or closed item');
       return {graph: this.boundary.itemGraph, seed: askValue.seed, ...items[0]};
     };
     try {
@@ -132,9 +132,11 @@ export class DeckReader {
         creationBinding(await call('/graphs?graph=' + encodeURIComponent(graph)), expected);
       }
       const first = await requestRow(), askValue = readRequest(first, this.boundary);
-      const freshItem = await itemRow(askValue);
+      const freshItem = await itemRow(askValue, !!askValue.settlement);
+      const targetRequest = askValue.settlement ? {seed: askValue.settlement.target, itemRevision: askValue.settlement.targetRevision} : null;
+      const targetItem = targetRequest ? await itemRow(targetRequest, true) : null;
       const candidates = await ask('answers', {requestId, revision: askValue.revision});
-      const rows = [], operations = new Set();
+      const rows = [], admitted = [], operations = new Set();
       // At most two requests in flight; no fanout of one request per answer.
       for (const candidate of candidates) {
         exact(candidate, ['subject', 'receiptIri', 'manifest']);
@@ -142,7 +144,7 @@ export class DeckReader {
         operations.add(candidate.subject);
         const row = {graph: this.boundary.answerGraph, ...candidate};
         const receipt = await call('/attest/receipt', {nonce: candidate.receiptIri.slice('urn:quipu:attest:'.length)}, 131072);
-        await readAnswer(row, receipt, askValue, this.boundary, this.operator);
+        admitted.push(await readAnswer(row, receipt, askValue, this.boundary, this.operator));
         const proof = await receiptProof(receipt, decodeProposal(candidate.manifest), this.operator, candidate.receiptIri.slice('urn:quipu:attest:'.length));
         const [facts, links] = await Promise.all([ask('facts', {receiptIri: candidate.receiptIri}), ask('links', {receiptIri: candidate.receiptIri})]);
         const datums = facts.map(f => {
@@ -157,8 +159,16 @@ export class DeckReader {
       }
       const last = await requestRow();
       if (JSON.stringify(first) !== JSON.stringify(last)) throw new Unknown('Request changed during read');
-      if (JSON.stringify(freshItem) !== JSON.stringify(await itemRow(askValue))) throw new Unknown('Item changed during read');
-      return {complete: true, requestRow: last, freshItem, rows};
+      if (JSON.stringify(freshItem) !== JSON.stringify(await itemRow(askValue, !!askValue.settlement))) throw new Unknown('Item changed during read');
+      if (targetItem && JSON.stringify(targetItem) !== JSON.stringify(await itemRow(targetRequest, true))) throw new Unknown('Linked item changed during read');
+      if (askValue.settlement) {
+        const view = disposition(admitted, askValue, this.boundary);
+        // Historical signed choices remain readable after native settlement.
+        // This does not prove settlement or authorize another signature.
+        if (view.state !== 'ANSWERED' && (freshItem.revision !== askValue.itemRevision || freshItem.status !== this.boundary.openStatus || targetItem.revision !== targetRequest.itemRevision)) throw new Unknown('Changed item without an admitted choice');
+      }
+      return {complete: true, requestRow: last, freshItem, rows,
+        ...(targetItem ? {freshTarget: {graph: targetItem.graph, seed: targetItem.seed, revision: targetItem.revision}} : {})};
     } finally {
       clearTimeout(timer); ctl.signal.removeEventListener('abort', aborted); ctl.abort(); this.busy = false;
     }

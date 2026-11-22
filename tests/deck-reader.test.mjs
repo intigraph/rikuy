@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import {DeckReader, readerDefinitions, renderReaderQuery, readerTransport, NATIVE_PROVENANCE_NS} from '../web/deck/reader.mjs';
 import {requestPublication, revisionIri} from '../web/deck/model.mjs';
 import {sha256, utf8} from '../web/deck/value.mjs';
-import {ask, boundary, who, evidence} from './deck-fixture.mjs';
+import {ask, boundary, who, evidence, make} from './deck-fixture.mjs';
 
 const provenance = NATIVE_PROVENANCE_NS;
-async function fixture({change = value => value, deadlineMs = 6000} = {}) {
-  const definitions = readerDefinitions(boundary, provenance), ev = await evidence();
+async function fixture({change = value => value, deadlineMs = 6000, requestValue = ask} = {}) {
+  const definitions = readerDefinitions(boundary, provenance), ev = await evidence(requestValue.settlement ? make({ask: requestValue, freshTarget: {graph: boundary.itemGraph, seed: requestValue.settlement.target, revision: requestValue.settlement.targetRevision}}) : make());
   const queryHashes = Object.fromEntries(await Promise.all(Object.entries(definitions).map(async ([k, v]) => [k, await sha256(utf8(JSON.stringify(v)))])));
   const registrations = [boundary.requestGraph, boundary.answerGraph, boundary.itemGraph].map((iri, i) => ({iri, creation: {actor: 'fixture-curator', timestamp: '2026-10-25T00:00:00Z'}, g: i + 1}));
   let active = 0, peak = 0;
@@ -23,8 +23,8 @@ async function fixture({change = value => value, deadlineMs = 6000} = {}) {
         assert.equal(url.pathname, '/ask');
         role = Object.keys(definitions).find(k => definitions[k].name === options.body.name);
         const rows = {
-          request: [{revision: ask.revision, revisionIri: revisionIri(ask), manifest: requestPublication(ask, boundary).datums[1].o.value}],
-          item: [{revision: ask.itemRevision, status: boundary.openStatus}],
+          request: [{revision: requestValue.revision, revisionIri: revisionIri(requestValue), manifest: requestPublication(requestValue, boundary).datums[1].o.value}],
+          item: [{revision: requestValue.settlement && options.body.params.seed === requestValue.settlement.target ? requestValue.settlement.targetRevision : requestValue.itemRevision, status: boundary.openStatus}],
           answers: [{subject: ev.row.subject, receiptIri: ev.row.receiptIri, manifest: ev.row.manifest}],
           facts: ev.readback.datums.map(d => ({s: d.s, p: d.p, kind: d.o.kind, value: String(d.o.value)})),
           links: ev.readback.attestedBy.map(({s}) => ({s}))
@@ -132,4 +132,20 @@ test('streaming transport caps bytes and restricts origin, methods, redirects an
   for (const response of [new Response('denied', {status: 403}), new Response('{}', {headers: {'content-type': 'text/html'}}), new Response(new Uint8Array([255]), {headers: {'content-type': 'application/json'}})]) {
     await assert.rejects(() => readerTransport('https://reader.example.test/', async () => response)('https://reader.example.test/ask', {body: {}, signal: ctl.signal, cap: 100}));
   }
+});
+
+test('bound Ask reader brackets linked revision and retains historical choices after closure', async () => {
+  const r = {...ask, settlement: {target: boundary.itemPrefix + 'linked', targetRevision: 12}};
+  const f = await fixture({requestValue: r});
+  assert.deepEqual((await f.reader.read(r.id)).freshTarget, {graph: boundary.itemGraph, seed: r.settlement.target, revision: 12});
+  assert.equal(f.calls.filter(c => c.body?.params?.seed === r.settlement.target).length, 2);
+  const closed = await fixture({requestValue: r, change: (v, c) => c.role === 'item' ? {...v, rows: [{revision: c.options.body.params.seed === r.seed ? 8 : 13, status: 'urn:closed'}]} : v});
+  const observed = await closed.reader.read(r.id);
+  assert.equal(observed.freshItem.revision, 8);
+  assert.equal(observed.rows.length, 1, 'historical receipt readable, not settlement proof');
+  const noChoice = await fixture({requestValue: r, change: (v, c) => c.role === 'answers' ? {...v, rows: [], count: 0} : c.role === 'item' ? {...v, rows: [{revision: 99, status: boundary.openStatus}]} : v});
+  await assert.rejects(() => noChoice.reader.read(r.id));
+  let count = 0;
+  const race = await fixture({requestValue: r, change: (v, c) => c.role === 'item' && c.options.body.params.seed === r.settlement.target && ++count === 2 ? {...v, rows: [{revision: 13, status: boundary.openStatus}]} : v});
+  await assert.rejects(() => race.reader.read(r.id));
 });

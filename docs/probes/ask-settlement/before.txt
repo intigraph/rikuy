@@ -1,0 +1,3 @@
+Base e0f6f17, same typed settlement request: Unknown or missing field
+Candidate, same request accepted: target=https://example.test/item/linked, revision=12
+Synthetic source request only; no production query or write.

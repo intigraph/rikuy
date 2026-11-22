@@ -27,6 +27,7 @@ WHERE {
   GRAPH ${term(b.itemGraph)} {
     ${unique(r.seed, b.revisionPredicate, number(r.itemRevision), 'otherItemRevision')}
     ${unique(r.seed, b.statusPredicate, term(b.openStatus), 'otherStatus')}
+    ${r.settlement ? unique(r.settlement.target, b.revisionPredicate, number(r.settlement.targetRevision), 'otherTargetRevision') : ''}
   }
   ${old ? `GRAPH ${term(b.requestGraph)} { ${head} ${retained} }` : `FILTER NOT EXISTS { GRAPH ${term(b.requestGraph)} { ${term(r.id)} ${term(current)} ?head . } }`}
   FILTER NOT EXISTS { GRAPH ${term(b.requestGraph)} { ${term(revisionIri(r))} ?occupiedPredicate ?occupiedValue . } }

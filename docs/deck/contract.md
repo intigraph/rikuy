@@ -43,6 +43,8 @@ when serializing proposals and server-issued challenge bytes.
 Choose and Later fill the decided slot; comment does not. Comment text is
 retained exactly, including newlines. A comment requires nonblank text.
 The underlying item is neither closed nor revised by these answer facts.
+An optional [Seeds settlement binding](settlement.md) adds the linked revision
+to the signed intent and invokes a separately admitted native Seeds transition.
 The reader projects the answer and visible comment from the answer graph;
 existing Brief/Seeds consumer integration is still owed.
 
