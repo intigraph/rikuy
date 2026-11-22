@@ -57,7 +57,7 @@ export function logEntries(deploys) {
 export function decisionView(view){
   const created=row=>Number.isFinite(Date.parse(row.created))?Date.parse(row.created):Infinity;
   const ranked=[...(view?.rows||[])].sort((a,b)=>a.priority-b.priority||created(a)-created(b)||a.id.localeCompare(b.id));
-  const featured=ranked.filter(row=>/^ASK Stiwi\b/i.test(row.title)).slice(0,3);
+  const featured=ranked.filter(row=>row.kind==='ask'||/^ASK Stiwi\b/i.test(row.title)).slice(0,3);
   const ids=new Set(featured.map(row=>row.id));
   return {featured,remaining:ranked.filter(row=>!ids.has(row.id)),total:ranked.length};
 }

@@ -1,6 +1,6 @@
 import {queryRows,validatePanel,Unknown,item as sourceItem} from '../knowledge/model.mjs';
 // Needs-you (aegis-zmk, Stiwi bsf8 rule 2): EVERY open ASK seed, query-derived.
-// An ASK is a seed with a human-gate label, or one titled "ASK Stiwi". No page cut:
+// An ASK is an explicit ask, a seed with a human-gate label, or an ASK title. No page cut:
 // a seed past an arbitrary twentieth was a seed Stiwi never saw.
 const TITLE='ASK Stiwi',MAX_UNLABELLED=25;
 const text=v=>typeof v==='string'?v.trim():'';
@@ -9,6 +9,7 @@ function cards(facts){
   for(const r of facts){
     let entry=seeds.get(r.item);
     if(!entry){entry={...r,gates:[],options:'',rec:''};seeds.set(r.item,entry);}
+    for(const key of ['kind','unblocks','default','expires'])if(entry[key]!==r[key])throw new Unknown('Conflicting Ask metadata');
     entry.gates.push(r.gate);entry.options||=text(r.options);entry.rec||=text(r.rec);
   }
   return [...seeds.values()].sort((a,b)=>a.priority-b.priority||(a.rank??Infinity)-(b.rank??Infinity)||a.id.localeCompare(b.id));

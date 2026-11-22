@@ -62,7 +62,7 @@ export function renderAsks(view,reason,at){
   $('h-asks').textContent='Needs you';
   if(!view){unavailable(top,reason,at);unavailable(root,reason,at);mark($('asks-status')).textContent='Live asks · count unavailable';$('ask-rest-count').textContent='';$('h-remaining').textContent='Other decisions';return;}
   const decisions=decisionView(view);
-  mark($('asks-status')).textContent=`${decisions.total} asks · every open human-gated or “ASK Stiwi” seed${view.incomplete?' · coverage incomplete':''} · checked ${stamp(at)}`;
+  mark($('asks-status')).textContent=`${decisions.total} asks · every active Ask, human-gated or “ASK Stiwi” seed${view.incomplete?' · coverage incomplete':''} · checked ${stamp(at)}`;
   cite($('asks-status'),'./asks/query.json');
   cite($('asks-status'),'./asks/titles.json','Title query');
   const cardFor=(row,index)=>{
@@ -73,6 +73,14 @@ export function renderAsks(view,reason,at){
     if(row.options)details.append(el('p','OPTIONS: '+row.options.split(/\bREC:/i)[0].trim(),'options'));
     if(row.rec)details.append(el('p','REC: '+row.rec,'rec'));
     if(!row.options&&!row.rec)details.append(el('p','Choices have not been recorded.','note'));
+    if(row.kind==='ask'){
+      const metadata=el('dl',undefined,'ask-metadata');
+      for(const[label,value]of [['If unanswered',row.default],['Reply by',row.expires]])metadata.append(el('dt',label),el('dd',value));
+      details.append(metadata);
+      const linked=row.unblocks.split('/').at(-1);
+      const linkedButton=recordButton(linked,'Work awaiting this decision');linkedButton.textContent='Open linked work';
+      details.append(el('p','Unblocks '+linked),linkedButton);
+    }
     details.append(el('div',[row.id,'P'+row.priority,row.status,'age '+(row.created?age(row.created):'unknown'),row.owner?.split('/').at(-1)||'unassigned'].join(' · '),'meta'));
     details.addEventListener('toggle',()=>{details.open?opened.add(row.id):opened.delete(row.id);root.dataset.openIds=JSON.stringify([...opened]);});
     card.append(details,recordButton(row.id,row.title));return card;

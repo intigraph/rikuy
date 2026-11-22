@@ -27,7 +27,9 @@ export function mountRecord(root,{read,now=()=>Date.now()}={}){
       status.dataset.stale=String(record.asOf?.stale===true);
       status.dataset.updated=at||'';
       const metadata=node('dl',undefined,'record-meta');
-      for(const [label,value]of [['Status',record.status],['Owner',record.owner],['Created',record.created],['Updated',record.modified]])metadata.append(node('dt',label),node('dd',value||'Not recorded'));
+      const fields=[['Status',record.status],['Owner',record.owner],['Created',record.created],['Updated',record.modified]];
+      if(record.kind==='ask')fields.push(['If unanswered',record.default],['Reply by',record.expires]);
+      for(const [label,value]of fields)metadata.append(node('dt',label),node('dd',value||'Not recorded'));
       const description=node('p',record.description||'No description has been recorded.','record-description');
       const comments=node('section');comments.append(node('h3','Recent comments'));
       if(!record.comments.length)comments.append(node('p','No comments in this record.'));
