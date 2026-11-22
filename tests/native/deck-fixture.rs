@@ -10,6 +10,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     std::io::stdin().read_to_string(&mut raw)?;
     let v: J = serde_json::from_str(&raw)?;
     let mut s = Store::open(&a[1])?;
+    // Explicit vocabulary for this disposable fixture, matching the reader's
+    // native provenance contract. No deployment/default namespace is selected.
+    s.set_base_ns("http://aegis.gastown.local/ontology/");
     let out = match a[2].as_str() {
         "seed" => {
             let g = s.graph_create(v["graph"].as_str().unwrap())?;

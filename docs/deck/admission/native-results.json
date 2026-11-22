@@ -1,0 +1,138 @@
+{
+  "candidate": "quipu 0.19.1\ngit_sha: 6c4765c2e8063f7a7ac64e97b553e48df30df413\ngit_dirty: true",
+  "native_library_sha256": "0d7b346d9b69d6622b6a1e8d8dd8dc9a762386faae52f701db6859ed0b37fb96",
+  "helper_source_sha256": "2f143dd5c7ffdd6acafd1ac86cbdca131c60f97d543e95acfc3bd83c30202ae6",
+  "fixture": "Disposable stores; generated software keys kept only in memory; local native methods and actual operator CLI; no HTTP/service/real credential or production profile union",
+  "results": [
+    {
+      "case": "choose",
+      "state": "ANSWERED",
+      "canonical_native_match": true,
+      "native_verified": true,
+      "replay_no_mutation": true
+    },
+    {
+      "case": "choose-stored-reader",
+      "native_registered_queries": true,
+      "graph_creation_bound": true,
+      "typed_facts_and_provenance": true
+    },
+    {
+      "case": "later",
+      "state": "LATER",
+      "canonical_native_match": true,
+      "native_verified": true,
+      "replay_no_mutation": true
+    },
+    {
+      "case": "later-stored-reader",
+      "native_registered_queries": true,
+      "graph_creation_bound": true,
+      "typed_facts_and_provenance": true
+    },
+    {
+      "case": "comment",
+      "state": "WAITING",
+      "canonical_native_match": true,
+      "native_verified": true,
+      "replay_no_mutation": true
+    },
+    {
+      "case": "comment-stored-reader",
+      "native_registered_queries": true,
+      "graph_creation_bound": true,
+      "typed_facts_and_provenance": true
+    },
+    {
+      "case": "bound-choose",
+      "state": "ANSWERED",
+      "canonical_native_match": true,
+      "native_verified": true,
+      "replay_no_mutation": true
+    },
+    {
+      "case": "bound-choose-stored-reader",
+      "native_registered_queries": true,
+      "graph_creation_bound": true,
+      "typed_facts_and_provenance": true
+    },
+    {
+      "case": "forged",
+      "refused_no_mutation": true,
+      "nonce_and_counter_unspent": true
+    },
+    {
+      "case": "wrong-origin",
+      "refused_no_mutation": true,
+      "nonce_and_counter_unspent": true
+    },
+    {
+      "case": "item-revision",
+      "refused_no_mutation": true,
+      "nonce_and_counter_unspent": true
+    },
+    {
+      "case": "closed-item",
+      "refused_no_mutation": true,
+      "nonce_and_counter_unspent": true
+    },
+    {
+      "case": "request-revision",
+      "refused_no_mutation": true,
+      "nonce_and_counter_unspent": true
+    },
+    {
+      "case": "target-revision",
+      "refused_no_mutation": true,
+      "nonce_and_counter_unspent": true
+    },
+    {
+      "case": "missing-expectation-0",
+      "native_verified": true,
+      "deck_reader_refused": true
+    },
+    {
+      "case": "missing-expectation-1",
+      "native_verified": true,
+      "deck_reader_refused": true
+    },
+    {
+      "case": "missing-expectation-2",
+      "native_verified": true,
+      "deck_reader_refused": true
+    },
+    {
+      "case": "missing-expectation-3",
+      "native_verified": true,
+      "deck_reader_refused": true
+    },
+    {
+      "case": "missing-expectation-4",
+      "native_verified": true,
+      "deck_reader_refused": true
+    },
+    {
+      "case": "missing-linked-expectation",
+      "native_verified": true,
+      "deck_reader_refused": true
+    },
+    {
+      "case": "missing-comment-floor",
+      "native_verified": true,
+      "deck_reader_refused": true,
+      "limitation": "Native post-state admission excludes MinCount floors; full shape validation and client/reader constraints remain distinct"
+    },
+    {
+      "case": "loaded-action-value-constraint",
+      "refused_no_mutation": true
+    },
+    {
+      "case": "ordinary-graph-and-other-request-revision",
+      "deck_reader_refused": true
+    }
+  ],
+  "quipu_source_revision": "97d1a973e843e0fb1f38b269367ead878ddb9e19",
+  "quipu_cli_sha256": "52292342eca2fa987c0c5e4fe63c365434d075924d20fd3a29a24e369e1c062e",
+  "serde_json_sha256": "96ed87b6fc4b29fd7594033e1532f669daab96a90c43f97ce0929b7530f79be9",
+  "scope": "offline fixture only; no production endpoints/credentials/keys/enrollment/grants; memory-only ephemeral test keys"
+}

@@ -1,0 +1,165 @@
+{
+  "schema": "rikuy-ask-preparation/v1",
+  "mode": "PREPARATION_ONLY",
+  "pins": [
+    {
+      "id": "source.rikuy",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "source.seeds",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "artifact.nativeAdapter",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "instance.storeLineage",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "instance.requestGraph",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "instance.answerGraph",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "instance.itemGraph",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "key.curatorCredentialLocation",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "key.settlerCredentialLocation",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "key.humanSigner",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "key.humanFingerprint",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "grant.curator",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "grant.settler",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "grant.humanSigner",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "operator.enrollmentLane",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "operator.custodyCurator",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "operator.custodySettler",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "operator.trustedOrigin",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "operator.wrongOriginCors",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "operator.humanCeremony",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "cost.requestReader",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "cost.itemReader",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "cost.answerReaders",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    },
+    {
+      "id": "cost.boundAskProfile",
+      "state": "UNKNOWN",
+      "value": null,
+      "evidence": "Attach exact reviewed nonsecret evidence in the private deployment packet."
+    }
+  ],
+  "rollback": {
+    "disable": "Disable only admitted consumers through reviewed configuration.",
+    "revoke": "Revoke exact grants and binding through qualified owner lane.",
+    "retain": "Retain all pending custody, receipts and audit history.",
+    "verify": "Demonstrate revocation refusal before declaring rollback complete."
+  },
+  "acceptance": {
+    "smoke": "Real human choice, native receipt, both-item atomic read-back and audit.",
+    "forgery": "Native altered-signature and wrong-origin refusal without side effects.",
+    "replay": "Native replay refusal with exactly one original ruling.",
+    "staleAsk": "Concurrent Ask revision rejects the entire batch.",
+    "staleTarget": "Concurrent linked revision rejects the entire batch.",
+    "lostReply": "Read-only recovery after an uncertain send, no automatic resend.",
+    "revocation": "Exact grant/binding revocation refuses the former writer."
+  }
+}
