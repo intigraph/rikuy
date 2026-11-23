@@ -1,0 +1,14 @@
+Script started on 2026-11-22 21:02:47-05:00 [COMMAND="python3 docs/probes/browser-check-no-install/demo.py" <not executed on terminal>]
+base 1ad4a395
+Input: no override; empty cache; inert package-command fixtures.
+exit=99
+npm ci --ignore-scripts
+npx --no-install playwright install --with-deps chromium
+
+candidate
+Input: no override; empty cache; inert package-command fixtures.
+exit=1
+npm ci --ignore-scripts
+Browser unavailable: set RIKUY_BROWSER_EXECUTABLE to an installed browser or provision Playwright Chromium before running tests. Browser checks never install system packages.
+
+Script done on 2026-11-22 21:02:48-05:00 [COMMAND_EXIT_CODE="0"]

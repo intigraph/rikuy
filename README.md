@@ -129,6 +129,11 @@ just test
 just ci
 ```
 
+Browser checks require an installed browser: set `RIKUY_BROWSER_EXECUTABLE`
+to its executable, or provision Playwright Chromium separately. Local test
+commands never install browser dependencies or system packages. Hosted CI
+provisions its disposable runner explicitly before running tests.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md).
 
 ## 📜 License
