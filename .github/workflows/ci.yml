@@ -14,6 +14,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Provision browser on the disposable CI runner
+        run: |
+          npm ci --ignore-scripts
+          npx --no-install playwright install --with-deps chromium
+      - run: python3 scripts/test-browser-check.py
       - run: npm run ci
 
   repository-pendant-source:
