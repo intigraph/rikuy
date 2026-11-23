@@ -8,7 +8,7 @@
       "source": "README.md",
       "subject": "http://aegis.gastown.local/ontology/doc/rikuy/README.md#why-you-would-want-it",
       "summary": "Rikuy presents source-bound status, graph snapshots, watches and decision client surfaces in a static browser brief. It is not a separate knowledge store.",
-      "source_sha256": "65458d68e7e34031a8ca804ffd455c653f6de393004409896dcec2623c73bce2",
+      "source_sha256": "7eef1b5e3b282d33e5873501cef9295c2741fb42c76f40483c0be337a5d2ec10",
       "type": "Concept"
     },
     {
@@ -30,7 +30,7 @@
       "source": "README.md",
       "subject": "http://aegis.gastown.local/ontology/doc/rikuy/README.md#install",
       "summary": "The source installer builds the current public source snapshot, records its revision and package version, and copies only static output. It configures no server, credentials or live connection; a versioned release package and checksum manifest remain unavailable.",
-      "source_sha256": "65458d68e7e34031a8ca804ffd455c653f6de393004409896dcec2623c73bce2",
+      "source_sha256": "7eef1b5e3b282d33e5873501cef9295c2741fb42c76f40483c0be337a5d2ec10",
       "properties": {
         "interfaceKind": "file-format",
         "publicName": "Static dist directory"
@@ -59,7 +59,7 @@
       "source": "README.md",
       "subject": "http://aegis.gastown.local/ontology/doc/rikuy/README.md",
       "summary": "Start with the static-client overview and synthetic demo; demo success does not prove admitted live reads or signing enrollment.",
-      "source_sha256": "65458d68e7e34031a8ca804ffd455c653f6de393004409896dcec2623c73bce2",
+      "source_sha256": "7eef1b5e3b282d33e5873501cef9295c2741fb42c76f40483c0be337a5d2ec10",
       "properties": {
         "startHereOrder": 1,
         "glossaryTerm": "https://scbrown.github.io/quechua/ns#Decision"
@@ -80,7 +80,7 @@
       "source": "README.md",
       "subject": "http://aegis.gastown.local/ontology/doc/rikuy/README.md#before-you-start",
       "summary": "Confirm runtime and admitted read requirements; keep credentials server-side and source candidates disabled until their own acceptance.",
-      "source_sha256": "65458d68e7e34031a8ca804ffd455c653f6de393004409896dcec2623c73bce2",
+      "source_sha256": "7eef1b5e3b282d33e5873501cef9295c2741fb42c76f40483c0be337a5d2ec10",
       "properties": {
         "startHereOrder": 3
       }
