@@ -57,3 +57,32 @@ Retain the accepted receipt, every uncertain intent and the audit history during
 rollback; disable only the admitted consumers and revoke exact grants through
 the qualified owner lane. No runtime adapter, credential, graph, grant, device,
 service, timer or production profile is selected or activated by this source.
+
+## Native loopback origin controls
+
+The origin qualification starts a SHA-pinned native server with a disposable
+store, private temporary HOME, synthetic local bearer and an explicit HTTPS
+origin allowlist. It binds only loopback, makes no production requests and
+performs no enrollment, grant or publication. The reported native source stamp
+must match the supplied source revision and report a clean build.
+
+```sh
+QUIPU_SERVER=/absolute/pinned/quipu-server \
+QUIPU_SERVER_SHA256=ACTUAL_64_HEX_DIGEST \
+QUIPU_SOURCE_SHA=ACTUAL_40_HEX_SOURCE_REVISION \
+DECK_TRUSTED_ORIGIN=https://brief.example \
+node scripts/qualify-deck-origin.mjs
+```
+
+The actual HTTP preflight controls cover trusted, foreign and `null` origins
+on the reader and challenge routes. A positive health response admits only the
+trusted origin to browser code. Foreign-origin health remains an ordinary HTTP
+response without CORS admission: CORS governs browser exposure, not server
+access or mutation authority. No wildcard headers or credentialed browser
+requests are enabled. Native signature origin verification remains a separate
+control in the offline signing qualification; these preflight checks do not
+prove enrollment, production TLS/device trust or a production allowlist apply.
+
+Keep the real origin and deployment admission evidence in the private packet.
+The public example above is an identifier for an isolated rehearsal. The
+listener has a 60-second kill deadline and removes its fixture after exit.
