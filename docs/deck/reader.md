@@ -73,3 +73,16 @@ explicit local Playwright installation and Chrome:
 ```sh
 PLAYWRIGHT_MODULE=/path/to/playwright node scripts/qualify-deck-reader-browser.cjs
 ```
+
+The item definition is `rikuy_deck_item_v2`. It bounds each subject/predicate
+lookup to three rows before joining, then retains the three-row outer overflow
+sentinel. Multiple revisions or statuses remain visible and refuse; this does
+not aggregate or pick a preferred value. The status is projected as a full IRI
+string so a server's namespace compaction cannot change the reader's identity
+comparison. A non-IRI status becomes an invalid marker rather than disappearing,
+so an extra malformed value still makes the item ambiguous.
+
+The previous version remains a distinct registry name. A deployment must admit
+the new exact definition/hash and measured cost; source delivery does not replace
+an existing protected definition or enable the reader. Native qualification also
+checks full status identity, visible malformed extra status and revision overflow.
