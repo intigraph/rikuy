@@ -1,0 +1,167 @@
+{
+  "candidate": "quipu 0.19.1\ngit_sha: 97d1a973e843e0fb1f38b269367ead878ddb9e19\ngit_dirty: false",
+  "native_library_sha256": "e28895e103b2040dfab9180bc885d54e2a52522b6cfb31348a4258317a78cd3a",
+  "helper_source_sha256": "2f143dd5c7ffdd6acafd1ac86cbdca131c60f97d543e95acfc3bd83c30202ae6",
+  "fixture": "Disposable stores; generated software keys kept only in memory; local native methods and actual operator CLI; loopback HTTPS process transport plus local native methods/operator CLI; no production endpoint, real credential or production profile union",
+  "results": [
+    {
+      "case": "choose",
+      "state": "ANSWERED",
+      "canonical_native_match": true,
+      "native_verified": true,
+      "replay_no_mutation": true
+    },
+    {
+      "case": "choose-stored-reader",
+      "native_registered_queries": true,
+      "graph_creation_bound": true,
+      "typed_facts_and_provenance": true
+    },
+    {
+      "case": "later",
+      "state": "LATER",
+      "canonical_native_match": true,
+      "native_verified": true,
+      "replay_no_mutation": true
+    },
+    {
+      "case": "later-stored-reader",
+      "native_registered_queries": true,
+      "graph_creation_bound": true,
+      "typed_facts_and_provenance": true
+    },
+    {
+      "case": "comment",
+      "state": "WAITING",
+      "canonical_native_match": true,
+      "native_verified": true,
+      "replay_no_mutation": true
+    },
+    {
+      "case": "comment-stored-reader",
+      "native_registered_queries": true,
+      "graph_creation_bound": true,
+      "typed_facts_and_provenance": true
+    },
+    {
+      "case": "bound-choose",
+      "state": "ANSWERED",
+      "canonical_native_match": true,
+      "native_verified": true,
+      "replay_no_mutation": true
+    },
+    {
+      "case": "seeds-native-process-atomic-settlement",
+      "real_receipt_and_process": true,
+      "backend": "disposable in-memory Quipu",
+      "closed_only_ask": true,
+      "one_ruling": true,
+      "durable_reservation": true,
+      "wrong_binding_no_write": true,
+      "reconciliation_no_write": true,
+      "limitation": "Does not qualify production root deployment selection or remote scoped writer grant"
+    },
+    {
+      "case": "native-verifier-process-tls",
+      "native_store_dispatch": true,
+      "private_pipe": true,
+      "full_binding": true,
+      "unknown_ca_refused": true,
+      "forged_input_before_network": true,
+      "writer_calls": 0
+    },
+    {
+      "case": "native-process-verifier",
+      "actual_native_receipt": true,
+      "full_binding": true,
+      "wrong_target_and_replaced_graph_refused": true,
+      "caller_verified_flag_refused": true
+    },
+    {
+      "case": "bound-choose-stored-reader",
+      "native_registered_queries": true,
+      "graph_creation_bound": true,
+      "typed_facts_and_provenance": true
+    },
+    {
+      "case": "forged",
+      "refused_no_mutation": true,
+      "nonce_and_counter_unspent": true
+    },
+    {
+      "case": "wrong-origin",
+      "refused_no_mutation": true,
+      "nonce_and_counter_unspent": true
+    },
+    {
+      "case": "item-revision",
+      "refused_no_mutation": true,
+      "nonce_and_counter_unspent": true
+    },
+    {
+      "case": "closed-item",
+      "refused_no_mutation": true,
+      "nonce_and_counter_unspent": true
+    },
+    {
+      "case": "request-revision",
+      "refused_no_mutation": true,
+      "nonce_and_counter_unspent": true
+    },
+    {
+      "case": "target-revision",
+      "refused_no_mutation": true,
+      "nonce_and_counter_unspent": true
+    },
+    {
+      "case": "missing-expectation-0",
+      "native_verified": true,
+      "deck_reader_refused": true
+    },
+    {
+      "case": "missing-expectation-1",
+      "native_verified": true,
+      "deck_reader_refused": true
+    },
+    {
+      "case": "missing-expectation-2",
+      "native_verified": true,
+      "deck_reader_refused": true
+    },
+    {
+      "case": "missing-expectation-3",
+      "native_verified": true,
+      "deck_reader_refused": true
+    },
+    {
+      "case": "missing-expectation-4",
+      "native_verified": true,
+      "deck_reader_refused": true
+    },
+    {
+      "case": "missing-linked-expectation",
+      "native_verified": true,
+      "deck_reader_refused": true
+    },
+    {
+      "case": "missing-comment-floor",
+      "native_verified": true,
+      "deck_reader_refused": true,
+      "limitation": "Native post-state admission excludes MinCount floors; full shape validation and client/reader constraints remain distinct"
+    },
+    {
+      "case": "loaded-action-value-constraint",
+      "refused_no_mutation": true
+    },
+    {
+      "case": "ordinary-graph-and-other-request-revision",
+      "deck_reader_refused": true
+    },
+    {
+      "case": "bounded-item-query-v2",
+      "full_status_iri": true,
+      "invalid_extra_status_visible": true,
+      "revision_overflow_refused": true
+    }
+  ]
+}

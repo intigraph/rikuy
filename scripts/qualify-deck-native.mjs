@@ -1,14 +1,17 @@
 // # arming: agent-invoked explicit disposable qualification; no installed/default store.
-import {mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
+import {mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join, dirname, resolve} from 'node:path';
-import {execFileSync} from 'node:child_process';
+import {execFileSync, execFile} from 'node:child_process';
+import {createServer} from 'node:https';
 import {createHash, generateKeyPairSync, sign} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {NS} from '../web/deck/value.mjs';
 import {buildProposal, canonicalProposal, operationIri, requestPublication, readRequest, revisionIri} from '../web/deck/model.mjs';
 import {admittedChallenge, readAnswer, disposition, readbackProof} from '../web/deck/evidence.mjs';
 import {DeckReader, readerDefinitions, readerRows, NATIVE_PROVENANCE_NS} from '../web/deck/reader.mjs';
+import {verifySeedsAnswer} from './admission/verify-seeds-answer.mjs';
+import {settlementBinding} from '../web/deck/settlement.mjs';
 import {nativeLibraries} from './admission/native-libraries.mjs';
 const cli = process.env.QUIPU_CLI, artifacts = process.env.QUIPU_ARTIFACTS;
 if (!cli || !artifacts) throw Error('Explicit candidate QUIPU_CLI and fresh QUIPU_ARTIFACTS JSONL required');
@@ -106,7 +109,7 @@ try {
     for (const def of Object.values(definitions)) command(state.db, 'query-load', def);
     const registrations = [boundary.requestGraph, boundary.answerGraph, boundary.itemGraph].map(graph => {
       const metadata = command(state.db, 'graphs', {graph}).graphs[0];
-      return {iri: graph, creation: metadata.creation};
+      return {iri: graph, g: metadata.g, creation: metadata.creation};
     });
     // Real stored-query rendering/execution, native point receipts and registry;
     // synthetic transport dispatch only, with no HTTP or production endpoint.
@@ -116,6 +119,73 @@ try {
     }});
     const observed = await reader.read(state.r.id);
     assert.equal(observed.rows.length, 1);
+    if (index === 3) {
+      const binding = settlementBinding(answer, state.r, boundary);
+      const profile = {endpoint: 'https://reader.example.test/', storeId: state.who.audience, boundary, operator: state.who, queryHashes, registrations};
+      const nativeRequest = async (address, {body}) => {
+        const url = new URL(address);
+        return command(state.db, url.pathname === '/graphs' ? 'graphs' : url.pathname === '/ask' ? 'ask' : 'receipt', url.pathname === '/graphs' ? {graph: url.searchParams.get('graph')} : body);
+      };
+      const dto = await verifySeedsAnswer({binding, profile, request: nativeRequest, signal: new AbortController().signal});
+      assert.equal(dto.choice, 'Yes'); assert.equal(dto.binding.target_revision, 12);
+      assert.equal(dto.actor, state.who.actor); assert.equal(dto.evidence.receipt_iri, binding.receipt);
+      await assert.rejects(verifySeedsAnswer({binding: {...binding, targetRevision: 13}, profile, request: nativeRequest}));
+      await assert.rejects(verifySeedsAnswer({binding: {...binding, verified: true}, profile, request: nativeRequest}));
+      const replaced = structuredClone(profile); replaced.registrations[0].g++;
+      await assert.rejects(verifySeedsAnswer({binding, profile: replaced, request: nativeRequest}));
+      // Exercise the separately spawned executable over authenticated TLS.
+      // The fixture dispatches to the real native store helper, never a caller
+      // supplied verified response. The ephemeral TLS private key stays in RAM.
+      const tlsKey = generateKeyPairSync('rsa', {modulusLength: 2048}).privateKey.export({type: 'pkcs8', format: 'pem'});
+      const certificate = execFileSync('python3', ['-c', "import subprocess,sys; sys.stdout.buffer.write(subprocess.run(['openssl','req','-new','-x509','-key','/dev/stdin','-days','1','-subj','/CN=localhost','-addext','subjectAltName=DNS:localhost'],input=sys.stdin.buffer.read(),stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=True).stdout)"], {input: tlsKey, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe']});
+      let calls = 0;
+      const server = createServer({key: tlsKey, cert: certificate}, async (req, res) => {
+        try {
+          const url = new URL(req.url, 'https://localhost');
+          const verb = {'/graphs': 'graphs', '/ask': 'ask', '/attest/receipt': 'receipt'}[url.pathname];
+          if (!verb) {res.writeHead(404).end(); return;}
+          const parts = []; let length = 0;
+          for await (const part of req) {length += part.length; if (length > 65536) throw Error('Bound'); parts.push(part);}
+          const body = verb === 'graphs' ? {graph: url.searchParams.get('graph')} : JSON.parse(Buffer.concat(parts));
+          calls++;
+          res.writeHead(200, {'content-type': 'application/json'}).end(JSON.stringify(command(state.db, verb, body)));
+        } catch {res.writeHead(400).end('{}');}
+      });
+      await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+      try {
+        const endpoint = `https://localhost:${server.address().port}/`;
+        const input = {schema: 'seeds-native-verifier/v1', binding, reader: {...profile, endpoint}, tlsCaPem: certificate};
+        const invoke = value => new Promise((resolve, reject) => {
+          const child = execFile(process.execPath, [join(source, 'scripts/verify-seeds-answer.mjs')], {timeout: 9000, maxBuffer: 262144}, (error, stdout, stderr) => error ? reject(Object.assign(error, {stdout, stderr})) : resolve(JSON.parse(stdout)));
+          child.stdin.end(JSON.stringify(value));
+        });
+        const produced = await invoke(input);
+        assert.equal(produced.choice, 'Yes'); assert.deepEqual(produced.binding, dto.binding);
+        assert.equal(produced.evidence.receipt_iri, binding.receipt);
+        if (process.env.SEEDS_NATIVE_PORT_TEST) {
+          const custody = join(root, 'send-custody'); mkdirSync(custody, {mode: 0o700});
+          const fixturePath = join(root, 'seeds-native-port.json');
+          const nativeProfile = {endpoint, graph: boundary.itemGraph, audit_location: 'project', store_id: state.who.audience,
+            machine_principal: 'fixture-settler', custody_directory: custody, custody_uid: process.getuid(),
+            writer_credential_file: null, code_root: source, node: {path: process.execPath, sha256: sha(readFileSync(process.execPath))},
+            assets: Object.fromEntries(['scripts/verify-seeds-answer.mjs', 'scripts/admission/verify-seeds-answer.mjs', 'web/deck/value.mjs', 'web/deck/model.mjs', 'web/deck/evidence.mjs', 'web/deck/reader.mjs', 'web/deck/settlement.mjs'].map(name => [name, sha(readFileSync(join(source, name)))])),
+            reader: {...profile, endpoint}, tls_ca: null};
+          writeFileSync(fixturePath, JSON.stringify({profile: nativeProfile, binding: dto.binding, ca: certificate}), {mode: 0o600});
+          await new Promise((resolve, reject) => execFile(process.env.SEEDS_NATIVE_PORT_TEST,
+            ['native::ask_native::tests::actual_native_process_receipt_drives_one_atomic_settlement', '--exact', '--ignored', '--nocapture'],
+            {env: {...process.env, SEEDS_NATIVE_PORT_FIXTURE: fixturePath}, timeout: 30000, maxBuffer: 16384},
+            (error, stdout, stderr) => error ? reject(Error('Seeds native port fixture failed: ' + stdout + stderr)) : resolve(stdout)));
+          results.push({case: 'seeds-native-process-atomic-settlement', real_receipt_and_process: true, backend: 'disposable in-memory Quipu', closed_only_ask: true, one_ruling: true, durable_reservation: true, wrong_binding_no_write: true, reconciliation_no_write: true, limitation: 'Does not qualify production root deployment selection or remote scoped writer grant'});
+        }
+        const before = calls;
+        await assert.rejects(invoke({...input, binding: {...binding, verified: true}}));
+        assert.equal(calls, before, 'Forged caller verification refused before network');
+        await assert.rejects(invoke({...input, tlsCaPem: null}));
+        results.push({case: 'native-verifier-process-tls', native_store_dispatch: true, private_pipe: true, full_binding: true, unknown_ca_refused: true, forged_input_before_network: true, writer_calls: 0});
+      } finally {await new Promise(resolve => server.close(resolve));}
+      results.push({case: 'native-process-verifier', actual_native_receipt: true, full_binding: true, wrong_target_and_replaced_graph_refused: true, caller_verified_flag_refused: true});
+    }
+
     assert.equal(observed.rows[0].receipt.receipt_iri, e.receipt.receipt_iri);
     results.push({case: `${index === 3 ? 'bound-choose' : kind}-stored-reader`, native_registered_queries: true, graph_creation_bound: true, typed_facts_and_provenance: true});
   }
@@ -182,6 +252,6 @@ try {
     assert.throws(() => readerRows(response, def, {seed: state.r.seed}));
     results.push({case: 'bounded-item-query-v2', full_status_iri: true, invalid_extra_status_visible: true, revision_overflow_refused: true});
   }
-  console.log(JSON.stringify({candidate, native_library_sha256: sha(readFileSync(libraries.get('quipu'))), helper_source_sha256: sha(readFileSync(join(source, 'tests/native/deck-fixture.rs'))), fixture: 'Disposable stores; generated software keys kept only in memory; local native methods and actual operator CLI; no HTTP/service/real credential or production profile union', results}, null, 2));
+  console.log(JSON.stringify({candidate, native_library_sha256: sha(readFileSync(libraries.get('quipu'))), helper_source_sha256: sha(readFileSync(join(source, 'tests/native/deck-fixture.rs'))), fixture: 'Disposable stores; generated software keys kept only in memory; local native methods and actual operator CLI; loopback HTTPS process transport plus local native methods/operator CLI; no production endpoint, real credential or production profile union', results}, null, 2));
   }
 } finally {rmSync(root, {recursive: true, force: true});}

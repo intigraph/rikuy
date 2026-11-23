@@ -86,3 +86,38 @@ prove enrollment, production TLS/device trust or a production allowlist apply.
 Keep the real origin and deployment admission evidence in the private packet.
 The public example above is an identifier for an isolated rehearsal. The
 listener has a 60-second kill deadline and removes its fixture after exit.
+
+## Staged Seeds verifier process
+
+`scripts/verify-seeds-answer.mjs` is a bounded, read-only native process entry
+point for Seeds' separately admitted executable port. Stdin contains only a
+revision-bound intent and the operator-selected reader profile/public CA. It
+fetches the native point receipt itself, pins three graph registration IDs and
+retained creation records, and runs the complete signed-answer reader. The
+process refuses caller-supplied verification flags, foreign bindings, replaced
+graphs, incomplete native evidence and untrusted TLS. It has no credential,
+writer, default endpoint, signing key or enrollment command.
+
+The producer's DTO is authority only inside the private pipe from the
+root-owned hash-pinned program selected by Seeds. Running this script directly
+or copying its JSON does not admit a Seeds write. The seven-module bundle and
+Node executable must be admitted separately; this source installs neither.
+
+Native qualification also spawns the actual entry point over a temporary HTTPS
+listener dispatching read requests to the real native store helper. A temporary
+TLS key stays in memory; Python passes it over a pipe to OpenSSL for a public
+certificate. This transport fixture does not use the production HTTP server or
+qualify its scoped writer. Unknown CA and forged input must refuse. Setting
+`SEEDS_NATIVE_PORT_TEST` to the matching built Seeds library-test executable
+additionally exercises the real native process receipt, durable one-send
+reservation and atomic Seeds transition on a disposable in-memory backend,
+including wrong-binding refusal and read-only reconciliation. The test bypasses
+only root deployment selection, inside an explicitly ignored test function;
+there is no production override. Retain both repositories' exact source and
+executable hashes with this result.
+
+The native Seeds port's staged audit location is the item project graph, in the
+same CAS as both item changes and the ruling. Ordinary Seeds CLI audit placement
+remains the sibling provenance graph. Production admission must explicitly
+resolve this storage-authority choice and qualify exact remote writer scope,
+revocation, root bundle/profile custody and lost-response recovery before use.
