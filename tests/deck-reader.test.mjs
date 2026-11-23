@@ -105,7 +105,7 @@ test('item bookend refuses closure during an otherwise valid answer read', async
   let count = 0;
   const f = await fixture({change: (v, {role}) => role === 'item' && ++count === 2 ? {...v, rows: [{revision: ask.itemRevision, status: 'urn:closed'}]} : v});
   await assert.rejects(() => f.reader.read(ask.id), /closed/);
-  assert.equal(f.calls.filter(c => c.body?.name === 'rikuy_deck_item_v1').length, 2);
+  assert.equal(f.calls.filter(c => c.body?.name === f.reader.definitions.item.name).length, 2);
 });
 
 test('one overall deadline bounds even a transport that fails to settle', async () => {

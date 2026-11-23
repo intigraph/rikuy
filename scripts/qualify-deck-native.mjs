@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import {NS} from '../web/deck/value.mjs';
 import {buildProposal, canonicalProposal, operationIri, requestPublication, readRequest, revisionIri} from '../web/deck/model.mjs';
 import {admittedChallenge, readAnswer, disposition, readbackProof} from '../web/deck/evidence.mjs';
-import {DeckReader, readerDefinitions} from '../web/deck/reader.mjs';
+import {DeckReader, readerDefinitions, readerRows, NATIVE_PROVENANCE_NS} from '../web/deck/reader.mjs';
 import {nativeLibraries} from './admission/native-libraries.mjs';
 const cli = process.env.QUIPU_CLI, artifacts = process.env.QUIPU_ARTIFACTS;
 if (!cli || !artifacts) throw Error('Explicit candidate QUIPU_CLI and fresh QUIPU_ARTIFACTS JSONL required');
@@ -167,6 +167,21 @@ try {
   await assert.rejects(readAnswer({...e.row, graph: ordinary}, e.receipt, state.r, boundary, state.who));
   await assert.rejects(readAnswer(e.row, e.receipt, {...state.r, revision: 4}, boundary, state.who));
   results.push({case: 'ordinary-graph-and-other-request-revision', deck_reader_refused: true});
+  {
+    const state = setup(60, 'comment'), def = readerDefinitions(boundary, NATIVE_PROVENANCE_NS).item;
+    command(state.db, 'query-load', def);
+    const read = () => command(state.db, 'ask', {name: def.name, params: {seed: state.r.seed}});
+    let response = read();
+    assert.deepEqual(response.rows, [{revision: state.r.itemRevision, status: boundary.openStatus}]);
+    put(state.db, boundary.itemGraph, [{s: state.r.seed, p: boundary.statusPredicate, o: {kind: 'str', value: boundary.openStatus}}]);
+    response = read(); assert.equal(response.rows.length, 2);
+    assert(response.rows.some(row => row.status === 'invalid-status-term'));
+    put(state.db, boundary.itemGraph, [{s: state.r.seed, p: boundary.statusPredicate, o: {kind: 'str', value: boundary.openStatus}}], true);
+    for (const value of [8, 9, 10]) put(state.db, boundary.itemGraph, [{s: state.r.seed, p: boundary.revisionPredicate, o: {kind: 'int', value}}]);
+    response = read(); assert.equal(response.rows.length, 3);
+    assert.throws(() => readerRows(response, def, {seed: state.r.seed}));
+    results.push({case: 'bounded-item-query-v2', full_status_iri: true, invalid_extra_status_visible: true, revision_overflow_refused: true});
+  }
   console.log(JSON.stringify({candidate, native_library_sha256: sha(readFileSync(libraries.get('quipu'))), helper_source_sha256: sha(readFileSync(join(source, 'tests/native/deck-fixture.rs'))), fixture: 'Disposable stores; generated software keys kept only in memory; local native methods and actual operator CLI; no HTTP/service/real credential or production profile union', results}, null, 2));
   }
 } finally {rmSync(root, {recursive: true, force: true});}

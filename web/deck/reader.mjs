@@ -12,10 +12,10 @@ export function readerDefinitions(boundary, provenanceNamespace) {
   const b = scope(boundary), q = iri(provenanceNamespace);
   if (q !== NATIVE_PROVENANCE_NS) throw new Unknown('Unknown native provenance vocabulary');
   const by = `<${q}attestedBy>`, graph = `<${b.answerGraph}>`;
-  const define = (name, template, params, cap) => ({name: `rikuy_deck_${name}_v1`, template, params, cap});
+  const define = (name, template, params, cap, version = 1) => ({name: `rikuy_deck_${name}_v${version}`, template, params, cap});
   return {
     request: define('request', `SELECT ?revision ?revisionIri ?manifest WHERE { GRAPH <${b.requestGraph}> { <{requestId}> <${NS}currentRevision> ?revision . ?revisionIri <${NS}requestManifest> ?manifest . FILTER(?revisionIri = IRI(CONCAT(STR(<{requestId}>), "#revision-", STR(?revision)))) } } LIMIT 3`, {requestId: 'iri'}, 3),
-    item: define('item', `SELECT ?revision ?status WHERE { GRAPH <${b.itemGraph}> { <{seed}> <${b.revisionPredicate}> ?revision ; <${b.statusPredicate}> ?status } } LIMIT 3`, {seed: 'iri'}, 3),
+    item: define('item', `SELECT ?revision ?status WHERE { { SELECT ?revision WHERE { GRAPH <${b.itemGraph}> { <{seed}> <${b.revisionPredicate}> ?revision } } LIMIT 3 } { SELECT ?status WHERE { GRAPH <${b.itemGraph}> { <{seed}> <${b.statusPredicate}> ?statusIri . BIND(IF(isIRI(?statusIri), STR(?statusIri), "invalid-status-term") AS ?status) } } LIMIT 3 } } LIMIT 3`, {seed: 'iri'}, 3, 2),
     answers: define('answers', `SELECT ?subject ?receiptIri ?manifest WHERE { GRAPH ${graph} { ?subject <${NS}request> <{requestId}> ; <${NS}revision> {revision} ; ${by} ?receiptIri . ?receiptIri <${q}attestProposal> ?manifest } } LIMIT 21`, {requestId: 'iri', revision: 'int'}, 21),
     facts: define('facts', `SELECT ?s ?p ?kind ?value WHERE { GRAPH ${graph} { ?s ${by} <{receiptIri}> ; ?p ?o . FILTER(?p != ${by}) BIND(STR(?o) AS ?value) BIND(IF(isIRI(?o), "iri", IF(datatype(?o) = <http://www.w3.org/2001/XMLSchema#integer>, "int", IF(datatype(?o) = <http://www.w3.org/2001/XMLSchema#string>, "str", "unsupported"))) AS ?kind) } } LIMIT 65`, {receiptIri: 'iri'}, 65),
     links: define('links', `SELECT ?s WHERE { GRAPH ${graph} { ?s ${by} <{receiptIri}> } } LIMIT 65`, {receiptIri: 'iri'}, 65)
