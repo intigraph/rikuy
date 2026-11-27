@@ -37,6 +37,29 @@ export function asks(body,definition,now=Date.now()){
   for(const seed of body.unlabelled.slice(0,MAX_UNLABELLED))if(!have.has(seed)&&!rows.some(r=>r.item===seed))throw new Unknown('Titled ask missing from Needs-you');
   return {rows,incomplete:body.unlabelled.length>MAX_UNLABELLED,facts:labelled.length+extra.length};
 }
+// OPTIONS/REC excerpts for one Ask, read on demand when its card is opened: the
+// list query (daily_brief_asks_v6) no longer extracts them for every row.
+export function askChoices(body,definition,seed){
+  const rows=queryRows(body,expand(definition,seed));
+  if(rows.length!==1||rows[0].item!==seed)throw new Unknown('Ask choices point read changed');
+  return {options:text(rows[0].options),rec:text(rows[0].rec)};
+}
+// Cached by item and revision, so an edited Ask is re-read and an unchanged one is not.
+export function askChoicesReader({request,endpoint,definition,timeoutMs=6000}){
+  const cache=new Map();
+  return (seed,revision)=>{
+    const key=seed+'@'+revision;
+    if(!cache.has(key)){
+      const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),timeoutMs);
+      const pending=Promise.resolve().then(()=>request(new URL('/ask',endpoint).href,{body:{name:definition.name,params:{seed}},cap:16384,signal:ctl.signal}))
+        .then(body=>askChoices(body,definition,seed))
+        .finally(()=>clearTimeout(timer));
+      pending.catch(()=>cache.delete(key));
+      cache.set(key,pending);
+    }
+    return cache.get(key);
+  };
+}
 export function later(body,definition,now=Date.now()){
   return queryRows(body,definition).map(r=>{
     const row=sourceItem(r,now);row.priority=Number(row.priority);

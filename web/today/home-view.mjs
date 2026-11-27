@@ -12,8 +12,9 @@ export function cite(node,href,label='Query definition'){
 export function unavailable(node,reason,at=Date.now()){
   mark(node).replaceChildren(el('p','Unavailable: '+reason,'unavailable'),el('time','Checked '+stamp(at),'source-time'));
 }
-let explorerPromise,recordReader,recordPanel,recordRoot,askDecisionAdapter;
+let explorerPromise,recordReader,recordPanel,recordRoot,askDecisionAdapter,askChoicesReader;
 export function setAskDecisionAdapter(adapter){askDecisionAdapter=adapter;}
+export function setAskChoicesReader(read){askChoicesReader=read;}
 export function setRecordReader(read){recordReader=read;}
 export async function openRecord(id,title){
   if(!/^aegis-[a-z0-9]+(?:\.[0-9]+)*$/.test(id))throw Error('Invalid record selection');
@@ -72,9 +73,21 @@ export function renderAsks(view,reason,at){
     card.append(el('div',(index===undefined?'':(index+1)+'. ')+questionLabel(row.title),'q'));
     const details=el('details',undefined,'ask-details');details.open=opened.has(row.id);
     details.append(el('summary','Choices and record'));
-    if(row.options)details.append(el('p','OPTIONS: '+row.options.split(/\bREC:/i)[0].trim(),'options'));
-    if(row.rec)details.append(el('p','REC: '+row.rec,'rec'));
-    if(!row.options&&!row.rec)details.append(el('p','Choices have not been recorded.','note'));
+    const choices=el('div',undefined,'ask-choices');details.append(choices);
+    const showChoices=({options,rec})=>{
+      choices.replaceChildren();
+      if(options)choices.append(el('p','OPTIONS: '+options.split(/\bREC:/i)[0].trim(),'options'));
+      if(rec)choices.append(el('p','REC: '+rec,'rec'));
+      if(!options&&!rec)choices.append(el('p','Choices have not been recorded.','note'));
+    };
+    // The list query carries no OPTIONS/REC; they are read per Ask when its card opens.
+    let loading=false;
+    const loadChoices=()=>{
+      if(loading||!askChoicesReader||row.options||row.rec)return;
+      loading=true;choices.replaceChildren(el('p','Reading choices…','note'));
+      askChoicesReader(row.item,row.revision).then(showChoices,()=>{loading=false;choices.replaceChildren(el('p','Choices unavailable · the item read did not verify. Close and reopen to retry.','unavailable'));});
+    };
+    if(row.options||row.rec||!askChoicesReader)showChoices(row);
     if(row.kind==='ask'){
       const metadata=el('dl',undefined,'ask-metadata');
       for(const[label,value]of [['If unanswered',row.default],['Reply by',row.expires]])metadata.append(el('dt',label),el('dd',value));
@@ -84,7 +97,8 @@ export function renderAsks(view,reason,at){
       details.append(el('p','Unblocks '+linked),linkedButton);
     }
     details.append(el('div',[row.id,'P'+row.priority,row.status,'age '+(row.created?age(row.created):'unknown'),row.owner?.split('/').at(-1)||'unassigned'].join(' · '),'meta'));
-    details.addEventListener('toggle',()=>{details.open?opened.add(row.id):opened.delete(row.id);root.dataset.openIds=JSON.stringify([...opened]);});
+    details.addEventListener('toggle',()=>{details.open?opened.add(row.id):opened.delete(row.id);root.dataset.openIds=JSON.stringify([...opened]);if(details.open)loadChoices();});
+    if(details.open)loadChoices();
     card.append(details,recordButton(row.id,row.title));
     if(row.kind==='ask'&&askDecisionAdapter){
       const actions=el('section');card.append(actions);

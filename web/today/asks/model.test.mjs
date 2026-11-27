@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {asks,later,sourceControl,asksReader,titleItems} from './model.mjs';
+import {asks,later,sourceControl,asksReader,titleItems,askChoices,askChoicesReader} from './model.mjs';
 const load=name=>JSON.parse(fs.readFileSync(new URL(name,import.meta.url)));
 const definitions={asks:load('./query.json'),titles:load('./titles.json'),item:load('./item.json')},control=load('./control.json');
 const laterDef=JSON.parse(fs.readFileSync(new URL('../later/query.json',import.meta.url)));
@@ -83,4 +83,29 @@ test('explicit overseer Asks need no legacy title or human-gate label',()=>{
 test('conflicting metadata across gates refuses rather than choosing one',()=>{
   const one=row('aegis-new',{gate:'ask-type',kind:'ask',unblocks:IRI('aegis-work'),linkedResource:true,default:'Wait',expires:'2026-12-01T12:00:00Z'});
   assert.throws(()=>asks(composite([one,{...one,gate:'desk',default:'Proceed'}]),definitions,now),/Conflicting Ask metadata/);
+});
+
+test('the v6 list query no longer extracts OPTIONS/REC; status is joined before priority',()=>{
+  const t=definitions.asks.template;
+  assert.equal(definitions.asks.name,'daily_brief_asks_v6');
+  for(const gone of ['?options','?rec','schema:description','seeds:notes','STRBEFORE'])assert.ok(!t.includes(gone),gone);
+  assert.ok(t.indexOf('seeds:status ?status')<t.indexOf('seeds:priority ?priority'));
+  assert.equal(definitions.titles.name,'daily_brief_ask_titles_v2');
+  assert.ok(definitions.titles.template.includes('VALUES ?status { "open" "in_progress" "blocked" "deferred" }'));
+});
+
+test('OPTIONS/REC are read per Ask by point read, cached by revision, and retried after a failure',async()=>{
+  const seed=IRI('aegis-one'),calls=[];let fail=true;
+  const read=askChoicesReader({endpoint:'https://reader.example',definition:definitions.item,request:async(url,options)=>{
+    calls.push([url,options.body]);
+    if(fail){fail=false;throw new Error('HTTP 408');}
+    return itemBody(seed,[row('aegis-one',{options:' A | B ',rec:'A'})]);
+  }});
+  await assert.rejects(read(seed,1));
+  assert.deepEqual(await read(seed,1),{options:'A | B',rec:'A'});
+  await read(seed,1);
+  assert.equal(calls.length,2);
+  assert.deepEqual(calls[1],['https://reader.example/ask',{name:'daily_brief_ask_item_v1',params:{seed}}]);
+  await read(seed,2);assert.equal(calls.length,3);
+  assert.throws(()=>askChoices(itemBody(seed,[row('aegis-two')]),definitions.item,seed),/changed/);
 });

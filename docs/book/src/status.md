@@ -41,7 +41,7 @@ and held work read several, and the Board reads a projection.
 
 | Panel | What it shows | Query |
 |---|---|---|
-| Needs you | Every open Ask and human-gated item, with options, recommendation, default, deadline and what it unblocks | `daily_brief_asks_v5`, with `daily_brief_source_control_v3`, `daily_brief_ask_titles_v1` and `daily_brief_ask_item_v1` |
+| Needs you | Every open Ask and human-gated item, with options, recommendation, default, deadline and what it unblocks | `daily_brief_asks_v6`, with `daily_brief_source_control_v3`, `daily_brief_ask_titles_v2` and `daily_brief_ask_item_v1` (options and recommendation are read per Ask when its card opens) |
 | Later | Items answered "later" that stay visible | `daily_brief_later_v1` |
 | Next | Open top-priority work, up to 20 | `daily_brief_priorities_v3` |
 | Pace and deploy log | Deploys in the last 24 hours: succeeded, rolled back and failed | `daily_brief_deploys_v1` |

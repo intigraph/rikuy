@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {feedRelevant} from './feed-relevance.mjs';
 const S='https://schema.org/',D='https://seeds.local/ontology/';
 const item='https://seeds.local/item/aegis-one',other='https://seeds.local/item/aegis-other';
-const names=['daily_brief_priorities_v3','daily_brief_later_v1','daily_brief_asks_v4','daily_brief_recently_deferred_v1','daily_brief_asks_v5'];
+const names=['daily_brief_priorities_v3','daily_brief_later_v1','daily_brief_asks_v4','daily_brief_recently_deferred_v1','daily_brief_asks_v5','daily_brief_asks_v6'];
 const page=(attribute,entity=other,op='assert')=>({capture:'old_and_new_values',records:[{entity,attribute,op,[op==='assert'?'value':'old_value']:'value'},...(op==='assert'?[{entity,attribute,op:'retract',old_value:'old'}]:[])]});
 for(const name of names){
  test(name+': displayed revision refreshes; unrelated revision and comment do not',()=>{
@@ -37,6 +37,11 @@ test('validated overflow sentinel changes still invalidate',()=>{
 });
 
 
-test('explicit Ask membership and metadata changes refresh the v5 cards',()=>{
- for(const field of ['issueType','unblocks','askDefault','expiresAt'])for(const op of ['assert','retract'])assert.equal(feedRelevant('daily_brief_asks_v5',{rows:[]},page(D+field,other,op)),true);
+test('explicit Ask membership and metadata changes refresh the v5 and v6 cards',()=>{
+ for(const name of ['daily_brief_asks_v5','daily_brief_asks_v6'])for(const field of ['issueType','unblocks','askDefault','expiresAt'])for(const op of ['assert','retract'])assert.equal(feedRelevant(name,{rows:[]},page(D+field,other,op)),true);
+});
+
+test('v6 carries no OPTIONS/REC: a description edit refreshes through the revision, not the text',()=>{
+ assert.equal(feedRelevant('daily_brief_asks_v6',{rows:[{item}]},page(S+'description',item)),false);
+ assert.equal(feedRelevant('daily_brief_asks_v6',{rows:[{item}]},page(S+'version',item)),true);
 });

@@ -8,14 +8,14 @@ import {makeRecordReader} from './record-reader.mjs';
 import {semwebReader} from './watches/model.mjs';
 import {WATCHES,watchDefinition,watchParams,validateWatch,renderWatches,watchSeen,rememberWatches} from './knowledge/watches.mjs';
 import {PriorityClient} from './priorities/model.mjs';
-import {asks as decodeAsks,asksReader,later as decodeLater} from './asks/model.mjs';
+import {asks as decodeAsks,asksReader,askChoicesReader,later as decodeLater} from './asks/model.mjs';
 import {deploys as decodeDeploys,paceParams} from './pace/model.mjs';
 import {changes as decodeChanges,changesParams,changesReader} from './changes/model.mjs';
 import {digest,logEntries} from './home-model.mjs';
 import {StatsClient} from './projection-metrics.mjs';
 import {heldReader} from './held/model.mjs';
 import {coverageParams,recentlyDeferred,deferredReader} from './recently-deferred/model.mjs';
-import {$,el,stamp,mark,unavailable,renderAsks,renderLater,renderPriorities,deployRows,tabs,renderOverview,setRecordReader,recordButton,cite,setAskDecisionAdapter} from './home-view.mjs';
+import {$,el,stamp,mark,unavailable,renderAsks,renderLater,renderPriorities,deployRows,tabs,renderOverview,setRecordReader,recordButton,cite,setAskDecisionAdapter,setAskChoicesReader} from './home-view.mjs';
 if(readerConfig.askDecisionsEnabled===true&&typeof readerConfig.askDecisionAdapter==='function')setAskDecisionAdapter(readerConfig.askDecisionAdapter);
 const state={asks:undefined,later:undefined,priorities:undefined,deploys:undefined,stats:undefined,held:undefined,deferred:undefined,watches:undefined,changes:undefined},checked={},reasons={};
 const now=()=>Date.now();
@@ -184,7 +184,8 @@ async function main(){
     boot('changes',['./changes/query.json','./changes/admission.json'],async([definition,admission])=>new PriorityClient({definition,decode:decodeChanges,getParams:()=>changesParams(now()),deadlineMs:6000,refreshMs:15000,status:status('changes'),render:update('changes'),read:await changesReader({request,endpoint,definition,admission})})),
     boot('watches',['./watches/admission.json'],([admission])=>{const definition=watchDefinition(WATCHES[0]);return new PriorityClient({definition,decode:(body,def,time,params)=>validateWatch(body,def,params,time),getParams:()=>watchParams(now()),deadlineMs:6000,refreshMs:60000,status:status('watches'),render:update('watches'),read:semwebReader({request,endpoint,definition,admission})});}),
     boot('asks',['./asks/query.json','./asks/titles.json','./asks/item.json','./asks/control.json'],([ask,titles,item,control])=>{
-      const definitions={asks:expect(ask,'daily_brief_asks_v5'),titles:expect(titles,'daily_brief_ask_titles_v1'),item:expect(item,'daily_brief_ask_item_v1')};
+      const definitions={asks:expect(ask,'daily_brief_asks_v6'),titles:expect(titles,'daily_brief_ask_titles_v2'),item:expect(item,'daily_brief_ask_item_v1')};
+      setAskChoicesReader(askChoicesReader({request,endpoint,definition:definitions.item}));
       return new PriorityClient({definition:definitions.asks,decode:body=>decodeAsks(body,definitions,now()),deadlineMs:15000,status:status('asks'),render:update('asks'),read:asksReader({request,endpoint,control:expect(control,'daily_brief_source_control_v3'),definitions}),...seeds});}),
     boot('later',['./later/query.json'],([definition])=>new PriorityClient({definition:expect(definition,'daily_brief_later_v1'),decode:decodeLater,status:status('later'),render:update('later'),read:plain,...seeds})),
     boot('priorities',['./priorities/query.json'],([definition])=>new PriorityClient({definition:expect(definition,'daily_brief_priorities_v3'),status:status('priorities'),render:update('priorities'),read:plain,...seeds})),
