@@ -38,3 +38,19 @@ test('Today publishes beside the retained legacy and experimental surfaces with 
  await assert.rejects(access('dist/today/home-model.test.mjs'));
  assert.equal(JSON.parse(await readFile('dist/source.json','utf8')).project,'rikuy');
 });
+
+test('the demo root serves the brief with the synthetic rows entry point, not the Today redirect',async()=>{
+ execFileSync(process.execPath,['scripts/build.mjs']);
+ const {spawn}=await import('node:child_process');
+ const port=41000+process.pid%2000;
+ const child=spawn(process.execPath,['scripts/demo.mjs'],{env:{...process.env,PORT:String(port)},stdio:['ignore','pipe','inherit']});
+ try{
+  await new Promise((done,fail)=>{child.stdout.once('data',done);child.once('error',fail);child.once('exit',()=>fail(Error('demo exited early')));});
+  const page=await (await fetch(`http://127.0.0.1:${port}/`)).text();
+  assert.ok(page.includes('id="demo"'),'brief page with the demo status line');
+  assert.ok(page.includes('<script type="module" src="./demo.mjs"></script>'),'demo entry point injected');
+  assert.equal(page.includes('http-equiv="refresh"'),false);
+  assert.equal((await (await fetch(`http://127.0.0.1:${port}/demo-rows.json`)).json()).length,3);
+  assert.match(await (await fetch(`http://127.0.0.1:${port}/today/`)).text(),/Needs you/);
+ }finally{child.kill();}
+});
