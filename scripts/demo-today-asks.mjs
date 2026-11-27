@@ -10,7 +10,7 @@ const rows = [
   {...base, id: 'aegis-demo2', item: item('aegis-demo2'), kind: 'ask', title: 'ASK Stiwi: Retire the legacy brief (now / after review / never)', unblocks: item('aegis-demo9'), default: 'Keep both pages', expires: '2026-12-31T12:00:00Z'},
   {...base, id: 'aegis-demo3', item: item('aegis-demo3'), kind: 'gate', gates: ['human-gate'], priority: 2, title: 'Approve the synthetic rollout?'}
 ];
-// Synthetic answers for the per-seed OPTIONS/REC point read (daily_brief_ask_item_v1).
+// Synthetic answers for the per-seed OPTIONS/REC point read (daily_brief_ask_item_v2).
 const recorded = {
   [item('aegis-demo1')]: {options: '(1) Verify the source (2) Wait for a receipt (3) Stop here', rec: '(1) the evidence is already readable'},
   [item('aegis-demo2')]: {options: '', rec: 'after review, once the record view is accepted'},

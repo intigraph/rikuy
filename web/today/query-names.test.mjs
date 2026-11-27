@@ -38,3 +38,12 @@ test('every expect() name in home.mjs matches the manifest file it pins', () => 
     .map(({panel, path, name}) => `${panel}: ${path} expected ${name}, file declares ${JSON.parse(readFileSync(new URL(path, dir), 'utf8')).name}`);
   assert.deepEqual(mismatches, []);
 });
+
+// The per-seed OPTIONS/REC point read moved to item_v2 (status OPTIONAL+BOUND).
+// item_v1 stays registered for rollback, so a stale pin would still boot against
+// the slow template; this pins the bump on both sides.
+test('the Asks item read is pinned to daily_brief_ask_item_v2 and the file agrees', () => {
+  const item = pins().filter(p => p.path === './asks/item.json');
+  assert.deepEqual(item.map(p => p.name), ['daily_brief_ask_item_v2']);
+  assert.equal(JSON.parse(readFileSync(new URL('./asks/item.json', dir), 'utf8')).name, 'daily_brief_ask_item_v2');
+});
