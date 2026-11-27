@@ -11,7 +11,9 @@ const server=createServer(async(req,res)=>{
   const name=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
   if(name==='/demo.mjs'){res.setHeader('content-type','text/javascript');return res.end(demoScript);}
   if(name==='/demo-rows.json'){res.setHeader('content-type','application/json');return res.end(JSON.stringify(rows));}
-  const file=resolve(root,'.'+name+(name.endsWith('/')?'index.html':''));
+  // The built root redirects to Today, whose live readers are off. The demo
+  // serves the retained brief at the root so the checked sample rows are shown.
+  const file=resolve(root,'.'+(name==='/'?'/legacy/index.html':name+(name.endsWith('/')?'index.html':'')));
   const actual=await realpath(file);if(!actual.startsWith(root+sep))throw Error('path');
   res.setHeader('content-type',mime[extname(actual)]||'application/octet-stream');const body=await readFile(actual);
   res.end(name==='/'?body.toString().replace('</body>','<script type="module" src="./demo.mjs"></script></body>'):body);

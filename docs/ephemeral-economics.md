@@ -1,53 +1,99 @@
 # Ephemeral job economics
 
-The Today Board tab links to `/economics/`. It opens an explicit local snapshot;
-it sends no network requests and activates no reader or refresh schedule.
+**Status: works today.** The page reads a snapshot file you choose. It sends
+no network requests and turns on no reader or refresh schedule.
 
-Read an operator-selected ledger directory into a private output file:
+**In short.** This report answers "how many short agent jobs ran, how long did
+they take, and how often did they run out of budget?" You extract a snapshot
+from a job ledger on your own machine, then open it in the `/economics/` page
+or as a standalone report. The Board tab of the Today brief links to it.
+
+## Make a report
+
+Read a ledger directory you select into a private file, then render it:
 
 ```sh
 node scripts/ephemeral-economics.mjs "$JOB_LEDGER" 2026-01-01T00:00:00Z 2026-01-02T00:00:00Z > snapshot.json
 node scripts/render-ephemeral-economics.mjs snapshot.json > report.html
 ```
 
-Open the standalone report, or import the snapshot into the static page. These
-files contain operator data: keep them private and outside the repository and
-public build. Only synthetic fixtures belong in source. The renderer escapes
-embedded data; all displayed fields use text nodes.
+Open `report.html`, or import `snapshot.json` into the static page.
 
-The versioned extraction scans at most 4,000 directory entries and 2,000 matching
-attempt records, within a three-second budget. It reads at most 64 KiB per file
-and 8 MiB total. Symlinks, nonregular files, corrupt JSON, concurrent replacements
-and exhausted bounds produce explicit coverage loss. The directory and each
-record are checked around reads. This is a bounded observation, not a ledger-wide
-atomic transaction or a promise of an immutable history. The snapshot records its
-reader version, source digest, scanned count, bytes and observed-through time.
-Neither command writes to the ledger. Prompts, summaries, environments and paths
-are excluded from the extracted fields. No credentials are read.
+**These files contain operator data.** Keep them private, outside the
+repository and outside the public build. Only synthetic fixtures belong in
+source. The renderer escapes embedded data, and every displayed field is drawn
+as a text node.
 
-Jobs count attempts spawned in `[start,end)`, UTC, with a maximum 31-day window.
-Retries are separately counted; they are not extra delivered work. Ended wall
-duration includes launch and waiting. Live attempts are censored and excluded
-from percentiles. Negative, missing or future end timestamps reduce coverage.
-Median and p90 use nearest rank; fewer than 20 duration samples is labelled low n.
-Teardown lag has its own covered denominator. Job, harness, model and the stored
-lifetime/turn/context budgets define separate cohorts. Missing models remain
-UNKNOWN; never infer them from today's deployment configuration.
+Neither command writes to the ledger. Prompts, summaries, environments and
+paths are left out of the extracted fields. No credentials are read.
 
-Exhaustion is the number of ended attempts whose first stored primary cause is
-`timeout`, `turn budget` or `context budget`, divided by all ended attempts in
-that cohort. The upper bound includes unknown causes. A verdict or report does
-not establish delivery, merge or installed acceptance. Failed imports preserve
-the previous successful page with a stale warning.
+## What is counted
 
-Tokens remain UNKNOWN until the existing usage reader can supply an exact,
-qualified job-to-session binding. Turns, context limits and governor percentages
-are not tokens. Crew-minutes and token savings remain UNKNOWN without a measured
-comparable crew active-time baseline and intervention coverage. Missing telemetry
-is not zero savings or an estimate. No historical records are backfilled.
+| Measure | Definition |
+|---|---|
+| Jobs | Attempts spawned in `[start, end)`, in UTC. The window is 31 days at most. |
+| Retries | Counted separately. A retry is not extra delivered work. |
+| Duration | Wall time until the attempt ended, including launch and waiting |
+| Median and p90 | Nearest rank. Fewer than 20 samples is labelled *low n*. |
+| Teardown lag | Reported with its own covered denominator |
+| Exhaustion | Ended attempts whose first stored primary cause is `timeout`, `turn budget` or `context budget`, divided by all ended attempts in the cohort |
 
-The finite arithmetic fixture in `tests/economics.test.mjs` covers UTC boundaries,
-retries, separate 10/2 and 10/10 cohorts, live jobs, invalid durations, unknown
-causes, duplicates and reader limits. The browser check imports synthetic data,
-checks arithmetic, safe text, mobile layout and stale retention, and blocks every
-nonlocal request. Deployment of static assets remains a separate normal lane.
+Details that affect the numbers:
+
+- Attempts that are still running are left out of the percentiles.
+- A negative, missing or future end time reduces coverage.
+- The upper bound on exhaustion includes attempts whose cause is unknown.
+- Cohorts are split by job, harness, model, and the stored lifetime, turn and
+  context budgets.
+- A missing model stays UNKNOWN. It is never inferred from today's deployment
+  configuration.
+
+A verdict or a report from a job does not show that anything was delivered,
+merged or installed.
+
+## What is not measured
+
+| Measure | Why it is UNKNOWN |
+|---|---|
+| Tokens | The usage reader cannot yet bind a job to a session exactly. Turns, context limits and governor percentages are not tokens. |
+| Crew-minutes and token savings | There is no measured, comparable baseline of crew active time, and no coverage of interventions |
+
+Missing telemetry is not zero savings, and it is not estimated. No historical
+records are backfilled.
+
+## Limits on the extraction
+
+The extraction is versioned and bounded.
+
+| Limit | Value |
+|---|---|
+| Directory entries scanned | 4,000 |
+| Matching attempt records | 2,000 |
+| Time budget | 3 seconds |
+| Bytes per file | 64 KiB |
+| Bytes in total | 8 MiB |
+
+Symbolic links, non-regular files, corrupt JSON, files replaced during the
+read and exhausted limits are all reported as lost coverage. The directory and
+each record are checked before and after reading.
+
+This is a bounded observation. It is not an atomic transaction over the whole
+ledger, and it does not promise the history is immutable.
+
+The snapshot records the reader version, the source digest, the scanned count,
+the bytes read and the time it observed through.
+
+If an import fails, the page keeps the last successful report and shows a
+stale warning.
+
+## How it is tested
+
+`tests/economics.test.mjs` uses a fixed arithmetic fixture. It covers UTC
+boundaries, retries, separate 10/2 and 10/10 cohorts, live jobs, invalid
+durations, unknown causes, duplicates and the reader limits.
+
+The browser check imports synthetic data, then checks the arithmetic, safe
+text, the mobile layout and stale retention. It blocks every non-local
+request.
+
+Deploying the static files is a separate, normal step.

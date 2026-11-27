@@ -1,118 +1,217 @@
-# Online request and attested answer source
+# Request and answer contract
 
-The `/deck/` preview implements Rikuy's request card and answer interpretation
-on the generic Quipu attested-write primitive. It ships disabled, selects no
-production endpoint or credential, and makes no request on page load. Its CSP
-also disallows network connections. Deployment adapters and policy changes are
-separate reviewed work. The offline decision protocol is unchanged and has a
-different domain, database and retry contract.
+**Status: built, switched off.** The `/deck/` page ships disabled. It selects
+no server and no credential, makes no request when it loads, and its content
+security policy blocks all network connections. Turning it on is separate,
+reviewed work for each deployment.
 
-## Request and proposal
+**In short.** A curator publishes a question. The page shows it as a card. The
+person answers, a passkey signs the answer, and Quipu writes it only if the
+signature is valid and nothing changed since the card was drawn. This page
+says exactly what is published, signed, checked and recovered.
 
-A curator publishes a canonical request manifest in an ordinary request graph,
-with a current revision and an immutable revision subject. `requestPublication`
-constructs those facts; it does not publish them. A real curator job must use
-normal governed conditional writes: advance the current revision atomically,
-expect the old revision, and expect the new manifest slot to be absent. This
-source does not deploy that job or grant it a credential. The separate
-[conditional curator source](curator.md) implements plan construction and
-durable publication custody with explicit adapters; production adapters,
-credential restrictions and served admission remain separate gates.
+For a plain-language overview, read
+[Signed decisions](../book/src/signed-decisions.md). The design reasoning is
+in [Deck boundary](../design/deck-boundary.md).
 
-The admitted reader supplies the exact graph, request ID, current revision,
-revision subject and complete manifest. Unknown fields, duplicate JSON keys,
-foreign items, ambiguous revisions and incomplete results refuse. The card
-renders text through DOM text nodes, including option labels and comments.
+The offline decision protocol is a different thing. It has its own domain,
+database and retry rules, and is not described here.
 
-Each intent has a stable 256-bit operation ID. The proposal carries five
-expectations in three named graphs:
+## The request
 
-| Graph | Required slot |
+A curator publishes a request into an ordinary graph, the *request graph*. A
+request has:
+
+- a canonical manifest: the question, its options and the allowed actions;
+- a current revision number;
+- a revision subject that never changes once written.
+
+`requestPublication` builds those facts. It does not publish them. A real
+curator job publishes through normal governed conditional writes:
+
+- it advances the current revision in one atomic step;
+- it expects the old revision to be the one it read;
+- it expects the new manifest slot to be empty.
+
+The [curator](curator.md) document covers the job that does this. This source
+does not deploy that job or grant it a credential. Its production adapters,
+credential limits and admission are separate gates.
+
+## What the page accepts before showing a card
+
+The reader hands the page the exact graph, request ID, current revision,
+revision subject and complete manifest. The page refuses the request if it
+finds any of these:
+
+- an unknown field;
+- a duplicate JSON key;
+- an item outside the admitted item prefix;
+- an ambiguous revision;
+- an incomplete result.
+
+All text on the card, including option labels and comments, is drawn as plain
+text nodes. Nothing from a request is interpreted as HTML.
+
+## What is signed
+
+Each answer has a stable 256-bit operation ID. The signed proposal carries the
+answer and five conditions, spread over three graphs. Quipu writes the answer
+only if all five hold at the moment of commit.
+
+| Graph | Condition |
 |---|---|
-| Request | Request's current revision equals the displayed revision |
-| Answer | That request revision's decided slot is empty |
-| Item | Exact canonical item's revision equals the displayed item revision |
-| Item | Exact canonical item's status equals the configured open status |
-| Answer | This operation's type slot is absent |
+| Request | The request's current revision equals the revision the card showed |
+| Answer | The "decided" slot for that request revision is empty |
+| Item | The work item's revision equals the revision the card showed |
+| Item | The work item's status equals the configured open status |
+| Answer | The type slot for this operation ID is absent |
 
-Typed integers, strings and IRIs stay distinct. JavaScript refuses integers
-outside its exact safe range, oversized UTF-8 values, unpaired surrogates,
-unknown fields and duplicate slots. The fixed native field order is retained
-when serializing proposals and server-issued challenge bytes.
+Value rules:
 
-Choose and Later fill the decided slot; comment does not. Comment text is
-retained exactly, including newlines. A comment requires nonblank text.
-The underlying item is neither closed nor revised by these answer facts.
-An optional [Seeds settlement binding](settlement.md) adds the linked revision
-to the signed intent and invokes a separately admitted native Seeds transition.
-The reader projects the answer and visible comment from the answer graph;
-existing Brief/Seeds consumer integration is still owed.
+- Integers, strings and IRIs are kept distinct.
+- The page refuses integers outside JavaScript's exact safe range, oversized
+  UTF-8 values, unpaired surrogates, unknown fields and duplicate slots.
+- Proposals and the server's challenge bytes are serialized in the fixed
+  field order the native code uses.
 
-The client requires the server's signed deadline to be no later than the
-curated request deadline before asking the authenticator. A request with less
-than the server's challenge lifetime remaining therefore refuses; it does not
-silently extend the request. The reader checks the retained deadline and
-server recording time too. It does not use a browser timestamp as evidence.
+## The three actions
 
-## Evidence and pending custody
+| Action | Fills the "decided" slot | Notes |
+|---|---|---|
+| Choose | Yes | Records the chosen option |
+| Later | Yes | Records that the person deferred |
+| Comment | No | Needs non-blank text. The text is kept exactly, newlines included. |
 
-The reader reconstructs the entire permitted proposal, including every
-expectation and datum, from the current curated request. It compares the exact
-canonical manifest with a native point receipt from the pinned reader route.
-A verified receipt must bind the configured store lineage, signer, actor,
-origin/RP, nonce, message hash and positive transaction. Ordinary-graph copies,
-other request revisions, missing expectations, unknown fields, unverified or
-foreign receipts and extra facts never become answered.
+These answer facts do not close or revise the underlying work item. Closing
+it is the job of the optional [Seeds settlement](settlement.md), which adds
+the linked item's revision to the signed intent and calls a separately
+admitted Seeds transition.
 
-`readAnswer` admits an immutable answer object. `disposition` only folds those
-admitted objects for the exact request: WAITING, ANSWERED or visible LATER.
-Comment alone leaves WAITING. Competing decisions or incomplete evidence are
-UNKNOWN, not an empty success result. A trusted adapter obtains receipt replies
-from native `/attest/receipt`; a caller's own `verified: true` is not authority.
+The reader shows the answer and any visible comment from the answer graph.
+Wiring this into the existing Brief and Seeds consumers is still owed.
 
-`PendingStore` uses IndexedDB transactions, scoped by the exact operator,
-store lineage and graph configuration. One insertion wins across tabs. It
-stores the proposal, nonce, content hash and request deadline before signing.
-No memory fallback is selected when durable storage fails. The WebAuthn caller
-requests the enrolled credential, RP and server-derived challenge with user
-verification required; it has no software-key fallback.
+## Deadlines
 
-Before the one commit call, custody changes to UNKNOWN. A timeout, refusal or
-absent point receipt never authorizes a second commit or signature. Recovery
-only reads the same nonce. ACCEPTED requires both the verified receipt and
-complete matching facts/provenance read-back. The UI also re-reads its current
-projection before acknowledging and clearing custody. A never-submitted
-PENDING attempt can be cancelled with a state-and-nonce compare-and-delete;
-an UNKNOWN attempt cannot be discarded that way.
+Before it asks the passkey to sign, the page requires the server's signed
+deadline to be no later than the request's own deadline. A request with less
+time left than the server's challenge lifetime is refused. It is never
+silently extended.
 
-## Shapes and limits
+The reader checks the retained deadline and the server's recording time as
+well. A browser timestamp is never used as evidence.
 
-`shapes/deck.shapes.ttl` defines the Decision and Comment source vocabulary.
-Its required-field and value constraints are not a claim that every native
-transaction enforces a complete batch SHACL result. In the qualified candidate,
-post-state admission deliberately excludes `MinCountConstraintComponent` from
-its selected components. A missing-comment signed write can therefore remain
-as a native attestation; Rikuy's full manifest reader rejects it. A native
-invalid-action value does refuse with the loaded shape, providing an armed
-positive control. Loading a shape does not authorize a writer or protect a graph.
+## Verifying an answer
 
-An invalid signed write can still occupy a decided slot. The curator advances
-the request revision through its normal conditional lane; it never edits or
-erases the invalid attestation. No source here repairs history automatically.
+To decide whether a request is answered, the reader:
+
+1. Rebuilds the entire permitted proposal, every condition and every fact,
+   from the current curated request.
+2. Compares that exact manifest with a native receipt fetched from the pinned
+   reader route.
+3. Requires the receipt to bind the configured store lineage, signer, actor,
+   origin and relying party, nonce, message hash and a positive transaction.
+
+None of the following ever counts as answered:
+
+- a copy of an answer in an ordinary graph;
+- an answer for another request revision;
+- an answer missing a condition;
+- an answer with unknown fields or extra facts;
+- a receipt that is unverified or foreign: from another store, signer, actor,
+  origin or intent.
+
+`readAnswer` admits one immutable answer object. `disposition` folds the
+admitted answers for one exact request into a state:
+
+| State | When |
+|---|---|
+| WAITING | No decision yet. A comment alone leaves the request waiting. |
+| ANSWERED | One verified Choose |
+| LATER | One verified Later, shown as visible |
+| UNKNOWN | Competing decisions, or incomplete evidence. Never treated as an empty success. |
+
+A trusted adapter gets receipt replies from Quipu's `/attest/receipt` route. A
+caller that passes its own `verified: true` gains no authority.
+
+## Keeping an answer safe in flight
+
+`PendingStore` holds an answer while it is being signed and sent.
+
+- It uses IndexedDB transactions, scoped to the exact operator, store lineage
+  and graph configuration.
+- Across tabs, one insertion wins.
+- It stores the proposal, nonce, content hash and request deadline *before*
+  signing.
+- If durable storage fails, it does not fall back to memory.
+
+The WebAuthn call asks for the enrolled credential, the relying party and the
+challenge derived from the server's bytes, with user verification required.
+There is no software-key fallback.
+
+### One commit, never two
+
+1. Before the single commit call, the stored state changes to UNKNOWN.
+2. A timeout, a refusal or a missing receipt never allows a second commit or a
+   second signature.
+3. Recovery only reads, using the same nonce.
+4. ACCEPTED requires both a verified receipt and a complete matching read-back
+   of the facts and their provenance.
+5. The page re-reads its current view before it acknowledges and clears the
+   stored answer.
+
+An answer that was never submitted (state PENDING) can be cancelled with a
+compare-and-delete on its state and nonce. An UNKNOWN answer cannot be
+discarded that way.
+
+## Shapes and their limits
+
+`shapes/deck.shapes.ttl` defines the Decision and Comment vocabulary.
+
+Loading the shapes does not mean every native transaction is fully validated
+against them. In the qualified candidate, post-write admission deliberately
+leaves out the minimum-count check (`MinCountConstraintComponent`). Two
+consequences:
+
+- A signed write that is missing its comment can remain as a native
+  attestation. Rikuy's full manifest reader rejects it.
+- A signed write with an invalid action value *is* refused by the loaded
+  shape. That gives one armed positive control.
+
+Loading a shape does not authorize a writer or protect a graph.
+
+An invalid signed write can still occupy a "decided" slot. When that happens,
+the curator advances the request to its next revision through its normal
+conditional write. It never edits or erases the invalid attestation, and
+nothing in this source repairs history automatically.
 
 ## Qualification and remaining acceptance
 
-`just ci` exercises the source units and disabled build. The explicit native
-fixture uses generated software keys only in memory, disposable local stores,
-the actual candidate operator CLI and linked native library. It checks Rust
-serialization and queryable provenance, successful choose/Later/comment,
-replay, forgery, wrong origin, changed/closed item, request revision, loaded
-shape values, and native-valid manifests that the Deck reader must reject.
-It is not a production profile-union, HTTP/CORS, hardware or human test.
+### What `just ci` covers
+
+The source units and the disabled build.
+
+### What the native fixture covers
+
+The explicit native fixture uses software keys generated only in memory,
+disposable local stores, the actual candidate operator CLI and the linked
+native library. It checks:
+
+- Rust serialization and queryable provenance;
+- a successful Choose, Later and Comment;
+- replay, forgery and wrong origin;
+- a changed item and a closed item;
+- a changed request revision;
+- values the loaded shape refuses;
+- manifests that are valid natively but that the Deck reader must reject.
+
+It is not a test of production profile union, HTTP or CORS, real hardware, or
+a real person.
+
+### Running it
 
 Generate a fresh Cargo JSONL artifact inventory from the candidate Quipu
-checkout using `cargo test --no-run --message-format=json`. Set `QUIPU_CLI` to
-its clean candidate executable and `QUIPU_ARTIFACTS` to that inventory. Build
+checkout with `cargo test --no-run --message-format=json`. Set `QUIPU_CLI` to
+the clean candidate executable and `QUIPU_ARTIFACTS` to that inventory. Build
 outside the test HOME, then run under the normal HOME guard:
 
 ```sh
@@ -120,13 +219,21 @@ node scripts/qualify-deck-native.mjs --build-helper /tmp/rikuy-native-fixture
 QUIPU_NATIVE_FIXTURE=/tmp/rikuy-native-fixture node scripts/qualify-deck-native.mjs
 ```
 
-The helper receipt pins its source, library and executable hashes; changed or
-ambiguous artifacts refuse. All stores are created below a new owned temporary
-directory and removed afterward. No default/installed store is opened.
+The helper's receipt pins the hashes of its source, library and executable. A
+changed or ambiguous artifact is refused. Every store is created under a new
+temporary directory owned by the run and removed afterward. No default or
+installed store is opened.
 
-Remaining acceptance: normal source CI/review/landing; admitted curator and
-bounded stored-query adapters; production shape classification; generic signer
-CLI adoption; dedicated trusted origin and live CORS/wrong-origin checks;
-explicit human ceremony; served Brief safety and interleaved performance; then
-separately reviewed old-domain removal. This preview is not activation,
-production publication, a new enrollment route or completed migration.
+### Still owed before this can be turned on
+
+1. Normal source CI, review and landing.
+2. Admitted curator and bounded stored-query adapters.
+3. Production classification of the shapes.
+4. Adoption of the generic signer CLI.
+5. A dedicated trusted origin, with live CORS and wrong-origin checks.
+6. An explicit human ceremony.
+7. Safety checks and interleaved performance checks on the served Brief.
+8. Reviewed removal of the old domain.
+
+This preview is not activation, production publication, a new enrollment
+route or a completed migration.

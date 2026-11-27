@@ -1,33 +1,99 @@
-# Source configuration
+# Reference
 
-`web/legacy/config.mjs` owns the immutable reader contract and disabled activation. A deployment supplies its exact graph, source/curator/row binding, creation receipt and registered query definitions. No URL or local-storage switch enables a reader. `web/knowledge/config.mjs` and `web/offline/config.mjs` remain disabled independently.
+## Configuration
 
-Production endpoints, graph registration, read-cost acceptance, snapshot provenance and signing enrollment must be provided by the deployment owner. The public demo is not their acceptance proof. Do not distribute operator data with this repository.
+Each page has a config file. Every flag ships set to off. A deployment
+edits its own copy; nothing in a URL or in browser storage can change these
+values.
+
+| File | Flags | What it controls |
+|---|---|---|
+| `web/today/reader-config.mjs` | `enabled`, `liveFeed`, `askDecisionsEnabled`, `readerOrigin` | Today's live reads, its change feed and its answer buttons. `readerOrigin` is the page's own origin. |
+| `web/legacy/config.mjs` | `enabled`, `endpoint`, `graph`, `transport`, `registration` | The retained brief: the server, the graph and how it polls |
+| `web/knowledge/config.mjs` | `enabled`, `prFlow.enabled`, `watches.enabled`, plus a receipt for each | Knowledge, pull requests and watches |
+| `web/deck/config.mjs` | `enabled` | The decision card |
+| `web/enroll/config.mjs` | `enabled`, `origin`, `rpId` | Passkey enrollment. `origin` must be one exact HTTPS origin, and `rpId` its hostname. |
+| `web/offline/config.mjs` | `enabled`, `installCache` | Offline decisions and the installable app |
+
+Three Today panels have a further gate beside their code:
+`web/today/changes/admission.json` and `web/today/watches/admission.json`
+(`enabled`, plus registration and read-cost receipts), and
+`web/today/recently-deferred/coverage.json` (`since` and
+`installationReceipt`). Each ships off or empty.
+
+Query definitions sit beside the code that uses them, for example
+`web/today/asks/query.json`. Each holds the query's name, its text and its row
+cap. Register them in Quipu exactly as written.
+
+The deployment owner supplies everything specific to an installation: the
+server address, the graph, the registered queries, the accepted read cost, any
+snapshot and the signing enrollment. None of it belongs in this repository.
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `just demo` | Builds the site and serves the sample brief on `http://127.0.0.1:4173` |
+| `just build` | Writes the static site to `dist/` |
+| `just test` | Runs the unit tests |
+| `just ci` | Runs tests, the build, the README check and the browser checks |
+| `just book` | Builds this book with mdBook |
+| `just installer-check` | Checks the installer against private release fixtures |
+
+Scripts that test against a real local Quipu server are run by hand. They are
+described in the document for the part they qualify:
+[contract](https://github.com/intigraph/rikuy/blob/main/docs/deck/contract.md#qualification-and-remaining-acceptance),
+[curator](https://github.com/intigraph/rikuy/blob/main/docs/deck/curator.md#repeatable-qualification),
+[reader](https://github.com/intigraph/rikuy/blob/main/docs/deck/reader.md) and
+[admission](https://github.com/intigraph/rikuy/blob/main/docs/deck/admission/README.md).
 
 ## Installing and removing
 
-Rikuy currently distributes a source build, not a versioned release package.
-The [one-line installer](https://github.com/intigraph/rikuy/blob/main/install.sh) requires Node 22+, npm, Python 3
-and Git. It clones the public main branch, runs `npm run build` and copies only
-`dist` into `PREFIX/share/rikuy/SOURCE_REVISION`. The default `PREFIX` is
-`~/.local`. Its `.source.json` records the source revision and package version;
-this is not a release checksum or a claim that a service has been deployed.
+Rikuy is distributed as source. There is no prebuilt package with a checksum
+yet.
 
-Download and review `install.sh` before running it. Set `STACK_INSTALL_ROOT`
-on the receiving shell to choose a private prefix; no positional arguments or
-version-pin flag are supported. Re-running for an existing revision verifies
-the full static tree, file modes and source record and refuses drift instead
-of overwriting it.
+### Install
 
-For a manually selected source revision, use a clean checkout of the public
-repository, select the revision you intend to build, then run `npm run build`.
-Deploy `dist` through your normal site lane. The installer does not configure
-a web server, credentials, Quipu endpoints or live-reader activation.
+```sh
+curl -fsSL https://raw.githubusercontent.com/intigraph/rikuy/main/install.sh | sh
+```
 
-To remove an installed build, first stop referring to its static files in your
-site deployment, then remove only its `PREFIX/share/rikuy/SOURCE_REVISION`
-directory. Keep other revisions you still use. Removing static output does not
-remove Quipu data or change a separately managed site deployment.
+You need Node 22+, npm, Python 3 and Git. Download and read `install.sh`
+before you run it.
 
-A checksummed release installer remains unavailable until the project publishes
-its release package and checksum manifest.
+The installer does four things:
+
+1. Clones the public `main` branch.
+2. Runs `npm run build`.
+3. Copies only `dist` into `PREFIX/share/rikuy/SOURCE_REVISION`. The default
+   `PREFIX` is `~/.local`.
+4. Writes `.source.json` there, recording the source revision and the package
+   version.
+
+It does not start a web server, and it sets up no credentials, no Quipu
+address and no live reader.
+
+| Option | How |
+|---|---|
+| Choose another prefix | Set `STACK_INSTALL_ROOT` in the shell that runs the installer |
+| Pin a version | Not supported by the installer. Build by hand instead. |
+
+Running the installer again for a revision that is already installed checks
+every file, its mode and the source record. If anything differs, it stops
+instead of overwriting.
+
+`.source.json` says which source was built. It is not a release checksum, and
+it does not show that anything is being served.
+
+### Build a chosen revision by hand
+
+Clone the repository, check out the revision you want, and run
+`npm run build`. Deploy `dist` the way you deploy any static site.
+
+### Remove
+
+1. Stop pointing your web server at the installed files.
+2. Delete that revision's folder, `PREFIX/share/rikuy/SOURCE_REVISION`.
+
+Keep any other revisions you still use. Removing the files does not touch
+Quipu data or your web server's configuration.

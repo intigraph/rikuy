@@ -1,14 +1,14 @@
 {
-  "source_revision": "d0fe0bd6bbe9982e6fdce8290f575a23db361737",
-  "reviewed_at": "2026-11-04T05:10:01.170061Z",
+  "source_revision": "80024e443907eea74eee6096d2f99c37d5f4c57d",
+  "reviewed_at": "2026-11-27T06:15:32.900257Z",
   "max_age_seconds": 2592000,
   "records": [
     {
       "kind": "idea",
       "source": "README.md",
-      "subject": "http://aegis.gastown.local/ontology/doc/rikuy/README.md#why-you-would-want-it",
-      "summary": "Rikuy presents source-bound status, graph snapshots, watches and decision client surfaces in a static browser brief. It is not a separate knowledge store.",
-      "source_sha256": "7eef1b5e3b282d33e5873501cef9295c2741fb42c76f40483c0be337a5d2ec10",
+      "subject": "http://aegis.gastown.local/ontology/doc/rikuy/README.md#what-it-does-today",
+      "summary": "Rikuy is a static browser brief over Quipu: a Today brief, Ask cards, passkey-signed decisions, settlement into Seeds, a graph explorer and a job-cost report. It is not a separate knowledge store. The demo and the job-cost report work from a clean checkout; live reads and signing are built and ship switched off.",
+      "source_sha256": "db9b3ce865f428271de44759c70a17cbc9371b311de7cbf541e359b8a10017aa",
       "type": "Concept"
     },
     {
@@ -29,8 +29,8 @@
       "kind": "interface",
       "source": "README.md",
       "subject": "http://aegis.gastown.local/ontology/doc/rikuy/README.md#install",
-      "summary": "The source installer builds the current public source snapshot, records its revision and package version, and copies only static output. It configures no server, credentials or live connection; a versioned release package and checksum manifest remain unavailable.",
-      "source_sha256": "7eef1b5e3b282d33e5873501cef9295c2741fb42c76f40483c0be337a5d2ec10",
+      "summary": "The source installer builds the current public main branch and copies only the static output into a revision-named folder. It starts no server and configures no credentials or live connection; no prebuilt, checksummed package is published yet.",
+      "source_sha256": "db9b3ce865f428271de44759c70a17cbc9371b311de7cbf541e359b8a10017aa",
       "properties": {
         "interfaceKind": "file-format",
         "publicName": "Static dist directory"
@@ -43,8 +43,8 @@
       "kind": "decision",
       "source": "docs/book/src/how-it-works.md",
       "subject": "http://aegis.gastown.local/ontology/doc/rikuy/docs%2Fbook%2Fsrc%2Fhow-it-works.md",
-      "summary": "The source keeps Knowledge, Watches and offline signing disabled until separate admission; operator snapshots and private keys are not included. Missing snapshots stay unavailable.",
-      "source_sha256": "95055e19c6d03716ab68aae6a2336bf16f6c70c1cf6347b5529da6eb90e81499",
+      "summary": "Every part that talks to a server ships switched off. A deployment turns a part on only after its queries are registered, their read cost is accepted and its scope is fixed in configuration. Credentials, private keys, operator snapshots and demo fixtures never ship in a build. Missing evidence is shown as UNKNOWN, never zero.",
+      "source_sha256": "6164271992f1dd6fb8ee1bac68554b409353b36c538413b02b7fdce011199a3e",
       "type": "DecisionRecord",
       "properties": {
         "status": "active",
@@ -58,8 +58,8 @@
       "kind": "start-here",
       "source": "README.md",
       "subject": "http://aegis.gastown.local/ontology/doc/rikuy/README.md",
-      "summary": "Start with the static-client overview and synthetic demo; demo success does not prove admitted live reads or signing enrollment.",
-      "source_sha256": "7eef1b5e3b282d33e5873501cef9295c2741fb42c76f40483c0be337a5d2ec10",
+      "summary": "Start with what works today and the synthetic demo; a working demo does not prove admitted live reads or signing enrollment.",
+      "source_sha256": "db9b3ce865f428271de44759c70a17cbc9371b311de7cbf541e359b8a10017aa",
       "properties": {
         "startHereOrder": 1,
         "glossaryTerm": "https://scbrown.github.io/quechua/ns#Decision"
@@ -69,8 +69,8 @@
       "kind": "start-here",
       "source": "docs/book/src/reference.md",
       "subject": "http://aegis.gastown.local/ontology/doc/rikuy/docs%2Fbook%2Fsrc%2Freference.md",
-      "summary": "Read the source configuration contract before supplying a graph, exact query registration, read budget or deployment-owned evidence.",
-      "source_sha256": "5a333f198ac114a284aab473ada2c4477373a2ab071a148fdf939dc0ea038eb6",
+      "summary": "Read the configuration reference before supplying a graph, exact query registration, accepted read cost or other deployment-owned evidence.",
+      "source_sha256": "7bb831dbbd8a5cb7867d7610abb1d0812c7f82e9a5b8f38c32862db356a99854",
       "properties": {
         "startHereOrder": 2
       }
@@ -79,8 +79,8 @@
       "kind": "start-here",
       "source": "README.md",
       "subject": "http://aegis.gastown.local/ontology/doc/rikuy/README.md#before-you-start",
-      "summary": "Confirm runtime and admitted read requirements; keep credentials server-side and source candidates disabled until their own acceptance.",
-      "source_sha256": "7eef1b5e3b282d33e5873501cef9295c2741fb42c76f40483c0be337a5d2ec10",
+      "summary": "Confirm the runtime, browser and admitted-read requirements; keep credentials on the server and every reader, signing and enrollment switched off until each is admitted.",
+      "source_sha256": "db9b3ce865f428271de44759c70a17cbc9371b311de7cbf541e359b8a10017aa",
       "properties": {
         "startHereOrder": 3
       }

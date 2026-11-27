@@ -1,7 +1,16 @@
 # Decision Deck boundary: Rikuy owns the Deck, Quipu keeps generic primitives
 
-Status: design, review rulings recorded below. Nothing is implemented or
-enabled by this document.
+Status: design, with the review rulings recorded below. This document itself
+enables nothing.
+
+Progress against the [migration](#migration-in-order), as of Rikuy 0.4.0:
+
+| Step | State |
+|---|---|
+| 1. Quipu adds the attested write, off by default | Done. The `/attest/` routes exist behind a switch that defaults to off. |
+| 2. Rikuy builds the Deck on it | Done in source, switched off. See [contract](../deck/contract.md). |
+| 3. Switch the Brief to the Rikuy Deck | Not done |
+| 4. Quipu removes its own Deck | Not done. Quipu still carries its `/deck/` routes. |
 
 ## Decision
 
