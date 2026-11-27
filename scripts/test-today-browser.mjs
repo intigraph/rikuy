@@ -9,6 +9,7 @@ const server=createServer(async(req,res)=>{
   try {
     let name=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
     if(name==='/favicon.ico'){res.writeHead(204);res.end();return;}
+    if(name==='/today/demo-asks/'||name==='/demo-today-asks.mjs'){res.setHeader('Content-Type',name.endsWith('.mjs')?'text/javascript':'text/html');res.end(await readFile(resolve('scripts',name.endsWith('.mjs')?'demo-today-asks.mjs':'demo-today-asks.html')));return;}
     if(name.endsWith('/'))name+='index.html';
     const file=resolve(root,'.'+name);
     if(!file.startsWith(root+sep))throw new Error('outside static root');
@@ -47,6 +48,31 @@ async function loadToday({breakDependency=false}={}){
     assert.deepEqual(live,[],'default readers must remain off');
   } finally {await context.close();}
 }
+async function demoDecisionCards(){
+  const context=await browser.newContext({viewport:{width:390,height:844}}),page=await context.newPage(),failures=[],live=[];
+  page.on('pageerror',e=>failures.push(e.message));
+  await page.route('**/*',route=>{const u=new URL(route.request().url());if(u.origin!==origin){live.push(u.href);return route.abort();}return route.continue();});
+  try{
+    await page.goto(origin+'/today/demo-asks/');
+    await page.waitForFunction(()=>window.demoAsksRendered&&document.querySelectorAll('.ask-decide .recommended').length===3);
+    await page.waitForTimeout(120);
+    assert.equal(await page.evaluate(()=>window.demoChoiceReads),3,'one point read per card; a re-render reuses the seed@revision cache');
+    const cards=await page.locator('.ask').evaluateAll(nodes=>nodes.map(card=>({
+      id:card.dataset.item,choose:card.querySelectorAll('.ask-decide [data-action=choose]').length,
+      controls:card.querySelectorAll('.ask-decide button').length,enabled:card.querySelectorAll('.ask-decide button:not(:disabled)').length,
+      rec:[...card.querySelectorAll('.ask-decide .recommended')].map(b=>b.dataset.choice),reason:card.querySelector('.ask-decide .decision-status')?.textContent})));
+    assert.equal(cards.length,3);
+    for(const card of cards){
+      assert.ok(card.choose>=2,card.id+' has at least two choices');assert.equal(card.rec.length,1,card.id+' marks exactly one REC');
+      assert.equal(card.enabled,0,card.id+' choices are disabled under the public config');
+      assert.match(card.reason,/^Signing not admitted on this deployment/);
+    }
+    assert.deepEqual(cards.map(c=>c.rec[0]),['choose-1-verify-the-source','choose-2-after-review','choose-1-yes']);
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'no horizontal scroll at phone width');
+    assert.deepEqual(failures,[]);assert.deepEqual(live,[]);
+    console.log(`PASS demo decision cards: ${cards.length} cards, ${cards.reduce((n,c)=>n+c.controls,0)} decision controls (${cards.map(c=>c.choose).join('/')} choices + Later + Comment), REC marked once each, all disabled with the stated reason`);
+  }finally{await context.close();}
+}
 async function explicitAskRecord(){
   const context=await browser.newContext(),page=await context.newPage(),remote=[];
   await page.route('**/*',route=>{if(new URL(route.request().url()).origin!==origin){remote.push(route.request().url());return route.abort();}return route.continue();});
@@ -76,6 +102,7 @@ try {
   browser=await chromium.launch({headless:process.env.RIKUY_BROWSER_HEADED!=='1',...(process.env.RIKUY_BROWSER_EXECUTABLE?{executablePath:process.env.RIKUY_BROWSER_EXECUTABLE}:{})});
   await loadToday();
   await explicitAskRecord();
+  await demoDecisionCards();
   console.log('PASS explicit Ask metadata, readable record and keyboard graph navigation; zero nonlocal requests');
   console.log('PASS built Today module graph, disabled-reader startup and tab transition');
   await assert.rejects(loadToday({breakDependency:true}),/Timeout|built module imports/);
