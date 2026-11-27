@@ -105,7 +105,20 @@ test('OPTIONS/REC are read per Ask by point read, cached by revision, and retrie
   assert.deepEqual(await read(seed,1),{options:'A | B',rec:'A'});
   await read(seed,1);
   assert.equal(calls.length,2);
-  assert.deepEqual(calls[1],['https://reader.example/ask',{name:'daily_brief_ask_item_v1',params:{seed}}]);
+  assert.deepEqual(calls[1],['https://reader.example/ask',{name:'daily_brief_ask_item_v2',params:{seed}}]);
   await read(seed,2);assert.equal(calls.length,3);
   assert.throws(()=>askChoices(itemBody(seed,[row('aegis-two')]),definitions.item,seed),/changed/);
+});
+
+// A constant-subject `?item seeds:priority ?priority ; seeds:status ?status`
+// chain took 4-10 s per seed and timed the panel out; item_v2 reads status as
+// OPTIONAL and keeps v1's required-status semantics with FILTER(BOUND(?status)).
+test('item_v2 template reads status as OPTIONAL with a BOUND filter',()=>{
+  const {name,template,params,rowCap}=definitions.item;
+  assert.equal(name,'daily_brief_ask_item_v2');
+  assert.doesNotMatch(template,/seeds:priority\s+\?priority\s*;\s*seeds:status/);
+  assert.match(template,/\?item seeds:priority \?priority \. OPTIONAL \{ \?item seeds:status \?status \}/);
+  assert.match(template,/FILTER\(BOUND\(\?status\)\) \} \} LIMIT 2$/);
+  assert.deepEqual(params,[{name:'seed',type:'iri',required:true}]);
+  assert.equal(rowCap,3);
 });
