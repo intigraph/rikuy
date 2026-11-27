@@ -4,7 +4,11 @@ import {webauthnSigner} from '../deck/sign.mjs';
 import {PendingWrite} from '../deck/pending.mjs';
 import {PendingStore} from '../deck/storage.mjs';
 
-// The factory a deployment installs as readerConfig.askDecisionAdapter.
+// A factory a deployment may call to build readerConfig.askDecisionAdapter.
+// Nothing in this repository calls it outside tests: home.mjs does not import
+// or install it. home.mjs only accepts an adapter function that the deployment's
+// reader config already supplies, and only when askDecisionsEnabled === true.
+// The public build supplies none, so every card stays disabled with its reason.
 // It composes the existing Deck signer, durable intent store, signed-write
 // transport and native Seeds settlement for mountAskDecision. It owns no
 // store, endpoint or writer of its own, and has no unsigned fallback: a

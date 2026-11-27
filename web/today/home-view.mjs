@@ -1,6 +1,7 @@
 import {decisionView,questionLabel,deploymentGroups} from './home-model.mjs';
 import {mountAskDecision} from './ask-decisions.mjs';
 import {askChoices} from './ask-choices.mjs';
+import {choiceReads} from './ask-choice-reads.mjs';
 import {NOT_ADMITTED} from './ask-decision-adapter.mjs';
 // Presentation only. Decoded source data stays textContent, including titles.
 export const $=id=>document.getElementById(id);
@@ -14,25 +15,14 @@ export function cite(node,href,label='Query definition'){
 export function unavailable(node,reason,at=Date.now()){
   mark(node).replaceChildren(el('p','Unavailable: '+reason,'unavailable'),el('time','Checked '+stamp(at),'source-time'));
 }
-let explorerPromise,recordReader,recordPanel,recordRoot,askDecisionAdapter,askChoicesReader;
+let explorerPromise,recordReader,recordPanel,recordRoot,askDecisionAdapter,askChoicesReader,cardReads;
 export function setAskDecisionAdapter(adapter){askDecisionAdapter=adapter;}
-export function setAskChoicesReader(read){askChoicesReader=read;choiceQueue.length=0;}
+export function setAskChoicesReader(read){askChoicesReader=read;cardReads=read?choiceReads(read):undefined;}
 // Decision cards read OPTIONS/REC through the same per-seed point reader as the
 // details panel (cached by seed@revision, timed out, failures evicted), at most
 // two in flight. A failed read keeps the title/fallback choices, says so, and
-// offers a retry.
-const choiceQueue=[];let choiceReads=0;
-function queueChoices(row,done){
-  if(!askChoicesReader)return false;
-  const read=askChoicesReader;choiceQueue.push(()=>read(row.item,row.revision).then(found=>done({state:'read',options:found?.options||'',rec:found?.rec||''}),()=>done({state:'failed'})));
-  pumpChoices();return true;
-}
-function pumpChoices(){
-  while(choiceReads<2&&choiceQueue.length){
-    const next=choiceQueue.shift();choiceReads++;
-    Promise.resolve().then(next).finally(()=>{choiceReads--;pumpChoices();});
-  }
-}
+// offers a retry. A re-render does not re-read a failed seed@revision; only
+// Retry does.
 const decisionReason=()=>askDecisionAdapter?'Checking signing admission…':NOT_ADMITTED.signer;
 // Every Needs-you card is a decision card. Choices render disabled with the
 // visible reason until an admitted adapter mounts the signed Deck controls.
@@ -59,12 +49,10 @@ function decisionCard(card,row){
     section.dataset.reason=reason;
   };
   const redraw=()=>{if(!section.dataset.mounted)draw(section.dataset.reason);};
-  function load(){
-    if(queueChoices(row,found=>{choices=found;if(section.isConnected)redraw();}))choices={state:'loading'};
-    redraw();
-  }
+  const done=found=>{choices=found;if(section.isConnected)redraw();};
+  function load(){if(cardReads){choices=cardReads.retry(row,done);redraw();}}
+  if(choices.state==='none'&&cardReads)choices=cardReads.request(row,done);
   draw(decisionReason());
-  if(choices.state==='none')load();
   card.append(section);
   if(askDecisionAdapter){
     if(row.kind!=='ask'){draw(NOT_ADMITTED.ask);return;}
