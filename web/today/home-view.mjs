@@ -1,5 +1,7 @@
 import {decisionView,questionLabel,deploymentGroups} from './home-model.mjs';
 import {mountAskDecision} from './ask-decisions.mjs';
+import {askChoices} from './ask-choices.mjs';
+import {NOT_ADMITTED} from './ask-decision-adapter.mjs';
 // Presentation only. Decoded source data stays textContent, including titles.
 export const $=id=>document.getElementById(id);
 export const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
@@ -14,7 +16,63 @@ export function unavailable(node,reason,at=Date.now()){
 }
 let explorerPromise,recordReader,recordPanel,recordRoot,askDecisionAdapter,askChoicesReader;
 export function setAskDecisionAdapter(adapter){askDecisionAdapter=adapter;}
-export function setAskChoicesReader(read){askChoicesReader=read;}
+export function setAskChoicesReader(read){askChoicesReader=read;choiceQueue.length=0;}
+// Decision cards read OPTIONS/REC through the same per-seed point reader as the
+// details panel (cached by seed@revision, timed out, failures evicted), at most
+// two in flight. A failed read keeps the title/fallback choices, says so, and
+// offers a retry.
+const choiceQueue=[];let choiceReads=0;
+function queueChoices(row,done){
+  if(!askChoicesReader)return false;
+  const read=askChoicesReader;choiceQueue.push(()=>read(row.item,row.revision).then(found=>done({state:'read',options:found?.options||'',rec:found?.rec||''}),()=>done({state:'failed'})));
+  pumpChoices();return true;
+}
+function pumpChoices(){
+  while(choiceReads<2&&choiceQueue.length){
+    const next=choiceQueue.shift();choiceReads++;
+    Promise.resolve().then(next).finally(()=>{choiceReads--;pumpChoices();});
+  }
+}
+const decisionReason=()=>askDecisionAdapter?'Checking signing admission…':NOT_ADMITTED.signer;
+// Every Needs-you card is a decision card. Choices render disabled with the
+// visible reason until an admitted adapter mounts the signed Deck controls.
+function decisionCard(card,row){
+  const section=el('section',undefined,'ask-decide');section.dataset.item=row.id;
+  let choices=row.options||row.rec?{state:'read',options:row.options||'',rec:row.rec||''}:{state:'none'};
+  const draw=reason=>{
+    const parsed=askChoices({title:questionLabel(row.title),default:row.default,...(choices.state==='read'?{options:choices.options,rec:choices.rec}:{})});
+    const why=el('div',undefined,'decision-why');for(const line of parsed.why)why.append(el('p',line,'decision-context'));
+    const group=el('div',undefined,'decision-actions');group.setAttribute('role','group');group.setAttribute('aria-label','Choices: '+questionLabel(row.title));
+    const note=el('p',reason,'decision-status');note.id='decision-reason-'+row.id;note.setAttribute('role','status');
+    for(const choice of parsed.choices){
+      const button=el('button',choice.label,'decision-choice'+(choice.recommended?' recommended':''));button.type='button';button.disabled=true;button.dataset.choice=choice.id;button.dataset.action=choice.action;
+      button.setAttribute('aria-describedby',note.id);
+      if(choice.recommended){button.append(el('span',' · Recommended','rec-badge'));}
+      group.append(button);
+    }
+    section.replaceChildren(why,group,note);
+    if(choices.state==='loading')section.append(el('p','Reading recorded options…','note'));
+    if(choices.state==='failed'){
+      const retry=el('button','Retry','retry-choices');retry.type='button';retry.addEventListener('click',load);
+      const failed=el('p','Recorded options could not be read; showing '+(parsed.source==='title'?'the title choices':'Yes / No')+'. ','note');failed.append(retry);section.append(failed);
+    }
+    section.dataset.reason=reason;
+  };
+  const redraw=()=>{if(!section.dataset.mounted)draw(section.dataset.reason);};
+  function load(){
+    if(queueChoices(row,found=>{choices=found;if(section.isConnected)redraw();}))choices={state:'loading'};
+    redraw();
+  }
+  draw(decisionReason());
+  if(choices.state==='none')load();
+  card.append(section);
+  if(askDecisionAdapter){
+    if(row.kind!=='ask'){draw(NOT_ADMITTED.ask);return;}
+    const actions=el('section',undefined,'ask-signing');actions.hidden=true;card.append(actions);
+    mountAskDecision(actions,row,askDecisionAdapter).then(()=>{section.dataset.mounted='true';section.hidden=true;actions.hidden=false;})
+      .catch(error=>{actions.remove();draw(typeof error?.reason==='string'?error.reason:'Decision unavailable · admitted request or settlement evidence is missing.');});
+  }
+}
 export function setRecordReader(read){recordReader=read;}
 export async function openRecord(id,title){
   if(!/^aegis-[a-z0-9]+(?:\.[0-9]+)*$/.test(id))throw Error('Invalid record selection');
@@ -99,11 +157,8 @@ export function renderAsks(view,reason,at){
     details.append(el('div',[row.id,'P'+row.priority,row.status,'age '+(row.created?age(row.created):'unknown'),row.owner?.split('/').at(-1)||'unassigned'].join(' · '),'meta'));
     details.addEventListener('toggle',()=>{details.open?opened.add(row.id):opened.delete(row.id);root.dataset.openIds=JSON.stringify([...opened]);if(details.open)loadChoices();});
     if(details.open)loadChoices();
+    decisionCard(card,row);
     card.append(details,recordButton(row.id,row.title));
-    if(row.kind==='ask'&&askDecisionAdapter){
-      const actions=el('section');card.append(actions);
-      mountAskDecision(actions,row,askDecisionAdapter).catch(()=>actions.replaceChildren(el('p','Decision unavailable · admitted request or settlement evidence is missing.','unavailable')));
-    }
     return card;
   };
   for(const [index,row] of decisions.featured.entries())top.append(cardFor(row,index));

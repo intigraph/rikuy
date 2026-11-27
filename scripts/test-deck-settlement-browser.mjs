@@ -7,21 +7,21 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const browser = await chromium.launch({executablePath: process.env.RIKUY_BROWSER_EXECUTABLE || undefined,
   headless: process.env.RIKUY_BROWSER_HEADED !== '1', args: ['--no-sandbox', '--disable-dev-shm-usage']});
 try {
-  for (const mode of ['accepted', 'lost-response', 'disabled', 'today-card', 'mismatched-card']) {
+  for (const mode of ['accepted', 'lost-response', 'disabled', 'today-card', 'mismatched-card', 'adapter-card', 'adapter-mismatch']) {
     const context = await browser.newContext(process.env.RIKUY_SETTLEMENT_DEMO_DIR && mode === 'accepted' ? {viewport: {width: 1280, height: 720}, recordVideo: {dir: process.env.RIKUY_SETTLEMENT_DEMO_DIR, size: {width: 1280, height: 720}}} : {}), page = await context.newPage(), errors = [], blocked = [];
     page.on('pageerror', e => errors.push(e.message));
     await context.route('**/*', async route => {
       const u = new URL(route.request().url());
       if (u.origin === 'https://sign.example.test') {
         if (u.pathname === '/') return route.fulfill({contentType: 'text/html', body: '<main></main>'});
-        if (/^\/(web\/deck\/[a-z-]+|tests\/deck-fixture|web\/today\/ask-decisions|web\/today\/knowledge\/model)\.mjs$/.test(u.pathname)) return route.fulfill({contentType: 'text/javascript', body: await readFile(root + u.pathname)});
+        if (/^\/(web\/deck\/[a-z-]+|tests\/deck-fixture|web\/today\/ask-decisions|web\/today\/ask-decision-adapter|web\/today\/knowledge\/model)\.mjs$/.test(u.pathname)) return route.fulfill({contentType: 'text/javascript', body: await readFile(root + u.pathname)});
       }
       blocked.push(u.href); await route.abort();
     });
     await page.goto('https://sign.example.test/');
     await page.evaluate(async mode => {
       const f = await import('/tests/deck-fixture.mjs'), m = await import('/web/deck/model.mjs'), {mount} = await import('/web/deck/view.mjs');
-      const today = mode === 'today-card' || mode === 'mismatched-card';
+      const adapterMode = mode.startsWith('adapter-'), today = mode === 'today-card' || mode === 'mismatched-card' || adapterMode;
       const boundary = today ? {...f.boundary, itemPrefix: 'https://seeds.local/item/', itemGraph: 'https://seeds.local/project/aegis'} : f.boundary;
       const ask = {...f.ask, ...(today ? {seed: boundary.itemPrefix + 'aegis-fixture'} : {}), settlement: {target: boundary.itemPrefix + 'aegis-linked', targetRevision: 12}};
       let evidence, pending = null, result, closed = false;
@@ -44,12 +44,30 @@ try {
       if (today) {
         const {mountAskDecision} = await import('/web/today/ask-decisions.mjs');
         const row = {kind: 'ask', item: ask.seed, revision: ask.itemRevision, unblocks: ask.settlement.target, expires: new Date(ask.expiresAt * 1000).toISOString()};
-        if (mode === 'mismatched-card') row.unblocks = boundary.itemPrefix + 'aegis-other';
-        try {await mountAskDecision(document.querySelector('main'), row, async () => deps);}
-        catch (e) {if (mode !== 'mismatched-card') throw e; document.querySelector('main').textContent = 'Mismatched card refused';}
+        if (mode === 'mismatched-card' || mode === 'adapter-mismatch') row.unblocks = boundary.itemPrefix + 'aegis-other';
+        let adapter = async () => deps;
+        if (adapterMode) {
+          // The real factory composes the Deck PendingWrite; no authenticator is touched here.
+          const {makeAskDecisionAdapter} = await import('/web/today/ask-decision-adapter.mjs');
+          const refused = async () => {throw Error('no signed write in this check');};
+          adapter = makeAskDecisionAdapter({identity: f.who, boundary, nativeSettlement: native, openStore: async () => f.memory(), readRequest: async () => deps.read(),
+            environment: {secure: true, origin: location.origin, credentials: {get: async () => {window.calls.sign++; throw Error('no authenticator in this check');}}},
+            transport: {challenge: refused, commit: refused, receipt: refused, readback: refused}});
+        }
+        try {await mountAskDecision(document.querySelector('main'), row, adapter);}
+        catch (e) {if (mode !== 'mismatched-card' && mode !== 'adapter-mismatch') throw e; document.querySelector('main').textContent = 'Mismatched card refused';}
       } else await mount(document.querySelector('main'), deps);
     }, mode);
-    if (mode === 'mismatched-card') {
+    if (mode === 'adapter-card') {
+      await page.getByRole('button', {name: 'Yes', exact: true}).waitFor();
+      assert.equal(await page.getByRole('button', {name: 'No', exact: true}).count(), 1);
+      assert.equal(await page.getByRole('button', {name: 'Later', exact: true}).count(), 1);
+      assert.deepEqual(await page.evaluate(() => window.calls), {send: 0, read: 0, sign: 0});
+      assert.deepEqual(errors, []); assert.deepEqual(blocked, []);
+      console.log('PASS admitted adapter fixture mounts Today card through mountAskDecision; no signing or writes');
+      await context.close(); continue;
+    }
+    if (mode === 'mismatched-card' || mode === 'adapter-mismatch') {
       assert.equal(await page.locator('button').count(), 0);
       assert.deepEqual(await page.evaluate(() => window.calls), {send: 0, read: 0, sign: 0});
       assert.deepEqual(errors, []); assert.deepEqual(blocked, []);

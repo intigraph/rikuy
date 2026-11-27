@@ -5,11 +5,14 @@ import {verifiedDemo} from './demo-data.mjs';
 const rows=verifiedDemo();
 const root=resolve(import.meta.dirname,'../dist'),port=Number(process.env.PORT||4173);
 const demoScript=await readFile(resolve(import.meta.dirname,'../web/legacy/demo.mjs'));
+const asksPage=await readFile(resolve(import.meta.dirname,'demo-today-asks.html')),asksScript=await readFile(resolve(import.meta.dirname,'demo-today-asks.mjs'));
 const mime={'.mjs':'text/javascript','.js':'text/javascript','.css':'text/css','.json':'application/json','.wasm':'application/wasm','.html':'text/html'};
 const server=createServer(async(req,res)=>{
  try{
   const name=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
   if(name==='/demo.mjs'){res.setHeader('content-type','text/javascript');return res.end(demoScript);}
+  if(name==='/today/demo-asks/'){res.setHeader('content-type','text/html');return res.end(asksPage);}
+  if(name==='/demo-today-asks.mjs'){res.setHeader('content-type','text/javascript');return res.end(asksScript);}
   if(name==='/demo-rows.json'){res.setHeader('content-type','application/json');return res.end(JSON.stringify(rows));}
   // The built root redirects to Today, whose live readers are off. The demo
   // serves the retained brief at the root so the checked sample rows are shown.
@@ -19,5 +22,5 @@ const server=createServer(async(req,res)=>{
   res.end(name==='/'?body.toString().replace('</body>','<script type="module" src="./demo.mjs"></script></body>'):body);
  }catch{res.writeHead(404);res.end('Not found');}
 });
-server.listen(port,'127.0.0.1',()=>{console.log('Validated demo: 2 priorities and 1 decision.');console.log(`Rikuy demo: http://127.0.0.1:${server.address().port}`);});
+server.listen(port,'127.0.0.1',()=>{console.log('Validated demo: 2 priorities and 1 decision.');console.log(`Rikuy demo: http://127.0.0.1:${server.address().port}`);console.log(`Today decision cards (synthetic, signing not admitted): http://127.0.0.1:${server.address().port}/today/demo-asks/`);});
 for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>server.close());
