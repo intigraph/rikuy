@@ -1,0 +1,60 @@
+*{box-sizing:border-box}
+html,body{background:var(--c-field)}
+body{margin:0;color:var(--c-cord);font:15px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--c-cord);outline-offset:3px}
+.page{max-width:440px;margin:0 auto;padding:16px}
+.demo-note{margin:0 0 12px;font-size:12.5px;color:var(--c-dim)}
+/* Cord frame: elbow + bar on top, one rail block per panel, a cap below. */
+.console{position:relative;border-radius:28px;padding:16px 14px 18px;overflow:hidden}
+.top{display:grid;grid-template-columns:calc(var(--rail) + 30px) 1fr}
+.elbow{position:relative;height:58px;background:var(--c-cord);border-top-left-radius:36px;transform-origin:top left;animation:grow .7s var(--ease) both}
+.elbow::after{content:"";position:absolute;right:0;bottom:0;width:30px;height:42px;background:var(--c-field);border-top-left-radius:18px}
+.bar{display:flex;gap:4px;height:16px;padding-left:4px}
+.bar i{display:block;height:100%;transform-origin:left;animation:sweep .7s var(--ease) both}
+.bar i:nth-child(1){flex:1;background:var(--c-cord);animation-delay:.1s}
+.bar i:nth-child(2){width:46px;background:var(--c-live);animation-delay:.2s}
+.bar i:nth-child(3){width:22px;background:var(--c-ask);border-radius:0 8px 8px 0;animation-delay:.3s}
+.head{grid-column:2;margin-top:-34px;padding-left:12px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.head h1{font:700 30px/1 var(--display);letter-spacing:.06em;margin:0;text-transform:uppercase}
+.feed{display:flex;align-items:center;gap:7px;font:600 14px/1 var(--display);letter-spacing:.12em;color:var(--c-dim);text-transform:uppercase}
+.knot{width:11px;height:11px;border-radius:50%;background:var(--c-live);box-shadow:0 0 0 3px rgba(92,200,184,.22);animation:pulse 3.2s ease-in-out infinite}
+.byline{margin:0 0 4px;padding:12px 0 8px 12px;border-left:var(--rail) solid var(--c-cord);min-height:50px;font-size:12.5px;color:var(--c-dim)}
+.slots{display:flex;flex-direction:column;gap:4px}
+.slot{display:grid;grid-template-columns:var(--rail) minmax(0,1fr);gap:12px}
+.rail{position:relative;background:var(--tone,var(--c-cord));color:var(--c-field);font:700 17px/1 var(--display);display:flex;align-items:flex-end;justify-content:flex-end;padding:0 5px 6px;transform-origin:top;animation:grow .6s var(--ease) both}
+.rail::before{content:"";position:absolute;left:50%;top:14px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--c-field)}
+.slot[data-state=live]{--tone:var(--c-live)}
+.slot[data-state=ask]{--tone:var(--c-ask)}
+.slot[data-state=quiet]{--tone:var(--c-quiet)}
+.body{padding:6px 0 16px;min-width:0}
+.label{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px}
+.label h2{font:700 19px/1 var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--tone,var(--c-cord));margin:0}
+.label span{font-size:11px;color:var(--c-dim);overflow-wrap:anywhere;text-align:right}
+.cap{height:26px;width:var(--rail);background:var(--c-cord);border-bottom-left-radius:22px;margin-top:4px}
+/* Panel kind 1: metric tiles. Unknown is hatched, never zero. */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tile{background:var(--c-panel);border-radius:4px 16px 16px 4px;padding:9px 11px 8px;min-width:0}
+.tile small{display:block;font:600 14px/1.1 var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--c-dim)}
+.tile strong{display:block;font:700 34px/1.05 var(--display);font-variant-numeric:tabular-nums}
+.tile strong em{font:600 15px/1 var(--display);font-style:normal;color:var(--c-dim);margin-left:3px}
+.tile.fail strong{color:var(--c-fail)}
+.tile.unknown{background:repeating-linear-gradient(135deg,var(--c-panel) 0 6px,var(--c-hatch) 6px 12px)}
+.tile.unknown strong{font-size:24px;line-height:1.45;color:var(--c-dim);letter-spacing:.1em}
+.tile.unknown p{margin:3px 0 0;font-size:11px;line-height:1.3;color:var(--c-dim)}
+/* Panel kind 2: ask card. Choices stay disabled: signing is Stage 3. */
+.ask{background:var(--c-panel);border-radius:4px 16px 16px 4px;padding:12px}
+.ask h3{font:600 16px/1.3 var(--body);margin:0 0 6px}
+.ask dl{margin:0 0 10px;display:grid;grid-template-columns:auto 1fr;gap:1px 10px;font-size:12.5px}
+.ask dt{color:var(--c-dim)}
+.ask dd{margin:0}
+.actions{display:grid;grid-template-columns:1.25fr 1.25fr 1fr;gap:6px}
+.pill{min-width:0;min-height:48px;padding:0 6px;white-space:nowrap;border:0;border-radius:999px;background:var(--c-ask);color:var(--c-field);font:700 16px/1 var(--display);letter-spacing:.06em;text-transform:uppercase}
+.pill.ghost{background:none;border:2px solid var(--c-dim);color:var(--c-cord)}
+.pill:disabled{cursor:default}
+.status{margin:8px 0 0;font-size:12.5px;color:var(--c-dim)}
+@keyframes grow{from{transform:scaleY(0)}}
+@keyframes sweep{from{transform:scaleX(0)}}
+@keyframes pulse{50%{box-shadow:0 0 0 7px rgba(92,200,184,0)}}
+/* Reduced motion: every state still shows, nothing moves. */
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
