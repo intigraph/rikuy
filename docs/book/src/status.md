@@ -83,10 +83,6 @@ and held work read several, and the Board reads a projection.
 
 ## Known problems
 
-- `web/today/home.mjs` expects the Asks query to be named
-  `daily_brief_asks_v4`. The query file is named `daily_brief_asks_v5`. With
-  readers turned on, the *Needs you* panel refuses to start. The mismatch is
-  harmless while readers are off.
 - Seven curator custody tests fail on macOS. Its temporary directory is
   reached through a symbolic link, and the custody check refuses symlinked
   paths. They pass on Linux, which is what CI runs.
