@@ -1,5 +1,5 @@
 // Pure: turn an Ask's text into the choices a decision card offers.
-// Sources, in order: the seed's OPTIONS excerpt, a "(a / b / c)" title form,
+// Sources, in order: the seed's OPTIONS excerpt, a spaced "(a / b / c)" title form,
 // then the fallback Yes / No. Later and Comment are always offered. A REC
 // excerpt marks at most one choice; an ambiguous REC marks none.
 // Nothing here reads, writes or signs. Labels are plain text for textContent.
@@ -36,9 +36,11 @@ function fromOptions(options) {
   if (!text) return null;
   return markedList(text) || splitList(text);
 }
+// Only a spaced " / " separates title choices: "(web/today/home.mjs)",
+// "(and/or)" and "(3/3/2)" are a path, a phrase and a count, not choices.
 function fromTitle(title) {
   for (const m of clean(title).matchAll(/\(([^()]{3,240})\)/g)) {
-    const parts = m[1].split(/\s+\/\s+|\s*\/\s*(?=\S)/).map(clean).filter(Boolean);
+    const parts = m[1].split(/\s+\/\s+/).map(clean).filter(Boolean);
     if (parts.length >= 2 && parts.length <= MAX_CHOICES && parts.every(p => p.length <= MAX_LABEL)) return parts.map(label => ({key: null, label}));
   }
   return null;

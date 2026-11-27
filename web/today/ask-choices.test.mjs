@@ -84,3 +84,11 @@ test('labels and choice count are bounded; duplicates collapse', () => {
   const nine = Array.from({length: 9}, (_, i) => 'opt' + i).join(' | ');
   assert.equal(askChoices({options: nine}).source, 'fallback');
 });
+
+test('unspaced slashes in a title parenthetical are not choices', () => {
+  for (const title of ['ASK Stiwi: fix the import (web/today/home.mjs)', 'ASK Stiwi: keep the rule (and/or)', 'ASK Stiwi: split the cards (3/3/2)']) {
+    const r = askChoices({title});
+    assert.equal(r.source, 'fallback', title);
+    assert.deepEqual(labels(r), ['Yes', 'No'], title);
+  }
+});
