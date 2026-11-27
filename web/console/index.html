@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rikuy console · demo</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="./tokens.css"><link rel="stylesheet" href="./console.css">
+</head><body>
+<div class="page">
+<p class="demo-note">Demo look · synthetic sample data. Reads nothing from Quipu and signs nothing.</p>
+<section class="console" id="console" aria-label="Rikuy console">
+  <div class="top">
+    <div class="elbow" aria-hidden="true"></div>
+    <div class="bar" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="head"><h1>Rikuy</h1><span class="feed"><span class="knot" aria-hidden="true"></span>Sample feed</span></div>
+  </div>
+  <p class="byline">Standing layout · sample</p>
+  <div class="slots">
+    <article class="slot" data-state="live" data-kind="tiles" aria-labelledby="h-delivery">
+      <div class="rail" aria-hidden="true">01</div>
+      <div class="body">
+        <div class="label"><h2 id="h-delivery">Delivery</h2><span>30 days · sample</span></div>
+        <div class="tiles">
+          <div class="tile"><small>Deploys per day</small><strong><span data-count="12.5" data-dp="1">12.5</span></strong></div>
+          <div class="tile fail"><small>Change failure</small><strong><span data-count="6">6</span><em>%</em></strong></div>
+          <div class="tile"><small>Time to restore</small><strong><span data-count="41">41</span><em>min</em></strong></div>
+          <div class="tile unknown"><small>Lead time</small><strong>Unknown</strong><p>No merge record to measure from yet</p></div>
+        </div>
+      </div>
+    </article>
+    <article class="slot" data-state="ask" data-kind="ask" aria-labelledby="h-needs">
+      <div class="rail" aria-hidden="true">02</div>
+      <div class="body">
+        <div class="label"><h2 id="h-needs">Needs you · 1</h2><span>expires in 3 days</span></div>
+        <div class="ask">
+          <h3>Where does the signing key live?</h3>
+          <dl><dt>A</dt><dd>Security key tapped on the phone (recommended)</dd><dt>B</dt><dd>Synced phone passkey</dd><dt>If unanswered</dt><dd>A applies</dd></dl>
+          <div class="actions" role="group" aria-label="Choices">
+            <button class="pill" type="button" disabled aria-describedby="ask-status">Choose A</button>
+            <button class="pill ghost" type="button" disabled aria-describedby="ask-status">Choose B</button>
+            <button class="pill ghost" type="button" disabled aria-describedby="ask-status">Later</button>
+          </div>
+          <p class="status" id="ask-status" role="status">Signing is not admitted (Stage 3). Choices stay disabled.</p>
+        </div>
+      </div>
+    </article>
+  </div>
+  <div class="cap" aria-hidden="true"></div>
+</section>
+</div>
+<script type="module" src="./console.mjs"></script>
+</body></html>

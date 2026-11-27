@@ -1,0 +1,20 @@
+/* Rikuy console tokens (aegis-xwm, Stage 1 "See").
+   One colour, one meaning. scripts/check-contrast.mjs reads every --c-* token
+   below and fails `just ci` if any declared pair is under WCAG AA (4.5:1), or
+   if a colour token is used in no checked pair. */
+:root{
+  color-scheme:dark;
+  --c-field:#0e1822;  /* page and rail-gap navy */
+  --c-panel:#172533;  /* panel surface */
+  --c-cord:#efe2c3;   /* cream: structure and text */
+  --c-dim:#8fa0af;    /* secondary text */
+  --c-live:#5cc8b8;   /* teal: live and verified */
+  --c-ask:#f0a94a;    /* amber: needs you */
+  --c-fail:#e9715f;   /* coral: failed or refused */
+  --c-quiet:#b9c4b5;  /* sage: quiet rail */
+  --c-hatch:#22323f;  /* unknown hatch stripe */
+  --display:"Saira Extra Condensed","Arial Narrow","Roboto Condensed",sans-serif-condensed,sans-serif;
+  --body:"Saira","Segoe UI",system-ui,sans-serif;
+  --rail:40px;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
