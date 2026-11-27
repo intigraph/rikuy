@@ -1,70 +1,137 @@
-# Ask admission preparation
+# Admission: the checklist before signing is turned on
 
-This packet format records source, instance, key, grant, operator and cost pins.
-Every required pin is either `SELECTED` with evidence or `UNKNOWN` with a reason
-and no guessed value. Keep deployment packets private: they may name internal
-principals, stores, managed credential locations and custody owners. They must
-never contain credential values or private keys.
+**Status: preparation only.** Nothing in this directory selects or activates a
+runtime adapter, credential, graph, grant, device, service, timer or
+production profile.
 
-`assessPacket` validates the complete inventory, named rollback and acceptance
-controls. Its report omits pin values and always says `runtimeAuthorized:false`,
-even when every pin has evidence. A complete checklist is not an access grant.
-The maintained public example is `example.json`; replace it only in a private
-copy, with actual reviewed evidence. Source revision is distinct from installed
-artifact, selected graph name from native graph-instance pin, and a credential
-location from a grant covering this principal and operation.
+**In short.** Before a deployment turns on signed Asks, it fills in a packet
+that pins every moving part: which source, which store and graphs, which key, which
+grant, which operator, and what the reads cost. This page describes the
+packet, the rehearsals that go with it, and the controls a future real test
+must show.
 
-Run the source rehearsal with an explicitly selected and hashed Seeds example:
+Background: [Signed decisions](../../book/src/signed-decisions.md).
+
+## The packet
+
+The packet records pins for source, instance, key, grant, operator and cost.
+
+- Every required pin is either `SELECTED`, with evidence, or `UNKNOWN`, with a
+  reason and no guessed value.
+- `assessPacket` validates the complete inventory, the named rollback and the
+  acceptance controls.
+- Its report leaves out pin values and always says `runtimeAuthorized:false`,
+  even when every pin has evidence.
+
+**A complete checklist is not an access grant.**
+
+Keep deployment packets private. They may name internal principals, stores,
+managed credential locations and custody owners. They must never contain
+credential values or private keys.
+
+The public example is `example.json`. Replace it only in a private copy, with
+evidence that was actually reviewed.
+
+Three pairs that are easy to confuse, and that the packet keeps apart:
+
+| This | Is not |
+|---|---|
+| The source revision | The installed artifact |
+| The selected graph name | The native pin for that graph instance |
+| Where a credential is stored | A grant covering this principal and operation |
+
+## Rehearsing settlement from source
+
+Build `ask_settlement_demo` from the admitted Seeds source first. Then run the
+rehearsal with an explicitly selected and hashed Seeds example:
 
 ```sh
 node scripts/rehearse-ask-admission.mjs PRIVATE_PACKET ABSOLUTE_SEEDS_DEMO SHA256
 ```
 
-Build `ask_settlement_demo` from the admitted Seeds source first. It uses a real
-in-memory Seeds transaction with a synthetic admission port. The driver checks
-that one batch closes the Ask, adds one linked ruling and preserves linked-work
-status, and that read-only recovery does not add a transaction. It separately
-checks the signed manifest's linked revision, altered/copy/duplicate answer
-refusals, Later without closure and one-send lost-response recovery. These are
-source controls; this driver marks native cryptography and production acceptance
-UNKNOWN. It never contacts an endpoint, generates a key or performs enrollment.
+It uses a real in-memory Seeds transaction with a synthetic admission port.
+The driver checks that:
 
-For actual **offline fixture** signing, forgery and replay controls, use the
-existing [native qualification](../contract.md#qualification-and-remaining-acceptance).
-The fixture now also covers the linked-item conditional slot, stale-target
-refusal and a natively verified manifest that the application reader must reject
-because it omits that slot. Keys are generated only in memory for disposable
-fixture stores and are never persisted or promoted into a production identity.
-The helper uses an explicit test vocabulary namespace; no deployment default is
-inferred. Store enrollment and grants in this fixture are disposable test data.
+- one batch closes the Ask, adds one linked ruling and leaves the linked
+  work's status alone;
+- read-only recovery adds no transaction;
+- the signed manifest carries the linked revision;
+- an altered, copied or duplicate answer is refused;
+- a Later does not close the Ask;
+- a lost response is recovered without a second send.
 
-Supply the complete fresh Cargo JSONL inventory; do not trim it to resolve
-ambiguity. If the producer builds multiple `serde_json` variants, default
-qualification refuses. An explicit `QUIPU_SERDE_JSON_ARTIFACT` plus
-`QUIPU_SERDE_JSON_SHA256` must match a member of that inventory and its actual
-bytes. The subsequent Rust compile must prove cross-library type/link identity.
-An incorrect but inventory-backed variant is expected to fail that compile.
-The helper receipt pins both libraries, its source and its executable. The
-native JSON report and retained producer/source/artifact receipts are the
-qualification evidence; a version string alone is insufficient.
+These are source controls. The driver marks native cryptography and
+production acceptance as UNKNOWN. It never contacts an endpoint, generates a
+key or performs an enrollment.
 
-A future admitted real smoke must show the actual human/device choice, native
-verified receipt, both-item revision/read-back, readable record/graph and audit.
-Forged/wrong-origin/replayed signatures and either stale item must refuse with
-no unauthorized changes. Lost replies retain durable one-send custody and
-recover read-only. Revocation must refuse the exact scoped credentials/binding.
-Retain the accepted receipt, every uncertain intent and the audit history during
-rollback; disable only the admitted consumers and revoke exact grants through
-the qualified owner lane. No runtime adapter, credential, graph, grant, device,
-service, timer or production profile is selected or activated by this source.
+## Signing, forgery and replay with real cryptography
+
+For real signing, forgery and replay controls on an **offline fixture**, use
+the [native qualification](../contract.md#qualification-and-remaining-acceptance).
+
+That fixture also covers:
+
+- the condition on the linked item;
+- refusal when the linked item is stale;
+- a manifest that verifies natively but that the application reader must
+  reject because it leaves out that condition.
+
+Keys are generated in memory for disposable fixture stores. They are never
+saved and never promoted into a production identity. The helper uses an
+explicit test vocabulary namespace, and no deployment default is inferred.
+Store enrollment and grants in the fixture are throwaway test data.
+
+### Supplying the build inventory
+
+- Supply the complete, fresh Cargo JSONL inventory. Do not trim it to resolve
+  an ambiguity.
+- If the producer builds several `serde_json` variants, default qualification
+  refuses.
+- To choose one, set both `QUIPU_SERDE_JSON_ARTIFACT` and
+  `QUIPU_SERDE_JSON_SHA256`. They must match a member of the inventory and its
+  actual bytes.
+- The Rust compile that follows must prove the libraries link with identical
+  types. A wrong variant that is still in the inventory is expected to fail
+  that compile.
+
+The helper's receipt pins both libraries, its source and its executable. The
+evidence is the native JSON report together with the retained producer, source
+and artifact receipts. A version string alone is not enough.
+
+## What a real test must show
+
+A future admitted test with a real person and device must show:
+
+- the actual human and device choice;
+- a native verified receipt;
+- both items' revisions advanced and read back;
+- a readable record and graph;
+- the audit trail.
+
+It must also show refusals, with no unauthorized change:
+
+- a forged signature, a wrong-origin signature and a replayed signature;
+- either item being stale.
+
+And these behaviors:
+
+- A lost reply keeps durable one-send custody and is recovered by reading.
+- Revocation refuses the exact scoped credentials and binding.
+
+### Rolling back
+
+Keep the accepted receipt, every uncertain intent and the audit history.
+Disable only the admitted consumers, and revoke the exact grants through the
+qualified owner path.
 
 ## Native loopback origin controls
 
-The origin qualification starts a SHA-pinned native server with a disposable
-store, private temporary HOME, synthetic local bearer and an explicit HTTPS
-origin allowlist. It binds only loopback, makes no production requests and
-performs no enrollment, grant or publication. The reported native source stamp
-must match the supplied source revision and report a clean build.
+The origin qualification starts a native server, pinned by SHA, with a
+disposable store, a private temporary HOME, a synthetic local bearer and an
+explicit HTTPS origin allowlist. It binds only to loopback, makes no
+production requests, and performs no enrollment, grant or publication. The
+native source stamp it reports must match the supplied source revision and
+report a clean build.
 
 ```sh
 QUIPU_SERVER=/absolute/pinned/quipu-server \
@@ -74,50 +141,77 @@ DECK_TRUSTED_ORIGIN=https://brief.example \
 node scripts/qualify-deck-origin.mjs
 ```
 
-The actual HTTP preflight controls cover trusted, foreign and `null` origins
-on the reader and challenge routes. A positive health response admits only the
-trusted origin to browser code. Foreign-origin health remains an ordinary HTTP
-response without CORS admission: CORS governs browser exposure, not server
-access or mutation authority. No wildcard headers or credentialed browser
-requests are enabled. Native signature origin verification remains a separate
-control in the offline signing qualification; these preflight checks do not
-prove enrollment, production TLS/device trust or a production allowlist apply.
+The HTTP preflight controls cover a trusted origin, a foreign origin and a
+`null` origin, on both the reader and challenge routes.
 
-Keep the real origin and deployment admission evidence in the private packet.
-The public example above is an identifier for an isolated rehearsal. The
-listener has a 60-second kill deadline and removes its fixture after exit.
+What the results mean:
+
+- A positive health response admits only the trusted origin to browser code.
+- A foreign origin still gets an ordinary HTTP health response, without CORS
+  admission. CORS governs what a browser exposes to a page. It does not govern
+  server access or the authority to write.
+- No wildcard headers and no credentialed browser requests are enabled.
+
+Checking the origin inside the signature is a separate control, in the offline
+signing qualification. These preflight checks do not prove enrollment,
+production TLS or device trust, or that a production allowlist was applied.
+
+Keep the real origin and the deployment's admission evidence in the private
+packet. The origin in the example above only identifies an isolated rehearsal.
+The listener has a 60-second kill deadline and removes its fixture on exit.
 
 ## Staged Seeds verifier process
 
-`scripts/verify-seeds-answer.mjs` is a bounded, read-only native process entry
-point for Seeds' separately admitted executable port. Stdin contains only a
-revision-bound intent and the operator-selected reader profile/public CA. It
-fetches the native point receipt itself, pins three graph registration IDs and
-retained creation records, and runs the complete signed-answer reader. The
-process refuses caller-supplied verification flags, foreign bindings, replaced
-graphs, incomplete native evidence and untrusted TLS. It has no credential,
-writer, default endpoint, signing key or enrollment command.
+`scripts/verify-seeds-answer.mjs` is a bounded, read-only process that Seeds'
+separately admitted executable port can start.
 
-The producer's DTO is authority only inside the private pipe from the
-root-owned hash-pinned program selected by Seeds. Running this script directly
-or copying its JSON does not admit a Seeds write. The seven-module bundle and
-Node executable must be admitted separately; this source installs neither.
+**Input.** Standard input holds only a revision-bound intent and the reader
+profile and public CA the operator selected.
 
-Native qualification also spawns the actual entry point over a temporary HTTPS
-listener dispatching read requests to the real native store helper. A temporary
-TLS key stays in memory; Python passes it over a pipe to OpenSSL for a public
-certificate. This transport fixture does not use the production HTTP server or
-qualify its scoped writer. Unknown CA and forged input must refuse. Setting
-`SEEDS_NATIVE_PORT_TEST` to the matching built Seeds library-test executable
-additionally exercises the real native process receipt, durable one-send
-reservation and atomic Seeds transition on a disposable in-memory backend,
-including wrong-binding refusal and read-only reconciliation. The test bypasses
-only root deployment selection, inside an explicitly ignored test function;
-there is no production override. Retain both repositories' exact source and
-executable hashes with this result.
+**What it does.**
 
-The native Seeds port's staged audit location is the item project graph, in the
-same CAS as both item changes and the ruling. Ordinary Seeds CLI audit placement
-remains the sibling provenance graph. Production admission must explicitly
-resolve this storage-authority choice and qualify exact remote writer scope,
-revocation, root bundle/profile custody and lost-response recovery before use.
+1. Fetches the native point receipt itself.
+2. Pins three graph registration IDs and their retained creation records.
+3. Runs the complete signed-answer reader.
+
+**What it refuses.** Verification flags supplied by the caller, foreign
+bindings, replaced graphs, incomplete native evidence and untrusted TLS.
+
+**What it lacks, on purpose.** A credential, a writer, a default endpoint, a
+signing key and an enrollment command.
+
+The producer's data carries authority only inside the private pipe from the
+root-owned, hash-pinned program that Seeds selected. Running this script
+directly, or copying its JSON, does not admit a Seeds write. The seven-module
+bundle and the Node executable must be admitted separately. This source
+installs neither.
+
+### How it is qualified
+
+Native qualification starts the real entry point against a temporary HTTPS
+listener that passes read requests to the real native store helper.
+
+- A temporary TLS key stays in memory. Python passes it over a pipe to OpenSSL
+  to make a public certificate.
+- This transport fixture does not use the production HTTP server and does not
+  qualify its scoped writer.
+- An unknown CA and forged input must both be refused.
+
+Setting `SEEDS_NATIVE_PORT_TEST` to the matching built Seeds library-test
+executable adds a run of the real native process receipt, the durable one-send
+reservation and the atomic Seeds transition, on a disposable in-memory
+backend. It includes a wrong-binding refusal and read-only reconciliation.
+
+That test bypasses only the root deployment selection, inside a test function
+that is explicitly ignored by default. There is no production override. Keep
+both repositories' exact source and executable hashes with the result.
+
+### An open storage question
+
+The native Seeds port stages its audit record in the item's project graph, in
+the same compare-and-set as both item changes and the ruling. The ordinary
+Seeds CLI puts audit records in the sibling provenance graph.
+
+Production admission must settle that choice explicitly. It must also qualify
+the exact remote writer scope, revocation, custody of the root bundle and
+profile, and lost-response recovery.

@@ -1,43 +1,98 @@
-# Public credential ceremony
+# Passkey enrollment ceremony
 
-The `/enroll/` source page creates a WebAuthn credential and exports only its
-credential ID, COSE public key, scheme, origin/RP and fingerprint. It has no
-registration transport, bearer, actor authority, graph allowlist or enable
-operation. The fingerprint is the first eight SHA-256 bytes of the exact COSE
-encoding, rendered as four groups of four hex digits. Compare it with the
-operator's native signer status after registration.
+**Status: built, switched off.** Delivering this source enrolls nobody.
+Do not prompt anyone to enroll, and do not change a production configuration,
+just because this source was delivered.
 
-Source configuration ships disabled. An approved deployment must provide one
-exact dedicated HTTPS origin and its identical RP hostname. URL parameters,
-local storage and browser-entered values cannot enable or change that scope.
-The default button is disabled and no credential is created on page load. A
-configured supported browser asks only after an explicit click. Cancellation,
-unsupported exports, mismatched context and malformed data produce no packet;
-creation may still have left a credential on the authenticator.
+**In short.** The `/enroll/` page creates a passkey and shows its public key
+and fingerprint. It registers nothing. An operator registers the key by hand
+with a command-line tool, then compares fingerprints with the person holding
+the device.
 
-The page checks the returned RP hash, credential identifier, creation challenge,
-origin, user presence/verification and COSE structure. It declines credentials
-reporting backup eligibility or backup state, as required by the single-device
-scope, and declines unrequested authenticator extensions. These checks interpret
-returned authenticator metadata; they are not hardware attestation or proof of
-the person's identity. WebAuthn binds credentials to an RP/origin, not a URL path.
-The dedicated origin must remain isolated from unrelated applications.
-See the [W3C authenticator-data definition](https://www.w3.org/TR/webauthn-3/#sctn-authenticator-data).
+Background: [Signed decisions](../book/src/signed-decisions.md).
 
-The operator still establishes the human identity, chooses the approved graph
-scope and expiry, enrolls through the generic local signer CLI, and compares the
-fingerprint with the device. Enrollment does not enable writes or protect a
-graph. Rotation enrolls a new ID; the native CLI revokes the old ID. The page
-never performs those operations and does not claim a credential is enrolled.
+## What the page does
 
-Before a real human ceremony, the generic signer CLI must be installed and
-qualified, the dedicated TLS origin trusted on the device, and the existing
-origin/CORS gate must show its live wrong-origin refusal. The decision path,
-served-reader checks and signed-action activation remain separate acceptance.
-Do not prompt the human or flip a production configuration on source delivery.
+It creates a WebAuthn credential and exports only:
 
-Local source qualification uses unit negatives and Chromium's virtual
-authenticator on intercepted synthetic HTTPS assets. Its public packet is
-accepted by the candidate native signer CLI in a disposable store, with the
-same fingerprint and the switch still off. This is not a real enrollment,
-production-origin smoke, hardware test or proof of installed acceptance.
+- the credential ID;
+- the public key, in COSE form;
+- the signing scheme;
+- the origin and relying party;
+- a fingerprint.
+
+The fingerprint is the first eight bytes of the SHA-256 hash of the exact COSE
+encoding, shown as four groups of four hex digits.
+
+The page has no registration transport, no bearer, no actor authority, no
+graph allowlist and no way to enable anything.
+
+## What turns it on
+
+An approved deployment provides one exact, dedicated HTTPS origin and the
+matching relying-party hostname in `web/enroll/config.mjs`. URL parameters,
+local storage and values typed into the browser cannot enable the page or
+change that scope.
+
+With the default configuration the button is disabled, and no credential is
+created when the page loads. On a configured, supported browser, the page asks
+only after an explicit click.
+
+Cancelling, an unsupported export, a mismatched context or malformed data all
+produce no packet. Creation may still have left a credential on the device.
+
+## What the page checks
+
+- the relying-party hash;
+- the credential identifier;
+- the creation challenge;
+- the origin;
+- user presence and user verification;
+- the structure of the COSE key.
+
+It declines two kinds of credential:
+
+- **Synced passkeys.** A credential that reports backup eligibility or backup
+  state is declined, because the scope is one device.
+- **Credentials with unrequested authenticator extensions.**
+
+These checks read what the authenticator reports about itself. They are not
+hardware attestation, and they do not prove who the person is.
+
+WebAuthn ties a credential to an origin and relying party, not to a URL path.
+The dedicated origin must therefore be isolated from unrelated applications. See the
+[W3C authenticator-data definition](https://www.w3.org/TR/webauthn-3/#sctn-authenticator-data).
+
+## What the operator does
+
+The page never does any of this, and never claims a credential is enrolled.
+
+1. Establish who the person is.
+2. Choose the approved graphs the credential may write and when it expires.
+3. Enroll the public key with the generic local signer CLI.
+4. Compare the fingerprint from the CLI's status with the one on the device.
+
+Enrollment alone does not enable writes or protect a graph.
+
+To rotate, enroll a new credential ID, then revoke the old one with the CLI.
+
+## Before a real ceremony
+
+All three must be true first:
+
+1. The generic signer CLI is installed and qualified.
+2. The device trusts the dedicated origin's TLS certificate.
+3. The existing origin and CORS gate shows a live refusal for a wrong origin.
+
+The decision path, the served-reader checks and turning on signed actions are
+each accepted separately.
+
+## How the source is qualified
+
+Local qualification uses unit tests for the refusals and Chromium's virtual
+authenticator against intercepted, synthetic HTTPS assets. The packet the page
+exports is accepted by the candidate native signer CLI in a disposable store,
+with the same fingerprint and the switch still off.
+
+This is not a real enrollment, a smoke test on the production origin, a
+hardware test or proof of installed acceptance.
