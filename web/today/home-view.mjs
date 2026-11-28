@@ -26,6 +26,24 @@ export function setAskChoicesReader(read){askChoicesReader=read;cardReads=read?c
 const decisionReason=()=>askDecisionAdapter?'Checking signing admission…':NOT_ADMITTED.signer;
 // Every Needs-you card is a decision card. Choices render disabled with the
 // visible reason until an admitted adapter mounts the signed Deck controls.
+// On a phone the question and its Why lines are line-clamped (look.css). The
+// More toggle on the meta line expands them in place, and shows only when
+// something is clipped.
+function clampToggle(card){
+  const button=el('button','More','clamp-more');button.type='button';button.hidden=true;button.setAttribute('aria-expanded','false');
+  button.addEventListener('click',()=>{const open=card.classList.toggle('unclamped');button.textContent=open?'Less':'More';button.setAttribute('aria-expanded',String(open));});
+  return button;
+}
+function checkClamp(card){
+  const button=card.querySelector('.clamp-more');if(!button)return;
+  button.hidden=!card.classList.contains('unclamped')&&![...card.querySelectorAll('.q,.decision-why')].some(n=>n.scrollHeight>n.clientHeight+1);
+}
+let clampWatch;
+function watchClamps(){
+  const check=()=>document.querySelectorAll('.ask').forEach(checkClamp);
+  requestAnimationFrame(check);
+  if(!clampWatch){clampWatch=true;addEventListener('resize',check);document.fonts?.ready.then(check);}
+}
 function decisionCard(card,row){
   const section=el('section',undefined,'ask-decide');section.dataset.item=row.id;
   let choices=row.options||row.rec?{state:'read',options:row.options||'',rec:row.rec||''}:{state:'none'};
@@ -33,7 +51,7 @@ function decisionCard(card,row){
     const parsed=askChoices({title:questionLabel(row.title),default:row.default,...(choices.state==='read'?{options:choices.options,rec:choices.rec}:{})});
     const why=el('div',undefined,'decision-why');for(const line of parsed.why)why.append(el('p',line,'decision-context'));
     const group=el('div',undefined,'decision-actions');group.setAttribute('role','group');group.setAttribute('aria-label','Choices: '+questionLabel(row.title));
-    const note=el('p',reason,'decision-status');note.id='decision-reason-'+row.id;note.setAttribute('role','status');
+    const note=el('p',reason,'decision-status');note.title=reason;note.id='decision-reason-'+row.id;note.setAttribute('role','status');
     for(const choice of parsed.choices){
       const button=el('button',choice.label,'decision-choice'+(choice.recommended?' recommended':''));button.type='button';button.disabled=true;button.dataset.choice=choice.id;button.dataset.action=choice.action;
       button.setAttribute('aria-describedby',note.id);
@@ -41,6 +59,7 @@ function decisionCard(card,row){
       group.append(button);
     }
     section.replaceChildren(why,group,note);
+    if(section.isConnected)requestAnimationFrame(()=>checkClamp(card));
     if(choices.state==='loading')section.append(el('p','Reading recorded options…','note'));
     if(choices.state==='failed'){
       const retry=el('button','Retry','retry-choices');retry.type='button';retry.addEventListener('click',load);
@@ -116,7 +135,7 @@ export function renderAsks(view,reason,at){
   cite($('asks-status'),'./asks/titles.json','Title query');
   // The ordering rule is stated where the order is shown (decisionView).
   let order=$('ask-order');
-  if(!order){order=el('p',undefined,'ask-order');order.id='ask-order';top.before(order);}
+  if(!order){order=el('p',undefined,'ask-order');order.id='ask-order';order.tabIndex=0;top.before(order);}
   order.textContent=`Order: priority first (P0 highest), then oldest first. The top ${decisions.featured.length||3} are explicit asks; every other question and human gate follows in the same order.`;
   const cardFor=(row,index)=>{
     const card=el('article',undefined,'ask');card.dataset.item=row.id;
@@ -124,7 +143,7 @@ export function renderAsks(view,reason,at){
     // Priority, age and owner sit on the card itself, with Open record on the same line.
     const meta=el('div',undefined,'meta ask-meta');
     for(const[label,value]of [['priority','P'+row.priority],['age','age '+(row.created?age(row.created):'unknown')],['owner',row.owner?.split('/').at(-1)||'unassigned'],['status',row.status],['id',row.id]]){const part=el('span',value);part.dataset.field=label;meta.append(part);}
-    meta.append(recordButton(row.id,row.title));
+    meta.append(clampToggle(card),recordButton(row.id,row.title));
     card.append(meta);
     const details=el('details',undefined,'ask-details');details.open=opened.has(row.id);
     details.append(el('summary','Recorded options and linked work'));
@@ -159,6 +178,7 @@ export function renderAsks(view,reason,at){
   };
   for(const [index,row] of decisions.featured.entries())top.append(cardFor(row,index));
   for(const row of decisions.remaining)root.append(cardFor(row));
+  watchClamps();
   $('h-remaining').textContent=decisions.remaining.length+' other decisions';
   const count=$('ask-rest-count');count.replaceChildren();
   if(decisions.remaining.length){const link=el('a',decisions.remaining.length+' more decisions below ↓');link.href='#remaining-decisions';count.append(link);}
