@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {renderStored} from '../stored-query.mjs';
-import {decodeHead,ownerBatches,decodeWork,heldReader,heldSummary,ephemeralAgent,HELD_COLLAPSE_OWNERS} from './model.mjs';
+import {decodeHead,ownerBatches,decodeWork,heldReader,heldSummary,ephemeralAgent,HELD_COLLAPSE_OWNERS,heldTitleReader,HELD_TITLE_READS} from './model.mjs';
 const headDef=JSON.parse(fs.readFileSync(new URL('./head.json',import.meta.url))),workDef=JSON.parse(fs.readFileSync(new URL('./work.json',import.meta.url))),now=Date.parse('2026-10-24T15:00:00Z');
 const reply=(def,rows,params={})=>({query:def.name,sparql:renderStored(def,params),rows,count:rows.length,truncated:false});
 const entry=(agent='worker',revision=1,state='stopped')=>({agent,revision,state,contract:'shantytown-owned-work/v1',generation:'generation-1',observed_at:now/1000-60,fact:headDef.onto+'owned-work-'+revision.toString(16).padStart(64,'0')});
@@ -89,4 +89,49 @@ test('more than five owners holding work collapse; expired holders stay UNKNOWN'
   const sum=heldSummary(view,now);
   assert.equal(sum.collapsed,true);assert.equal(sum.holders.length,6);assert.equal(sum.holders[0].uncertain,true);assert.equal(sum.unknown,1);
   view.rows.pop();assert.equal(heldSummary(view,now).collapsed,false);
+});
+
+const itemDef=JSON.parse(fs.readFileSync(new URL('../asks/item.json',import.meta.url)));
+const titleReply=(seed,extra={})=>({query:itemDef.name,sparql:itemDef.template.replaceAll('{seed}',seed),rows:[{item:seed,id:seed.split('/').at(-1),priority:1,status:'open',...extra}],count:1,truncated:false});
+test('decoded held rows carry no stand-in title',()=>{
+ const out=decodeWork(projection([projectionRow()]),workDef,[headDef.principalPrefix+'worker']);
+ assert.equal(out.rows[0].title,undefined);assert.doesNotMatch(JSON.stringify(out),/Open source record/);
+});
+test('held titles come from the item point read, cached by item@modified',async()=>{
+ const calls=[];
+ const read=heldTitleReader({request:async(url,{body})=>{calls.push([url,body]);return titleReply(body.params.seed,{title:'Real title '+calls.length});},endpoint:'https://example.test',definition:itemDef});
+ const row={item:workDef.itemPrefix+'aegis-f1',modified:'2026-10-24T14:59:00Z'};
+ assert.equal(await read(row),'Real title 1');assert.equal(await read(row),'Real title 1');
+ assert.equal(calls.length,1);assert.equal(calls[0][0],'https://example.test/ask');assert.deepEqual(calls[0][1],{name:'daily_brief_ask_item_v2',params:{seed:row.item}});
+ assert.equal(await read({...row,modified:'2026-10-25T00:00:00Z'}),'Real title 2');
+});
+test('a missing title, foreign reply or failed read is an error with its reason, retried only after its hold',async()=>{
+ let mode='missing',calls=0,clock=0;
+ const read=heldTitleReader({failureTtlMs:1000,now:()=>clock,request:async(url,{body})=>{calls++;if(mode==='http')throw Error('Reader returned HTTP 503');return mode==='foreign'?{...titleReply(body.params.seed),rows:[{item:workDef.itemPrefix+'aegis-other',title:'Other'}]}:titleReply(body.params.seed,mode==='blank'?{title:'  '}:{});},endpoint:'https://example.test',definition:itemDef});
+ const row={item:workDef.itemPrefix+'aegis-f1',modified:'x'};
+ const again=async(re)=>{await assert.rejects(read(row),re);clock+=1000;};
+ await assert.rejects(read(row),/no title/);mode='blank';await assert.rejects(read(row),/no title/);
+ assert.equal(calls,1,'a re-render inside the hold does not re-read a failed item');
+ clock+=1000;await again(/no title/);mode='foreign';await again(/point read changed/);mode='http';await again(/HTTP 503/);
+ assert.equal(calls,4,'after the hold the failed item is read again');
+ mode='missing';await assert.rejects(read({item:workDef.itemPrefix+'aegis-Bad_id',modified:'x'}),/Invalid seed/);
+});
+test('held title reads are bounded in flight and time out with a reason',async()=>{
+ let active=0,peak=0;const release=[];
+ const read=heldTitleReader({limit:2,request:async(url,{body})=>{active++;peak=Math.max(peak,active);await new Promise(r=>release.push(r));active--;return titleReply(body.params.seed,{title:'T'});},endpoint:'https://example.test',definition:itemDef});
+ const all=Promise.all(Array.from({length:5},(_,i)=>read({item:workDef.itemPrefix+'aegis-f'+i,modified:'x'})));
+ await new Promise(r=>setTimeout(r,1));
+ while(release.length||active){await new Promise(r=>setTimeout(r,1));release.splice(0).forEach(r=>r());}
+ assert.deepEqual(await all,['T','T','T','T','T']);assert.equal(peak,2);
+ const slow=heldTitleReader({timeoutMs:5,request:(url,{signal})=>new Promise((_,reject)=>signal.addEventListener('abort',()=>reject(Error('aborted')))),endpoint:'https://example.test',definition:itemDef});
+ await assert.rejects(slow({item:workDef.itemPrefix+'aegis-f1',modified:'x'}),/timed out/);
+});
+test('held title reads stop at the per-page cap; cached titles stay free',async()=>{
+ let calls=0;
+ const read=heldTitleReader({maxReads:2,request:async(url,{body})=>{calls++;return titleReply(body.params.seed,{title:'T'+calls});},endpoint:'https://example.test',definition:itemDef});
+ const row=i=>({item:workDef.itemPrefix+'aegis-c'+i,modified:'x'});
+ assert.equal(await read(row(1)),'T1');assert.equal(await read(row(2)),'T2');
+ await assert.rejects(read(row(3)),e=>e.notLoaded===true&&/cap/.test(e.message));
+ assert.equal(await read(row(1)),'T1','a cached title is not a new read');
+ assert.equal(calls,2);assert.equal(HELD_TITLE_READS,40);
 });

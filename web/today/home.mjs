@@ -13,9 +13,9 @@ import {deploys as decodeDeploys,paceParams} from './pace/model.mjs';
 import {changes as decodeChanges,changesParams,changesReader} from './changes/model.mjs';
 import {digest,logEntries} from './home-model.mjs';
 import {StatsClient} from './projection-metrics.mjs';
-import {heldReader} from './held/model.mjs';
+import {heldReader,heldTitleReader} from './held/model.mjs';
 import {coverageParams,recentlyDeferred,deferredReader} from './recently-deferred/model.mjs';
-import {$,el,stamp,mark,unavailable,renderAsks,renderLater,renderPriorities,deployRows,tabs,renderOverview,setRecordReader,recordButton,cite,setAskDecisionAdapter,setAskChoicesReader,renderHeldPanel} from './home-view.mjs';
+import {$,el,stamp,mark,unavailable,renderAsks,renderLater,renderPriorities,deployRows,tabs,renderOverview,setRecordReader,recordButton,cite,setAskDecisionAdapter,setAskChoicesReader,renderHeldPanel,setHeldTitleReader} from './home-view.mjs';
 if(readerConfig.askDecisionsEnabled===true&&typeof readerConfig.askDecisionAdapter==='function')setAskDecisionAdapter(readerConfig.askDecisionAdapter);
 const state={asks:undefined,later:undefined,priorities:undefined,deploys:undefined,stats:undefined,held:undefined,deferred:undefined,watches:undefined,changes:undefined},checked={},reasons={};
 const now=()=>Date.now();
@@ -177,7 +177,7 @@ async function main(){
     boot('deploys',['./pace/query.json'],([definition])=>new PriorityClient({definition:expect(definition,'daily_brief_deploys_v1'),decode:decodeDeploys,getParams:()=>paceParams(now(),definition),status:status('deploys'),render:update('deploys'),read:plain})),
     boot('stats',[],()=>new StatsClient({request:(body,signal)=>request(endpoint+'/projections',{body,signal,cap:1048576}),status:status('stats'),render:update('stats')})),
     boot('deferred',['./recently-deferred/query.json','./recently-deferred/coverage.json','./asks/control.json'],([definition,coverage,control])=>new PriorityClient({definition:expect(definition,'daily_brief_recently_deferred_v1'),decode:recentlyDeferred,getParams:()=>coverageParams(coverage,now()),status:status('deferred'),render:update('deferred'),read:deferredReader({request,endpoint,definition,coverage,control:expect(control,'daily_brief_source_control_v3')}),...seeds})),
-    boot('held',['./held/head.json','./held/work.json','./asks/control.json'],([head,work,control])=>new PriorityClient({definition:expect(head,'daily_brief_held_head_v1'),decode:body=>body,deadlineMs:10000,status:status('held'),render:update('held'),read:heldReader({request,endpoint,head,work:expect(work,'daily_brief_held_work_v1'),control:expect(control,'daily_brief_source_control_v3')})})),
+    boot('held',['./held/head.json','./held/work.json','./asks/control.json','./asks/item.json'],([head,work,control,item])=>(setHeldTitleReader(heldTitleReader({request,endpoint,definition:expect(item,'daily_brief_ask_item_v2')})),new PriorityClient({definition:expect(head,'daily_brief_held_head_v1'),decode:body=>body,deadlineMs:10000,status:status('held'),render:update('held'),read:heldReader({request,endpoint,head,work:expect(work,'daily_brief_held_work_v1'),control:expect(control,'daily_brief_source_control_v3')})}))),
   ]);
 }
 // Navigation is local and remains usable before live-reader admission.

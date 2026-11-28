@@ -88,6 +88,40 @@ async function demoDecisionCards(){
     console.log(`PASS demo decision cards: ${cards.length} cards, ${cards.reduce((n,c)=>n+c.controls,0)} decision controls (${cards.map(c=>c.choose).join('/')} choices + Later + Comment), REC marked once each, all disabled with the stated reason`);
   }finally{await context.close();}
 }
+async function demoHeldTitles(){
+  const context=await browser.newContext({viewport:{width:412,height:915}}),page=await context.newPage(),failures=[],live=[];
+  page.on('pageerror',e=>failures.push(e.message));
+  await page.route('**/*',route=>{const u=new URL(route.request().url());if(u.origin!==origin){live.push(u.href);return route.abort();}return route.continue();});
+  // Settled once no row is still unstarted ("title not loaded") or in flight.
+  const settled=()=>page.waitForFunction(()=>![...document.querySelectorAll('.held-title')].some(n=>n.textContent==='title loading…'||n.textContent==='title not loaded'));
+  const titles=()=>page.locator('.held-title').allTextContents();
+  try{
+    await page.goto(origin+'/today/demo-held/');
+    await page.waitForFunction(()=>window.demoHeldRendered);
+    await page.waitForTimeout(120);
+    assert.equal(await page.evaluate(()=>document.querySelector('#held-work details.held-owners').open),false);
+    assert.equal(await page.evaluate(()=>window.demoTitleReads),0,'a collapsed holder group makes no title reads');
+    await page.locator('#held-work details.held-owners > summary').click();
+    await settled();
+    let shown=await titles();
+    assert.equal(shown.length,13);assert.equal(await page.evaluate(()=>window.demoTitleReads),13,'opening the group reads each visible row once');
+    assert.equal(shown.filter(t=>t.startsWith('title unavailable')).length,1,shown.join(' / '));assert.equal(shown.at(-1),'title unavailable: the source record has no title');
+    assert.ok(shown.slice(0,-1).every(t=>/^[A-Z][a-z]+ the /.test(t)),'every other row shows its real title');
+    await page.evaluate(()=>window.demoHeldRender());await settled();
+    assert.equal(await page.evaluate(()=>document.querySelector('#held-work details.held-owners').open),true,'a refresh keeps the group open');
+    assert.deepEqual(await titles(),shown);assert.equal(await page.evaluate(()=>window.demoTitleReads),13,'a refresh reuses the item@modified cache');
+    assert.equal((await page.content()).includes('Open source record for title'),false,'no placeholder title');
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'no horizontal scroll at phone width');
+    await page.goto(origin+'/today/demo-held/?cap=8');
+    await page.waitForFunction(()=>window.demoHeldRendered);
+    await page.locator('#held-work details.held-owners > summary').click();await settled();
+    shown=await titles();
+    assert.equal(await page.evaluate(()=>window.demoTitleReads),8,'the per-page cap bounds title reads');
+    assert.equal(shown.filter(t=>t==='title not loaded (open to load)').length,5,'rows past the cap say the title is not loaded');
+    assert.deepEqual(failures,[]);assert.deepEqual(live,[]);
+    console.log('PASS demo held titles: collapsed group 0 reads; opened 13 reads, 12 real titles, 1 unavailable with its reason; refresh 0 new reads; cap 8 leaves 5 not loaded; no placeholder');
+  }finally{await context.close();}
+}
 async function explicitAskRecord(){
   const context=await browser.newContext(),page=await context.newPage(),remote=[];
   await page.route('**/*',route=>{if(new URL(route.request().url()).origin!==origin){remote.push(route.request().url());return route.abort();}return route.continue();});
@@ -143,6 +177,7 @@ try {
   await demoDecisionCards();
   await demoHeldWork();
   console.log('PASS synthetic held work: only holders render, collapsed past five, below the fold at 1440 and 412');
+  await demoHeldTitles();
   console.log('PASS explicit Ask metadata, readable record and keyboard graph navigation; zero nonlocal requests');
   console.log('PASS built Today module graph, disabled-reader startup and tab transition');
   await assert.rejects(loadToday({breakDependency:true}),/Timeout|built module imports/);
