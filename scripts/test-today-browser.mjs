@@ -9,6 +9,7 @@ const server=createServer(async(req,res)=>{
   try {
     let name=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
     if(name==='/favicon.ico'){res.writeHead(204);res.end();return;}
+    if(name==='/today/demo-held/'||name==='/demo-today-held.mjs'){res.setHeader('Content-Type',name.endsWith('.mjs')?'text/javascript':'text/html');res.end(await readFile(resolve('scripts',name.endsWith('.mjs')?'demo-today-held.mjs':'demo-today-held.html')));return;}
     if(name==='/today/demo-asks/'||name==='/demo-today-asks.mjs'){res.setHeader('Content-Type',name.endsWith('.mjs')?'text/javascript':'text/html');res.end(await readFile(resolve('scripts',name.endsWith('.mjs')?'demo-today-asks.mjs':'demo-today-asks.html')));return;}
     if(name.endsWith('/'))name+='index.html';
     const file=resolve(root,'.'+name);
@@ -81,6 +82,23 @@ async function demoDecisionCards(){
     console.log(`PASS demo decision cards: ${cards.length} cards, ${cards.reduce((n,c)=>n+c.controls,0)} decision controls (${cards.map(c=>c.choose).join('/')} choices + Later + Comment), REC marked once each, all disabled with the stated reason`);
   }finally{await context.close();}
 }
+async function demoHeldTitles(){
+  const context=await browser.newContext({viewport:{width:412,height:915}}),page=await context.newPage(),failures=[],live=[];
+  page.on('pageerror',e=>failures.push(e.message));
+  await page.route('**/*',route=>{const u=new URL(route.request().url());if(u.origin!==origin){live.push(u.href);return route.abort();}return route.continue();});
+  try{
+    await page.goto(origin+'/today/demo-held/');
+    await page.waitForFunction(()=>window.demoHeldRendered&&document.querySelectorAll('.held-title').length===4&&![...document.querySelectorAll('.held-title')].some(n=>n.textContent==='title loading…'));
+    await page.waitForTimeout(120);
+    const titles=await page.locator('.held-title').allTextContents();
+    assert.deepEqual(titles,['Rotate the synthetic signing key','Document the bounded title read','Wait for the review receipt','title unavailable: the source record has no title']);
+    assert.equal(await page.evaluate(()=>window.demoTitleReads),4,'one title point read per row; a re-render reuses the item@modified cache');
+    assert.equal((await page.content()).includes('Open source record for title'),false,'no placeholder title');
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'no horizontal scroll at phone width');
+    assert.deepEqual(failures,[]);assert.deepEqual(live,[]);
+    console.log(`PASS demo held work: ${titles.length} rows, ${titles.filter(t=>!t.startsWith('title unavailable')).length} real titles, 1 unavailable with its reason, no placeholder`);
+  }finally{await context.close();}
+}
 async function explicitAskRecord(){
   const context=await browser.newContext(),page=await context.newPage(),remote=[];
   await page.route('**/*',route=>{if(new URL(route.request().url()).origin!==origin){remote.push(route.request().url());return route.abort();}return route.continue();});
@@ -111,6 +129,7 @@ try {
   await loadToday();
   await explicitAskRecord();
   await demoDecisionCards();
+  await demoHeldTitles();
   console.log('PASS explicit Ask metadata, readable record and keyboard graph navigation; zero nonlocal requests');
   console.log('PASS built Today module graph, disabled-reader startup and tab transition');
   await assert.rejects(loadToday({breakDependency:true}),/Timeout|built module imports/);

@@ -44,6 +44,16 @@ export function askChoices(body,definition,seed){
   if(rows.length!==1||rows[0].item!==seed)throw new Unknown('Ask choices point read changed');
   return {options:text(rows[0].options),rec:text(rows[0].rec)};
 }
+// Title for one seed through the same bounded point read (daily_brief_ask_item_v2,
+// LIMIT 2 by IRI). A missing or blank schema:name is an error, never a stand-in.
+export function itemTitle(body,definition,seed){
+  const rows=queryRows(body,expand(definition,seed));
+  if(rows.length!==1||rows[0].item!==seed)throw new Unknown('item point read changed');
+  const title=text(rows[0].title);
+  if(!title)throw new Unknown('the source record has no title');
+  if(title.length>500)throw new Unknown('the source title exceeds its bound');
+  return title;
+}
 // Cached by item and revision, so an edited Ask is re-read and an unchanged one is not.
 export function askChoicesReader({request,endpoint,definition,timeoutMs=6000}){
   const cache=new Map();

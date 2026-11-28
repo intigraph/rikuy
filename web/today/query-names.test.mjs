@@ -44,6 +44,7 @@ test('every expect() name in home.mjs matches the manifest file it pins', () => 
 // the slow template; this pins the bump on both sides.
 test('the Asks item read is pinned to daily_brief_ask_item_v2 and the file agrees', () => {
   const item = pins().filter(p => p.path === './asks/item.json');
-  assert.deepEqual(item.map(p => p.name), ['daily_brief_ask_item_v2']);
+  // Needs-you reads OPTIONS/REC and held work reads titles through the same pin.
+  assert.deepEqual(item.map(p => [p.panel, p.name]), [['asks', 'daily_brief_ask_item_v2'], ['held', 'daily_brief_ask_item_v2']]);
   assert.equal(JSON.parse(readFileSync(new URL('./asks/item.json', dir), 'utf8')).name, 'daily_brief_ask_item_v2');
 });

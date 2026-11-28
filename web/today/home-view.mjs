@@ -215,3 +215,38 @@ export function renderOverview(state,reasons,checked){
     cite(source,box===work?'./priorities/query.json':'./pace/query.json');box.append(source);
   }
 }
+
+// Held-work panel (owners with stopped or UNKNOWN lifecycle evidence).
+let heldTitles;
+export function setHeldTitleReader(read){heldTitles=read;}
+// The real title, or "title unavailable" with the reason; never a stand-in title.
+function showHeldTitle(node,button,row){
+  const failed=reason=>{node.textContent='title unavailable: '+reason;node.className='held-title missing';};
+  if(!heldTitles)return failed('no title reader is configured');
+  heldTitles(row).then(title=>{node.textContent=title;node.className='held-title';button.setAttribute('aria-label','Open record: '+title);},error=>failed(error?.message||'the title read failed'));
+}
+export function renderHeldView(view,reason,at,checkedAt,time=Date.now()){
+  const root=$('held-work'),status=$('held-status');
+  if(!view){unavailable(root,reason,at);mark(status).textContent='Owner liveness · no verified lifecycle evidence';return;}
+  mark(root).replaceChildren();
+  const expired=s=>s.state==='expired'||time>=s.observed_at*1000+1800000;
+  const unknown=view.pending+view.states.filter(expired).length;
+  const owners=view.states.filter(s=>s.state==='stopped'||s.state==='ceiling'||s.state==='expired');
+  mark(status).textContent=`${owners.length} owners with stopped or UNKNOWN evidence${unknown?' · UNKNOWN coverage: '+unknown+' owners have missing or expired evidence':!view.complete?' · UNKNOWN: writer coverage is incomplete':''} · board tx ${view.tx??'not read'} · checked ${stamp(checkedAt)}`;
+  cite(status,'./held/head.json','Owner query');cite(status,'./held/work.json','Work query');
+  if(!owners.length)root.append(el('p',view.complete&&!unknown?'No stopped owners in the verified writer scope.':'Stopped-owner coverage is UNKNOWN; an empty result cannot establish that every owner is live.','note'));
+  for(const owner of owners){
+    const card=el('article',undefined,'ask'),uncertain=expired(owner),label=uncertain?'UNKNOWN · last recorded '+owner.state:owner.state==='ceiling'?'ceiling-stopped':'stopped';
+    card.append(el('h3',owner.agent+' · '+label));
+    const rows=view.rows.filter(row=>row.owner===owner.owner);
+    for(const row of rows){
+      const line=el('p'),title=el('span','title loading…','held-title'),button=recordButton(row.id,row.id);
+      line.append(el('span',`${row.id} · P${row.priority} · ${row.status} · `),title,el('span',`${row.modified?' · updated '+row.modified:''} `),button);card.append(line);
+      showHeldTitle(title,button,row);
+    }
+    if(!rows.length)card.append(el('p',view.more?'No owned work within this bounded selection.':'No active owned work in the verified board read.','note'));
+    const proof=el('details');proof.append(el('summary','Owner evidence'),el('p',`Observed ${stamp(owner.observed_at*1000)} · lifecycle revision ${owner.revision} · ${owner.fact}`,'meta'));card.append(proof);root.append(card);
+  }
+  if(view.more)root.append(el('p','More owned work exists beyond this bounded selection.','note'));
+  root.append(el('p','Reassignment stays with the lead. Owner evidence expires after 30 minutes.','note'));
+}
