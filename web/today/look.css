@@ -61,6 +61,44 @@ footer{color:var(--c-dim)}
   .card,.brief-panel{padding:6px 0 14px calc(var(--rail) + 12px)}
   .tabs button{padding:10px 9px}
 }
+/* Phone: all six tabs stay reachable by wrapping, the page status
+   is one line that expands on focus or tap, and Needs you is compact enough that
+   three asks with their choices sit on the first 412x915 screen. Nothing is
+   removed: every reason, status and choice still renders. */
+@media(max-width:600px){
+  :root{--rail:24px}
+  .wrap{padding:10px 16px 16px}
+  .cord-top{grid-template-columns:calc(var(--rail) + 22px) 1fr;height:40px;margin-bottom:-28px}
+  .elbow{border-top-left-radius:24px}
+  .elbow::after{width:22px;height:28px;border-top-left-radius:12px}
+  .bar{height:12px}
+  .titlerow{padding-left:calc(var(--rail) + 28px);min-height:28px;gap:8px}
+  .eyebrow{font-size:10px;margin:0}
+  h1{font-size:24px}
+  .tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;padding:4px 0 0 4px;gap:0 2px}
+  .tabs button{min-height:40px;padding:6px 4px;font-size:14px;letter-spacing:.06em}
+  .tabs b{margin-left:2px;padding:2px 5px}
+  .connection{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:4px 0 6px 10px;margin:0 0 4px;cursor:pointer}
+  .connection:focus,.connection:hover{white-space:normal;overflow:visible}
+  .connection:focus-visible{outline:3px solid var(--c-ask);outline-offset:2px}
+  .card,.brief-panel{padding:4px 0 10px calc(var(--rail) + 10px)}
+  .card::before,.brief-panel::before{font-size:12px;padding:0 3px 4px}
+  .card::after,.brief-panel::after{left:8px;top:10px;width:8px;height:8px}
+  .card h2,.brief-panel h2{font-size:16px;margin-bottom:4px}
+  .needs-you .source-status{font-size:11px;line-height:1.45;margin:0 0 6px}
+  .ask{padding:8px 10px;margin:0 0 4px}
+  .ask .q{font-size:14px;line-height:1.35}
+  .ask-decide{margin:4px 0 2px}
+  .ask-decide .decision-context{font-size:12px;line-height:1.35;margin:2px 0}
+  .ask-decide .decision-actions{gap:4px;margin:4px 0}
+  .ask-decide .decision-choice{font-size:13px;min-height:36px;min-width:0;padding:4px 12px;letter-spacing:.04em}
+  .rec-badge{font-size:10px}
+  .ask-decide .decision-status{font-size:11px;line-height:1.35;padding:2px 8px;margin:4px 0}
+  .ask-details{display:inline-block;margin:0 12px 0 0;vertical-align:middle}
+  .ask-details[open]{display:block}
+  .ask-details summary{min-height:32px;padding:4px 0}
+  .ask>.record-link{margin:0;min-height:32px;vertical-align:middle}
+}
 @keyframes grow{from{transform:scaleY(0)}}
 @keyframes sweep{from{transform:scaleX(0)}}
 /* Reduced motion: every state still shows, nothing moves. */
