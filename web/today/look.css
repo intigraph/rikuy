@@ -61,6 +61,60 @@ footer{color:var(--c-dim)}
   .card,.brief-panel{padding:6px 0 14px calc(var(--rail) + 12px)}
   .tabs button{padding:10px 9px}
 }
+/* Phone: all six tabs stay reachable by wrapping, the page status
+   is one line that expands on focus or tap, and Needs you is compact enough that
+   three asks with their choices sit on the first 412x915 screen. Nothing is
+   removed: every reason, status and choice still renders. */
+@media(max-width:600px){
+  :root{--rail:24px}
+  .wrap{padding:10px 16px 16px}
+  .cord-top{grid-template-columns:calc(var(--rail) + 22px) 1fr;height:40px;margin-bottom:-28px}
+  .elbow{border-top-left-radius:24px}
+  .elbow::after{width:22px;height:28px;border-top-left-radius:12px}
+  .bar{height:12px}
+  .titlerow{padding-left:calc(var(--rail) + 28px);min-height:28px;gap:8px;align-items:center}
+  .eyebrow{display:none}
+  h1{font-size:24px}
+  .tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;padding:4px 0 0 4px;gap:0 2px}
+  .tabs button{min-height:34px;padding:2px 4px;font-size:13px;letter-spacing:.06em}
+  .tabs b{margin-left:2px;padding:2px 5px}
+  .connection{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:4px 0 6px 10px;margin:0 0 4px;cursor:pointer}
+  .connection:focus,.connection:hover{white-space:normal;overflow:visible}
+  .connection:focus-visible{outline:3px solid var(--c-ask);outline-offset:2px}
+  .card,.brief-panel{padding:4px 0 10px calc(var(--rail) + 10px)}
+  .card::before,.brief-panel::before{font-size:12px;padding:0 3px 4px}
+  .card::after,.brief-panel::after{left:8px;top:10px;width:8px;height:8px}
+  .card h2,.brief-panel h2{font-size:16px;margin-bottom:4px}
+  /* Needs you text is sized in rem so a larger phone font grows it; the
+     question is clamped to 3 lines and its Why lines to 2, with an inline More
+     toggle that expands them in place. Choices sit directly under them. */
+  /* The count line and the order statement are one line each; focus or tap
+     shows the rest, like the page status. */
+  .needs-you .source-status,.ask-order{font-size:.6875rem;line-height:1.35;margin:0 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+  .needs-you .source-status:focus-within,.needs-you .source-status:hover,.ask-order:focus,.ask-order:hover{white-space:normal;overflow:visible}
+  .ask-order{margin-bottom:4px}
+  .ask-order:focus-visible{outline:3px solid var(--c-ask);outline-offset:2px}
+  .ask{padding:6px 8px;margin:0 0 4px}
+  .ask .q{font-size:.84375rem;line-height:1.3;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
+  .ask .ask-meta{flex-wrap:nowrap;white-space:nowrap;gap:0 8px;font-size:.6875rem;line-height:1.3;margin:1px 0 0;min-width:0}
+  /* The meta line stays one line at any font size: the text fields give way
+     (ellipsis, id first) so Open record never pushes past the screen edge. */
+  .ask .ask-meta>span{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .ask .ask-meta [data-field=priority]{flex:none}
+  .ask .ask-meta [data-field=id]{flex-shrink:8}
+  .ask .ask-meta .record-link{flex:none;min-height:26px;font-size:.75rem}
+  .ask-decide{margin:2px 0}
+  .ask-decide .decision-why{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;font-size:.75rem;line-height:1.3}
+  .ask-decide .decision-context{display:inline;font-size:.75rem;line-height:1.3;margin:0 10px 0 0}
+  .ask.unclamped .q,.ask.unclamped .decision-why{display:block;-webkit-line-clamp:unset;line-clamp:none;overflow:visible}
+  .clamp-more{min-height:24px;padding:0 2px;border:0;background:none;color:var(--accent);font-size:.75rem;text-decoration:underline;text-underline-offset:3px}
+  .ask-decide .decision-actions{gap:4px;margin:3px 0}
+  .ask-decide .decision-choice{font-size:.75rem;line-height:1.2;min-height:28px;min-width:0;padding:2px 8px;letter-spacing:.02em}
+  .rec-badge{font-size:.625rem}
+  .ask-decide .decision-status{font-size:.6875rem;line-height:1.3;padding:1px 6px;margin:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ask-details{display:block;margin:0}
+  .ask-details summary{min-height:24px;padding:1px 0;font-size:.75rem}
+}
 @keyframes grow{from{transform:scaleY(0)}}
 @keyframes sweep{from{transform:scaleX(0)}}
 /* Reduced motion: every state still shows, nothing moves. */
