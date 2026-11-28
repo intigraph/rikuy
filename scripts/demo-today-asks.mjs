@@ -6,7 +6,7 @@ const definition = await (await fetch('/today/asks/item.json')).json();
 const item = id => 'https://seeds.local/item/' + id;
 const base = {status: 'open', priority: 1, revision: 3, created: '2026-11-20T00:00:00Z', owner: null, gates: ['ask-type'], options: '', rec: ''};
 const rows = [
-  {...base, id: 'aegis-demo1', item: item('aegis-demo1'), kind: 'ask', title: 'ASK Stiwi: Choose the next bounded step', unblocks: item('aegis-demo9'), default: 'Keep waiting for the receipt', expires: '2026-12-31T12:00:00Z'},
+  {...base, id: 'aegis-demo1', item: item('aegis-demo1'), kind: 'ask', priority: 0, created: '2026-11-10T00:00:00Z', owner: 'https://seeds.local/agent/demo-owner', title: 'ASK Stiwi: Choose the next bounded step', unblocks: item('aegis-demo9'), default: 'Keep waiting for the receipt', expires: '2026-12-31T12:00:00Z'},
   {...base, id: 'aegis-demo2', item: item('aegis-demo2'), kind: 'ask', title: 'ASK Stiwi: Retire the legacy brief (now / after review / never)', unblocks: item('aegis-demo9'), default: 'Keep both pages', expires: '2026-12-31T12:00:00Z'},
   {...base, id: 'aegis-demo3', item: item('aegis-demo3'), kind: 'gate', gates: ['human-gate'], priority: 2, title: 'Approve the synthetic rollout?'}
 ];
