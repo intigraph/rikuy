@@ -69,6 +69,12 @@ async function demoDecisionCards(){
     }
     assert.deepEqual(cards.map(c=>c.rec[0]),['choose-1-verify-the-source','choose-2-after-review','choose-1-yes']);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'no horizontal scroll at phone width');
+    const overview=await page.evaluate(()=>{const [work,deploys]=document.querySelectorAll('#overview-panels>.brief-panel');return {count:work.querySelector('.brief-count').textContent,rows:[...work.querySelectorAll('.brief-priorities li')].map(li=>({meta:li.querySelector('.meta').textContent,open:li.querySelectorAll('.record-link').length})),rest:work.querySelector('.brief-rest')?.textContent,applied:Number(deploys.querySelector('.applied').textContent.split(' ')[0]),lines:[...deploys.querySelectorAll('li')].map(li=>li.textContent)};});
+    assert.equal(overview.count,`Showing ${overview.rows.length} of 7 active P0 items`,'the count states what the panel shows');
+    assert.equal(overview.rest,'All 7 in Next →');
+    for(const row of overview.rows){assert.match(row.meta,/^\S+ · \S+ · /,'each P0 row names its id and owner');assert.equal(row.open,1,'each P0 row opens its record');}
+    assert.equal(overview.lines.reduce((n,l)=>n+Number(/(\d+) applied/.exec(l)?.[1]||0),0),overview.applied,'the deploy breakdown sums to the headline');
+    assert.match(overview.lines.at(-1),/^\d+ other services? — /);
     assert.deepEqual(failures,[]);assert.deepEqual(live,[]);
     console.log(`PASS demo decision cards: ${cards.length} cards, ${cards.reduce((n,c)=>n+c.controls,0)} decision controls (${cards.map(c=>c.choose).join('/')} choices + Later + Comment), REC marked once each, all disabled with the stated reason`);
   }finally{await context.close();}

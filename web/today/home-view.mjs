@@ -1,4 +1,4 @@
-import {decisionView,questionLabel,deploymentGroups} from './home-model.mjs';
+import {decisionView,questionLabel,deploymentGroups,deploymentLines} from './home-model.mjs';
 import {mountAskDecision} from './ask-decisions.mjs';
 import {askChoices} from './ask-choices.mjs';
 import {choiceReads} from './ask-choice-reads.mjs';
@@ -183,24 +183,36 @@ export function deployRows(root,rows){
 
 // A short deterministic overview of the SAME validated panel reads. No new
 // request, headline curator, inferred incident or yesterday baseline.
+const OVERVIEW_PRIORITIES=3;
 export function renderOverview(state,reasons,checked){
   const root=$('overview-panels');mark(root).replaceChildren();
   const panel=heading=>{const box=el('section',undefined,'brief-panel');box.append(el('h2',heading));root.append(box);return box;};
   const work=panel('Priority work');
   if(state.priorities){
-    work.append(el('p',state.priorities.moreThan20?'20 shown · more than 20 active P0 items':state.priorities.length+' active P0 items','brief-count'));
-    const list=el('ul');for(const row of state.priorities.slice(0,2))list.append(el('li',row.title.replace(/^EPIC(?:\s*\([^)]*\))?\s*:\s*/i,'')));work.append(list);
-    if(!state.priorities.length)work.append(el('p','No active P0 work in this read.','note'));
+    const rows=state.priorities,shown=rows.slice(0,OVERVIEW_PRIORITIES),total=rows.moreThan20?'more than 20':String(rows.length);
+    work.append(el('p',shown.length<rows.length||rows.moreThan20?`Showing ${shown.length} of ${total} active P0 items`:rows.length+' active P0 items','brief-count'));
+    const list=el('ul',undefined,'brief-priorities');
+    for(const row of shown){
+      const item=el('li');
+      item.append(el('div',row.title.replace(/^EPIC(?:\s*\([^)]*\))?\s*:\s*/i,''),'title'),el('div',[row.id,row.owner?.split('/').at(-1)||'unassigned',row.status.replaceAll('_',' ')].join(' · '),'meta'),recordButton(row.id,row.title));
+      list.append(item);
+    }
+    work.append(list);
+    if(shown.length<rows.length||rows.moreThan20){
+      const rest=el('a',`All ${total} in Next →`,'brief-rest');rest.href='#next';
+      rest.addEventListener('click',event=>{event.preventDefault();show('next',true);history.replaceState(null,'','#next');});
+      const line=el('p',undefined,'brief-rest-line');line.append(rest);work.append(line);
+    }
+    if(!rows.length)work.append(el('p','No active P0 work in this read.','note'));
   }else work.append(el('p','Unavailable: '+(reasons.priorities||'no verified priority read yet'),'note'));
   const deploys=panel('Deployments · last 24 hours');
   if(!state.deploys)deploys.append(el('p','Unavailable: '+(reasons.deploys||'no verified deployment read yet'),'note'));
   else{
     const counts=state.deploys.counts,summary=el('div',undefined,'outcome-counts');
     summary.append(el('span',counts.succeeded+' applied','applied'),el('span',counts.rolledback+' rolled back','rollback'),el('span',counts.failed+' failed',counts.failed?'failed':'note'));deploys.append(summary);
-    const list=el('ul');for(const group of deploymentGroups(state.deploys).slice(0,3)){
-      const outcomes=[];if(group.succeeded)outcomes.push(group.succeeded+' applied');if(group.rolledback)outcomes.push(group.rolledback+' rolled back');if(group.failed)outcomes.push(group.failed+' failed');
-      const item=el('li',group.label+' — '+outcomes.join(', '));if(group.rolledback||group.failed)item.className='deployment-problem';list.append(item);
-    }deploys.append(list);
+    const list=el('ul');
+    for(const line of deploymentLines(deploymentGroups(state.deploys))){const item=el('li',line.text);if(line.problem)item.className='deployment-problem';list.append(item);}
+    deploys.append(list);
   }
   for(const box of root.children){
     const source=el('p','Source: '+(box===work?'daily_brief_priorities_v3':'daily_brief_deploys_v1'),'provenance');

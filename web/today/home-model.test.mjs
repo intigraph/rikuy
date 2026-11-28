@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {askRows, priorityRows, digest, logEntries,decisionView,deploymentGroups,serviceLabel,questionLabel} from './home-model.mjs';
+import {askRows, priorityRows, digest, logEntries,decisionView,deploymentGroups,deploymentLines,serviceLabel,questionLabel} from './home-model.mjs';
 
 const now = Date.parse('2026-10-21T15:00:00Z');
 const ask = (id, extra = {}) => ({id, title: 'Decide ' + id, priority: 1, status: 'open', owner: 'https://seeds.local/principal/stiwi', gates: ['desk'], ...extra});
@@ -82,4 +82,14 @@ test('deployment groups retain each outcome and use plain service names without 
   assert.equal(groups[0].label,'Quipu settings change');assert.equal(groups[0].succeeded,1);assert.equal(groups[0].rolledback,1);assert.equal(groups[0].failed,0);
   assert.equal(groups[1].label,'Quipu');assert.equal(serviceLabel('constructor'),'constructor');assert.equal(serviceLabel(null),'Unnamed service');
   assert.deepEqual(deploymentGroups(null),[]);
+});
+test('deployment lines name the services past the first three as other, so lines sum to the headline',()=>{
+  const services=[['a',14],['b',12],['c',9],['d',6],['e',4],['f',3]];
+  const rows=services.flatMap(([service,n],s)=>Array.from({length:n},(_,i)=>({service,outcome:'succeeded',occurredAt:new Date(Date.UTC(2026,9,22,20-s,59-i)).toISOString()})));
+  rows.push({service:'f',outcome:'rolledback',occurredAt:'2026-10-22T00:00:00Z'});
+  const lines=deploymentLines(deploymentGroups({rows}));
+  assert.deepEqual(lines.map(l=>l.text),['f — 3 applied, 1 rolled back','a — 14 applied','b — 12 applied','3 other services — 19 applied']);
+  assert.equal(lines.reduce((n,l)=>n+Number(/(\d+) applied/.exec(l.text)[1]),0),48);
+  assert.deepEqual(deploymentLines(deploymentGroups({rows:rows.filter(r=>r.service==='a')})).map(l=>l.text),['a — 14 applied']);
+  assert.deepEqual(deploymentLines(deploymentGroups({rows:[...rows.filter(r=>['a','b','c'].includes(r.service)),{service:'d',outcome:'failed',occurredAt:'2026-10-21T00:00:00Z'}]})).map(l=>l.text),['d — 1 failed','a — 14 applied','b — 12 applied','1 other service — 9 applied']);
 });
