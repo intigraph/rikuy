@@ -78,6 +78,10 @@ async function demoDecisionCards(){
     assert.match(await page.locator('#ask-order').textContent(),/^Order: priority first \(P0 highest\), then oldest first\./,'ordering rule stated in the panel header');
     assert.deepEqual(cards.map(c=>c.rec[0]),['choose-1-verify-the-source','choose-2-after-review','choose-1-yes']);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'no horizontal scroll at phone width');
+    // Runner and phone fonts are wider than ours; widen every glyph without depending on which fonts are installed.
+    const wide=await page.addStyleTag({content:'html{font-size:125%!important}*{letter-spacing:.08em!important}'});await page.waitForTimeout(60);
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'no horizontal scroll at phone width with wider text');
+    await wide.evaluate(n=>n.remove());
     const overview=await page.evaluate(()=>{const [work,deploys]=document.querySelectorAll('#overview-panels>.brief-panel');return {count:work.querySelector('.brief-count').textContent,rows:[...work.querySelectorAll('.brief-priorities li')].map(li=>({meta:li.querySelector('.meta').textContent,open:li.querySelectorAll('.record-link').length})),rest:work.querySelector('.brief-rest')?.textContent,applied:Number(deploys.querySelector('.applied').textContent.split(' ')[0]),lines:[...deploys.querySelectorAll('li')].map(li=>li.textContent)};});
     assert.equal(overview.count,`Showing ${overview.rows.length} of 7 active P0 items`,'the count states what the panel shows');
     assert.equal(overview.rest,'All 7 in Next →');

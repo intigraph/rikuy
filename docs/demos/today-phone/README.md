@@ -20,3 +20,22 @@ Desktop layout is unchanged: the compact rules apply at 600 px and below.
 
 The CI browser may lack the condensed console fonts. With every font forced to
 the wider DejaVu Sans, the third Ask choices still end at y=839 of 915.
+
+## Wider fonts: the Ask meta line
+
+On the CI runner the meta line under each Ask (priority, age, owner, status,
+More, Open record) did not fit at 390 px, so Open record pushed the page 8 px
+wider than the screen. The text fields on that line now give way with an
+ellipsis (id first, priority never), and each keeps its full value as a
+tooltip. `scripts/test-today-browser.mjs` repeats its no-horizontal-scroll
+check at a 125% root font with wider letter spacing, so the check does not
+depend on which fonts are installed.
+
+Captured from `just demo` at `/today/demo-asks/`, 412 px wide, root font 125%:
+
+| | `document.scrollWidth` |
+| --- | --- |
+| Before | 448 (Open record cut off at the right edge) |
+| After | 412 |
+
+![Before, root font 125%](demo-asks-before-412-font-125pct.png) ![After, root font 125%](demo-asks-after-412-font-125pct.png)

@@ -143,7 +143,7 @@ export function renderAsks(view,reason,at){
     card.append(el('div',(index===undefined?'':(index+1)+'. ')+questionLabel(row.title),'q'));
     // Priority, age and owner sit on the card itself, with Open record on the same line.
     const meta=el('div',undefined,'meta ask-meta');
-    for(const[label,value]of [['priority','P'+row.priority],['age','age '+(row.created?age(row.created):'unknown')],['owner',row.owner?.split('/').at(-1)||'unassigned'],['status',row.status],['id',row.id]]){const part=el('span',value);part.dataset.field=label;meta.append(part);}
+    for(const[label,value]of [['priority','P'+row.priority],['age','age '+(row.created?age(row.created):'unknown')],['owner',row.owner?.split('/').at(-1)||'unassigned'],['status',row.status],['id',row.id]]){const part=el('span',value);part.dataset.field=label;part.title=value;meta.append(part);}
     meta.append(clampToggle(card),recordButton(row.id,row.title));
     card.append(meta);
     const details=el('details',undefined,'ask-details');details.open=opened.has(row.id);
