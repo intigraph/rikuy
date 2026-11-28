@@ -2,10 +2,10 @@
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Today · Aegis Daily Brief</title>
-<link rel="stylesheet" href="./home.css"><link rel="stylesheet" href="./explorer.css">
+<link rel="stylesheet" href="./tokens.css"><link rel="stylesheet" href="./home.css"><link rel="stylesheet" href="./explorer.css"><link rel="stylesheet" href="./look.css">
 </head><body>
 <div class="wrap">
-<header class="top"><div class="titlerow"><div><p class="eyebrow">AEGIS / DAILY BRIEF</p><h1>Today</h1></div><p id="asof" class="asof">Unavailable: no verified read received yet.</p></div>
+<header class="top"><div class="cord-top" aria-hidden="true"><div class="elbow"></div><div class="bar"><i></i><i></i><i></i></div></div><div class="titlerow"><div><p class="eyebrow">AEGIS / DAILY BRIEF</p><h1>Today</h1></div><p id="asof" class="asof">Unavailable: no verified read received yet.</p></div>
 <nav class="tabs" role="tablist" aria-label="Brief sections">
 <button role="tab" id="tab-today" aria-controls="v-today" data-v="today" aria-selected="true">Today <b id="ask-count" hidden></b></button>
 <button role="tab" id="tab-next" aria-controls="v-next" data-v="next">Next</button>
@@ -36,7 +36,7 @@
 <div class="view" id="v-board" role="tabpanel" aria-labelledby="tab-board" hidden><section class="card" aria-labelledby="h-board"><h2 id="h-board">Board · last 31 days</h2><p><a href="../economics/">Ephemeral job economics</a></p><div id="board-summary" data-panel-fallback="stats">Checking board stats…</div><div class="tablebox"><table><thead><tr><th>UTC day</th><th>Created</th><th>Closed</th><th>Closed P0</th><th>Closed P1</th></tr></thead><tbody id="board-daily"></tbody></table></div><p id="board-src" class="source-status">No verified board snapshot yet.</p></section></div>
 <div class="view" id="v-log" role="tabpanel" aria-labelledby="tab-log" hidden><section class="card" aria-labelledby="h-log"><h2 id="h-log">Deploy log · last 24 hours</h2><div id="log" class="log" data-panel-fallback="log"><p class="unavailable">Unavailable: no verified deploy-log read received yet.</p></div></section></div>
 <div class="view" id="v-explore" role="tabpanel" aria-labelledby="tab-explore" hidden><section class="card"><h2>Explore the dated snapshot</h2><p class="source-status">This is the bundled snapshot, not the live board. Open a record from Needs you or Next to inspect its retained details.</p><section id="quipu-explorer" aria-label="Explore the bundled work items"><p class="unavailable">Unavailable: snapshot has not been opened in this view.</p></section></section></div>
-</main><footer>Read-only brief · Live sources are checked independently. Unknown never means zero.</footer>
+</main><div class="cap" aria-hidden="true"></div><footer>Read-only brief · Live sources are checked independently. Unknown never means zero.</footer>
 </div>
 <script defer src="./home-fallback.js"></script><script id="brief-home-module" type="module" src="./home.mjs"></script>
 </body></html>

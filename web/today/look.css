@@ -1,0 +1,67 @@
+/* Console look on Today. Colours come only from tokens.css (copied from
+   web/console at build time); scripts/check-contrast.mjs fails CI on any raw
+   colour here or in home.css, and on any Today token pair under WCAG AA.
+   Presentation only: no panel loses its data, reader, error or UNKNOWN text. */
+body{font:15px/1.5 var(--body);-webkit-font-smoothing:antialiased;counter-reset:panel}
+h1,h2,.tabs button,.tile .k,.tile .v{font-family:var(--display)}
+.wrap{max-width:1264px}
+/* Cord frame: elbow and bar over the header, one rail per panel, a cap below. */
+.top{position:relative}
+.cord-top{display:grid;grid-template-columns:calc(var(--rail) + 30px) 1fr;height:58px;margin-bottom:-42px}
+.elbow{position:relative;background:var(--c-cord);border-top-left-radius:36px;transform-origin:top left;animation:grow .7s var(--ease) both}
+.elbow::after{content:"";position:absolute;right:0;bottom:0;width:30px;height:42px;background:var(--c-field);border-top-left-radius:18px}
+.bar{display:flex;gap:4px;height:16px;padding-left:4px}
+.bar i{display:block;height:100%;transform-origin:left;animation:sweep .7s var(--ease) both}
+.bar i:nth-child(1){flex:1;background:var(--c-cord);animation-delay:.1s}
+.bar i:nth-child(2){width:46px;background:var(--c-live);animation-delay:.2s}
+.bar i:nth-child(3){width:22px;background:var(--c-ask);border-radius:0 8px 8px 0;animation-delay:.3s}
+.titlerow{padding-left:calc(var(--rail) + 42px);align-items:flex-end;min-height:42px}
+.eyebrow{color:var(--c-dim);letter-spacing:.15em}
+h1{font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.tabs{border-left:var(--rail) solid var(--c-cord);border-bottom:0;margin-top:0;padding:10px 0 0 6px}
+.tabs button{text-transform:uppercase;letter-spacing:.1em;font-size:16px}
+.tabs button[aria-selected=true]{color:var(--c-live);border-bottom-color:var(--c-live)}
+.connection{border-left:var(--rail) solid var(--c-cord);border-bottom:0;padding:8px 0 10px 12px;margin:0 0 4px;color:var(--c-dim)}
+.connection[data-stale=true]{color:var(--c-ask)}
+.cap{height:26px;width:var(--rail);background:var(--c-cord);border-bottom-left-radius:22px;margin:4px 0 12px;transform-origin:top;animation:grow .6s var(--ease) both}
+footer{color:var(--c-dim)}
+/* Panels sit on the field beside their rail; the rail's tone says the state. */
+.card,.brief-panel{--tone:var(--c-cord);position:relative;background:none;border:0;border-radius:0;padding:6px 0 16px calc(var(--rail) + 12px);counter-increment:panel}
+.card::before,.brief-panel::before{content:counter(panel,decimal-leading-zero);position:absolute;left:0;top:0;bottom:0;width:var(--rail);background:var(--tone);color:var(--c-field);font:700 17px/1 var(--display);display:flex;align-items:flex-end;justify-content:flex-end;padding:0 5px 6px;transform-origin:top;animation:grow .6s var(--ease) both}
+.card::after,.brief-panel::after{content:"";position:absolute;left:14px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--c-field)}
+.card:has(.query-citation),.brief-panel:has(.query-citation){--tone:var(--c-live)}
+.brief-panel.needs-you,.card.needs-you,.card.decision-rest{--tone:var(--c-ask)}
+.card.later{--tone:var(--c-quiet)}
+/* Visible failure stays visible: a panel holding an Unavailable read turns coral. */
+.card:has(.unavailable),.brief-panel:has(.unavailable){--tone:var(--c-fail)}
+.card h2,.brief-panel h2{color:var(--tone);text-transform:uppercase;letter-spacing:.12em;font-weight:700}
+.overview,.today-grid{gap:4px 16px}
+.overview>section,.today-grid>section,.view>section{margin-bottom:4px}
+.unavailable{border-left:4px solid var(--c-fail);background:var(--c-panel);color:var(--c-cord)}
+.pending{border-left:4px solid var(--c-ask);background:var(--c-panel);color:var(--c-ask)}
+.source-details{border-left:var(--rail) solid var(--c-quiet);padding:4px 0 8px 12px}
+/* Panel kind 1: metric tiles. Unknown is hatched, never zero. */
+.tiles,.glance,.board-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5em,1fr));gap:6px;margin:0 0 12px}
+.tile{background:var(--c-panel);border:0;border-radius:4px 16px 16px 4px;padding:9px 11px 8px;min-width:0;overflow-wrap:anywhere;display:flex;flex-direction:column-reverse;justify-content:flex-end}
+.tile .k{font-size:14px;line-height:1.1;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--c-dim);margin:0}
+.tile .v{font-size:34px;line-height:1.05;font-weight:700;letter-spacing:0;font-variant-numeric:tabular-nums}
+.tile.fail .v{color:var(--c-fail)}
+.tile.unknown{background:repeating-linear-gradient(135deg,var(--c-panel) 0 6px,var(--c-hatch) 6px 12px)}
+.tile.unknown .v{color:var(--c-dim)}
+/* Panel kind 2: ask card. Choices stay disabled with the stated reason. */
+.ask{background:var(--c-panel);border:0;border-radius:4px 16px 16px 4px;padding:12px;margin:0 0 6px}
+.decision-choice,.decision-comment button{border-radius:999px;font-family:var(--display);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.ask-decide .decision-choice:disabled{background:none;border:2px solid var(--c-dim);color:var(--c-cord)}
+.ask-decide .decision-choice.recommended:disabled{background:var(--c-ask);border:2px solid var(--c-ask);color:var(--c-field)}
+.ask-decide .decision-status{background:none;border-left:3px solid var(--c-ask);color:var(--c-dim)}
+.deploy-row{border-color:var(--c-hatch)}
+@media(max-width:780px){
+  .wrap{padding:16px}
+  .titlerow{padding-left:calc(var(--rail) + 36px)}
+  .card,.brief-panel{padding:6px 0 14px calc(var(--rail) + 12px)}
+  .tabs button{padding:10px 9px}
+}
+@keyframes grow{from{transform:scaleY(0)}}
+@keyframes sweep{from{transform:scaleX(0)}}
+/* Reduced motion: every state still shows, nothing moves. */
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}

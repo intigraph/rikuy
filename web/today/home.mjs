@@ -41,7 +41,7 @@ function renderToday(){
   const ul=el('ul',undefined,'pts');for(const point of d.points.slice(0,3))ul.append(el('li',point));box.append(ul);
   box.append(el('time','Checked '+stamp(Math.max(...Object.values(checked),now())),'source-time'));
   const glance=$('glance');glance.replaceChildren();
-  const tile=(value,label)=>{const card=el('div',undefined,'tile');card.append(el('div',value,'v'),el('div',label,'k'));glance.append(card);};
+  const tile=(value,label)=>{const card=el('div',undefined,value==='—'?'tile unknown':'tile');card.append(el('div',value,'v'),el('div',label,'k'));glance.append(card);};
   tile(state.asks?String(state.asks.rows.length)+(state.asks.hasMore?'+':''):'—','Asks on the current page');tile(state.priorities?String(state.priorities.length):'—','Active P0 work');tile(state.deploys?String(state.deploys.rows.length):'—','Deploys · last 24 hours');
 }
 function renderPace(){
@@ -54,7 +54,7 @@ function renderPace(){
     deployRows(detail,d.rows);
   }
   const tiles=$('pace-tiles');tiles.replaceChildren();
-  for(const [kind,value] of [['Succeeded',d?.counts.succeeded],['Rolled back',d?.counts.rolledback],['Failed',d?.counts.failed]]){const card=el('div',undefined,'tile');card.append(el('div',value===undefined?'—':String(value),'v'),el('div',kind,'k'));tiles.append(card);}
+  for(const [kind,value] of [['Succeeded',d?.counts.succeeded],['Rolled back',d?.counts.rolledback],['Failed',d?.counts.failed]]){const card=el('div',undefined,value===undefined?'tile unknown':kind==='Failed'&&value?'tile fail':'tile');card.append(el('div',value===undefined?'—':String(value),'v'),el('div',kind,'k'));tiles.append(card);}
   mark($('pace-src')).textContent=d?'Governed deploys · daily_brief_deploys_v1 · checked '+stamp(checked.deploys):'Unavailable: '+reason('deploys')+' · checked '+stamp(checked.deploys||now());
   if(d)cite($('pace-src'),'./pace/query.json');
 }
@@ -73,7 +73,9 @@ function connection(){
 function renderStats(){
   const view=state.stats,summary=$('board-summary'),rows=$('board-daily'),source=$('board-src');rows.replaceChildren();
   if(!view){unavailable(summary,reason('stats'),checked.stats||now());mark(source).textContent='Board stats · no verified snapshot';return;}
-  mark(summary).replaceChildren(el('p',`${view.active_total} active items · ${view.created_total} created · ${view.closed_total} closed in the last 31 UTC days`));
+  const tiles=el('div',undefined,'board-tiles');
+  for(const [label,value] of [['Active items',view.active_total],['Created · 31 days',view.created_total],['Closed · 31 days',view.closed_total]]){const card=el('div',undefined,value==null?'tile unknown':'tile');card.append(el('div',value==null?'—':String(value),'v'),el('div',label,'k'));tiles.append(card);}
+  mark(summary).replaceChildren(tiles,el('p',`${view.active_total} active items · ${view.created_total} created · ${view.closed_total} closed in the last 31 UTC days`,'note'));
   summary.append(el('p','Active items by status (including inbox): '+Object.entries(view.active).map(([key,n])=>key.replaceAll('_',' ')+': '+n).join(' · '),'note'));
   for(const day of [...view.daily_work].reverse()){
     const row=el('tr');for(const value of [day.day,day.created,day.closed,day.closed_p0,day.closed_p1])row.append(el('td',String(value)));rows.append(row);
