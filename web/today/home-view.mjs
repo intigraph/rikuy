@@ -27,9 +27,10 @@ export function setAskChoicesReader(read){askChoicesReader=read;cardReads=read?c
 const decisionReason=()=>askDecisionAdapter?'Checking signing admission…':NOT_ADMITTED.signer;
 // Every Needs-you card is a decision card. Choices render disabled with the
 // visible reason until an admitted adapter mounts the signed Deck controls.
-// On a phone the question and its Why lines are line-clamped (look.css). The
-// More toggle on the meta line expands them in place, and shows only when
-// something is clipped.
+// On a phone the question and its Why lines are line-clamped, and the signing
+// reason is one line (look.css). The More toggle on the meta line expands all
+// three in place, and shows only when something is clipped, so a long reason
+// can be read on a touch screen where a title tooltip never appears.
 function clampToggle(card){
   const button=el('button','More','clamp-more');button.type='button';button.hidden=true;button.setAttribute('aria-expanded','false');
   button.addEventListener('click',()=>{const open=card.classList.toggle('unclamped');button.textContent=open?'Less':'More';button.setAttribute('aria-expanded',String(open));});
@@ -37,7 +38,7 @@ function clampToggle(card){
 }
 function checkClamp(card){
   const button=card.querySelector('.clamp-more');if(!button)return;
-  button.hidden=!card.classList.contains('unclamped')&&![...card.querySelectorAll('.q,.decision-why')].some(n=>n.scrollHeight>n.clientHeight+1);
+  button.hidden=!card.classList.contains('unclamped')&&!([...card.querySelectorAll('.q,.decision-why')].some(n=>n.scrollHeight>n.clientHeight+1)||[...card.querySelectorAll('.decision-status')].some(n=>n.scrollWidth>n.clientWidth+1));
 }
 let clampWatch;
 function watchClamps(){

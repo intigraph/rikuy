@@ -120,6 +120,17 @@ try{
     assert.ok(m.asks>=3,`at least three asks with their choices on the first screen (font ${scale}, saw ${m.asks})`);
     assert.equal(m.p0,'3 P0');assert.ok(m.p0Visible,`the P0 count is on the first screen (font ${scale})`);
     assert.ok(m.statusOneLine,`the page status line is one line on a phone (font ${scale})`);
+    // A long signing reason is cut to one line on a phone. More must appear and
+    // reveal all of it in place, because a title tooltip never shows on touch.
+    const long='Signing not admitted on this deployment · no enrolled signer for this audience, origin and relying party, so every choice stays disabled';
+    const before=await page.evaluate(long=>{const note=document.querySelector('#ask-top .ask .decision-status');note.textContent=long;dispatchEvent(new Event('resize'));return new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>{const more=note.closest('.ask').querySelector('.clamp-more');r({cut:note.scrollWidth>note.clientWidth+1,moreShown:!!more&&!more.hidden});})));},long);
+    assert.ok(before.cut,`the long reason is cut to one line before More (font ${scale})`);
+    assert.ok(before.moreShown,`More is offered when only the reason is cut (font ${scale})`);
+    await page.locator('#ask-top .ask').first().locator('.clamp-more').click();
+    const after=await page.evaluate(()=>{const note=document.querySelector('#ask-top .ask .decision-status'),r=note.getBoundingClientRect();return {expanded:note.closest('.ask').querySelector('.clamp-more').getAttribute('aria-expanded'),fits:note.scrollWidth<=note.clientWidth+1,lines:r.height/parseFloat(getComputedStyle(note).lineHeight),right:r.right,scrollWidth:document.documentElement.scrollWidth};});
+    assert.equal(after.expanded,'true');
+    assert.ok(after.fits&&after.lines>1.5,`More reveals the whole reason on more than one line (font ${scale}, ${JSON.stringify(after)})`);
+    assert.ok(after.right<=412&&after.scrollWidth<=412,`the revealed reason stays on screen (font ${scale})`);
     assert.deepEqual(failures,[]);
     await context.close();
   }
