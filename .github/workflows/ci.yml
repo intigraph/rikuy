@@ -20,6 +20,15 @@ jobs:
           npx --no-install playwright install --with-deps chromium
       - run: python3 scripts/test-browser-check.py
       - run: npm run ci
+        env:
+          RIKUY_TODAY_SCREENSHOTS: ${{ runner.temp }}/today-screens
+      - name: Keep the Today phone screenshots for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: today-phone-screens
+          path: ${{ runner.temp }}/today-screens
+          if-no-files-found: ignore
 
   repository-pendant-source:
     name: Repository pendant source controls

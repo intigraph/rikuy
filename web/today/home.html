@@ -8,18 +8,18 @@
 <header class="top"><div class="cord-top" aria-hidden="true"><div class="elbow"></div><div class="bar"><i></i><i></i><i></i></div></div><div class="titlerow"><div><p class="eyebrow">AEGIS / DAILY BRIEF</p><h1>Today</h1></div><p id="asof" class="asof">Unavailable: no verified read received yet.</p></div>
 <nav class="tabs" role="tablist" aria-label="Brief sections">
 <button role="tab" id="tab-today" aria-controls="v-today" data-v="today" aria-selected="true">Today <b id="ask-count" hidden></b></button>
-<button role="tab" id="tab-next" aria-controls="v-next" data-v="next">Next</button>
+<button role="tab" id="tab-next" aria-controls="v-next" data-v="next">Next <b id="p0-count" hidden></b></button>
 <button role="tab" id="tab-pace" aria-controls="v-pace" data-v="pace">Pace</button>
 <button role="tab" id="tab-board" aria-controls="v-board" data-v="board">Board</button>
 <button role="tab" id="tab-log" aria-controls="v-log" data-v="log">Log</button>
 <button role="tab" id="tab-explore" aria-controls="v-explore" data-v="explore">Explore</button>
 </nav></header>
-<p id="connection" role="status" aria-live="polite" class="connection">Unavailable: no verified live connection yet.</p>
+<p id="connection" role="status" aria-live="polite" class="connection" tabindex="0">Unavailable: no verified live connection yet.</p>
 <noscript><p class="unavailable">Unavailable: JavaScript is disabled. Live reads require JavaScript.</p></noscript>
 <main>
 <div class="view" id="v-today" role="tabpanel" aria-labelledby="tab-today">
 <div id="overview" class="overview">
-<section class="brief-panel needs-you" aria-labelledby="h-asks"><h2 id="h-asks">Needs you</h2><p id="asks-status" class="source-status" data-panel-fallback="asks">Unavailable: no verified asks read received yet.</p><div id="ask-top" data-panel-fallback="ask-top"></div><p id="ask-rest-count"></p></section>
+<section class="brief-panel needs-you" aria-labelledby="h-asks"><h2 id="h-asks">Needs you</h2><p id="asks-status" class="source-status" data-panel-fallback="asks" tabindex="0">Unavailable: no verified asks read received yet.</p><div id="ask-top" data-panel-fallback="ask-top"></div><p id="ask-rest-count"></p></section>
 <div id="overview-panels" class="overview-panels" data-panel-fallback="overview"><p>Unavailable: no verified brief received yet.</p></div>
 <section class="card" aria-labelledby="h-changes"><h2 id="h-changes">Recently closed work</h2><p id="changes-status" class="source-status" data-panel-fallback="changes-status">Recent closes await activation.</p><div id="recent-closes" data-panel-fallback="recent-closes"></div><p class="changes-gap">Merged pull requests and decisions are not yet shown.</p></section>
 </div>
