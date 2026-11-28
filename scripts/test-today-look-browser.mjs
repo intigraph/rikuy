@@ -104,7 +104,8 @@ try{
         tabs:document.querySelectorAll('.tabs [role=tab]').length,
         asks:[...document.querySelectorAll('#ask-top .ask')].filter(a=>{const g=a.querySelector('.decision-actions');return g&&g.children.length&&g.getBoundingClientRect().bottom<=H;}).length,
         p0:document.querySelector('#p0-count').textContent,p0Visible:document.querySelector('#p0-count').getBoundingClientRect().bottom<=H&&!document.querySelector('#p0-count').hidden,
-        statusOneLine:conn.getBoundingClientRect().height<2.2*parseFloat(getComputedStyle(conn).lineHeight)};});
+        statusOneLine:conn.getBoundingClientRect().height<2.2*parseFloat(getComputedStyle(conn).lineHeight),
+        layout:['.top','#connection','#asks-status',...[1,2,3].map(n=>`#ask-top .ask:nth-child(${n}) .decision-actions`)].map(q=>{const r=document.querySelector(q)?.getBoundingClientRect();return r?Math.round(r.top)+'-'+Math.round(r.bottom):'none';}).join(' ')+' fonts '+getComputedStyle(document.querySelector('.decision-choice')).fontFamily.slice(0,40)};});
     console.log('Today phone first screen at 412x915:',JSON.stringify(m));
     if(shots)await mkdir(shots,{recursive:true}),await page.screenshot({path:resolve(shots,'today-412x915.png')});
     assert.equal(m.tabs,6);
