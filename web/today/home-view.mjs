@@ -175,6 +175,7 @@ export function renderLater(rows,reason,at){
   for(const row of rows){const card=el('article',undefined,'ask later');card.append(el('div',row.title,'q'),el('div',[row.id,'P'+row.priority,row.status,'age '+(row.created?age(row.created):'unknown')].join(' · '),'meta'),recordButton(row.id,row.title));root.append(card);}
 }
 export function renderPriorities(rows,reason,at){
+  const badge=$('p0-count');if(badge){badge.hidden=!rows;badge.textContent=rows?(rows.moreThan20?'20+':rows.length)+' P0':'';}
   const root=$('prio');root.replaceChildren();
   mark($('priorities-status')).textContent=rows?`${rows.moreThan20?'Showing 20; more than 20 active P0 items. Bounded selection, ranked within this view.':rows.length+' active P0 items'} · checked ${stamp(at)}`:'Live priorities · count unavailable';
   if(rows)cite($('priorities-status'),'./priorities/query.json');
