@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.5.0](https://github.com/intigraph/rikuy/compare/rikuy-v0.4.0...rikuy-v0.5.0) (2026-11-28)
+
+
+### Features
+
+* **console:** console look on the demo with contrast and motion checks (aegis-xwm C) ([#42](https://github.com/intigraph/rikuy/issues/42)) ([e22d188](https://github.com/intigraph/rikuy/commit/e22d188cbf963038de706596cd45ef60a4492c39))
+* **today:** console look on the served Today page (stage 1 part D) ([#45](https://github.com/intigraph/rikuy/issues/45)) ([8eeb825](https://github.com/intigraph/rikuy/commit/8eeb825185565b00e7e44b5da7b97f9214acf346))
+* **today:** decision buttons on every Needs-you card, signed or disabled ([#41](https://github.com/intigraph/rikuy/issues/41)) ([713f795](https://github.com/intigraph/rikuy/commit/713f795d4a8ed7f0d7298a15ccebed930b2a306f))
+
+
+### Bug Fixes
+
+* **demo:** serve the brief with its sample rows at the demo root ([bd16498](https://github.com/intigraph/rikuy/commit/bd16498703a766b00197735925c4070a0068153f))
+* **share:** surface the failing tool's stderr when a publish command fails ([80024e4](https://github.com/intigraph/rikuy/commit/80024e443907eea74eee6096d2f99c37d5f4c57d))
+* **share:** surface the failing tool's stderr when a publish command fails ([e2b693d](https://github.com/intigraph/rikuy/commit/e2b693dae25342369d147b95c71c131dd63bc871))
+* **today:** collapse the held-work wall to owners that hold work ([#49](https://github.com/intigraph/rikuy/issues/49)) ([8a7e834](https://github.com/intigraph/rikuy/commit/8a7e8342a95275d840a0104886162c9082971513))
+* **today:** font-robust phone layout keeps all tabs, the P0 count and three asks on the first screen ([#55](https://github.com/intigraph/rikuy/issues/55)) ([c1eda5c](https://github.com/intigraph/rikuy/commit/c1eda5cd06e76fbe20aa0d8039644c5b1526951c))
+* **today:** Needs-you cards show priority, age and owner inline and state the order ([#47](https://github.com/intigraph/rikuy/issues/47)) ([f8537ee](https://github.com/intigraph/rikuy/commit/f8537eec691a15c0ad493388737ffa782b47fd52))
+* **today:** pin the Asks panel to daily_brief_asks_v5 ([7f629a6](https://github.com/intigraph/rikuy/commit/7f629a6c0780c20204ca026dd7b0c05f14b112c1))
+* **today:** pin the Asks panel to daily_brief_asks_v5 ([cb5da83](https://github.com/intigraph/rikuy/commit/cb5da83595ceae930441532af2936ef9af2b4e90))
+* **today:** Priority work and Deployments counts match the rows shown ([#48](https://github.com/intigraph/rikuy/issues/48)) ([e11eb03](https://github.com/intigraph/rikuy/commit/e11eb0319eba4891e266450bab3ff9e13c9678c3))
+* **today:** read Ask options through daily_brief_ask_item_v2 (status OPTIONAL+BOUND) ([#44](https://github.com/intigraph/rikuy/issues/44)) ([79f7627](https://github.com/intigraph/rikuy/commit/79f7627fdef26cbd95e33754204f732f0313f3ed))
+* **today:** read held-work titles, only for rows on screen (supersedes [#52](https://github.com/intigraph/rikuy/issues/52)) ([#54](https://github.com/intigraph/rikuy/issues/54)) ([3d744bf](https://github.com/intigraph/rikuy/commit/3d744bfa7dc2cb356fb701a055ae67adc5f2504c))
+* **today:** slim Asks to daily_brief_asks_v6 and titles to v2 (aegis-edu.3) ([#40](https://github.com/intigraph/rikuy/issues/40)) ([b5da144](https://github.com/intigraph/rikuy/commit/b5da144a023905c0f0efb4da0ace53c8965043e7))
+* **today:** spaced-only title choices, no auto re-read of failed cards, adapter docs (aegis-d3rd) ([#43](https://github.com/intigraph/rikuy/issues/43)) ([57fc601](https://github.com/intigraph/rikuy/commit/57fc601b93fe4051759f8e42ec40c7aa6a2c36fa))
+
 ## [0.4.0](https://github.com/intigraph/rikuy/compare/rikuy-v0.3.0...rikuy-v0.4.0) (2026-11-23)
 
 
