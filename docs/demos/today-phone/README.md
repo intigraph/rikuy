@@ -39,3 +39,11 @@ Captured from `just demo` at `/today/demo-asks/`, 412 px wide, root font 125%:
 | After | 412 |
 
 ![Before, root font 125%](demo-asks-before-412-font-125pct.png) ![After, root font 125%](demo-asks-after-412-font-125pct.png)
+
+## Signing reason on a phone
+
+At 412 px the signing reason under the choices is one line, so it can be cut off. Earlier, tapping **More** expanded only the question and its Why lines, and the full reason was available only as a `title` tooltip, which touch screens never show. Now **More** also appears when only the reason is cut off, and expands the reason in place. Taken with `just demo` at `/today/demo-asks/`, 412x915, root font 125%, after tapping **More** on the first card:
+
+| Before | After |
+| --- | --- |
+| ![before](demo-asks-reason-before-412-font-125pct.png) | ![after](demo-asks-reason-after-412-font-125pct.png) |
