@@ -6,6 +6,7 @@ const rows=verifiedDemo();
 const root=resolve(import.meta.dirname,'../dist'),port=Number(process.env.PORT||4173);
 const demoScript=await readFile(resolve(import.meta.dirname,'../web/legacy/demo.mjs'));
 const asksPage=await readFile(resolve(import.meta.dirname,'demo-today-asks.html')),asksScript=await readFile(resolve(import.meta.dirname,'demo-today-asks.mjs'));
+const heldPage=await readFile(resolve(import.meta.dirname,'demo-today-held.html')),heldScript=await readFile(resolve(import.meta.dirname,'demo-today-held.mjs'));
 // The console look is demo-only (aegis-xwm C): it is served from source here and
 // is not copied into dist, so the served brief_static pin does not carry it.
 const consoleRoot=resolve(import.meta.dirname,'../web/console');
@@ -16,6 +17,8 @@ const server=createServer(async(req,res)=>{
   if(name==='/demo.mjs'){res.setHeader('content-type','text/javascript');return res.end(demoScript);}
   if(name==='/today/demo-asks/'){res.setHeader('content-type','text/html');return res.end(asksPage);}
   if(name==='/demo-today-asks.mjs'){res.setHeader('content-type','text/javascript');return res.end(asksScript);}
+  if(name==='/today/demo-held/'){res.setHeader('content-type','text/html');return res.end(heldPage);}
+  if(name==='/demo-today-held.mjs'){res.setHeader('content-type','text/javascript');return res.end(heldScript);}
   if(name==='/demo-rows.json'){res.setHeader('content-type','application/json');return res.end(JSON.stringify(rows));}
   if(name==='/console'){res.writeHead(301,{location:'/console/'});return res.end();}
   if(name.startsWith('/console/')){
@@ -31,5 +34,5 @@ const server=createServer(async(req,res)=>{
   res.end(name==='/'?body.toString().replace('</body>','<script type="module" src="./demo.mjs"></script></body>'):body);
  }catch{res.writeHead(404);res.end('Not found');}
 });
-server.listen(port,'127.0.0.1',()=>{console.log('Validated demo: 2 priorities and 1 decision.');console.log(`Rikuy demo: http://127.0.0.1:${server.address().port}`);console.log(`Console look (synthetic, demo only): http://127.0.0.1:${server.address().port}/console/`);console.log(`Today decision cards (synthetic, signing not admitted): http://127.0.0.1:${server.address().port}/today/demo-asks/`);});
+server.listen(port,'127.0.0.1',()=>{console.log('Validated demo: 2 priorities and 1 decision.');console.log(`Rikuy demo: http://127.0.0.1:${server.address().port}`);console.log(`Console look (synthetic, demo only): http://127.0.0.1:${server.address().port}/console/`);console.log(`Today decision cards (synthetic, signing not admitted): http://127.0.0.1:${server.address().port}/today/demo-asks/`);console.log(`Today held work (synthetic): http://127.0.0.1:${server.address().port}/today/demo-held/`);});
 for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>server.close());
