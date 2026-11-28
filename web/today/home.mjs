@@ -15,7 +15,7 @@ import {digest,logEntries} from './home-model.mjs';
 import {StatsClient} from './projection-metrics.mjs';
 import {heldReader} from './held/model.mjs';
 import {coverageParams,recentlyDeferred,deferredReader} from './recently-deferred/model.mjs';
-import {$,el,stamp,mark,unavailable,renderAsks,renderLater,renderPriorities,deployRows,tabs,renderOverview,setRecordReader,recordButton,cite,setAskDecisionAdapter,setAskChoicesReader} from './home-view.mjs';
+import {$,el,stamp,mark,unavailable,renderAsks,renderLater,renderPriorities,deployRows,tabs,renderOverview,setRecordReader,recordButton,cite,setAskDecisionAdapter,setAskChoicesReader,renderHeldPanel} from './home-view.mjs';
 if(readerConfig.askDecisionsEnabled===true&&typeof readerConfig.askDecisionAdapter==='function')setAskDecisionAdapter(readerConfig.askDecisionAdapter);
 const state={asks:undefined,later:undefined,priorities:undefined,deploys:undefined,stats:undefined,held:undefined,deferred:undefined,watches:undefined,changes:undefined},checked={},reasons={};
 const now=()=>Date.now();
@@ -84,26 +84,9 @@ function renderStats(){
   cite(source,'./projection-metrics.mjs','Projection read definitions');
 }
 function renderHeld(){
-  const root=$('held-work'),status=$('held-status'),view=state.held;
-  if(!view){unavailable(root,reason('held'),checked.held||now());mark(status).textContent='Owner liveness · no verified lifecycle evidence';return;}
-  mark(root).replaceChildren();
-  const expired=s=>s.state==='expired'||now()>=s.observed_at*1000+1800000;
-  const unknown=view.pending+view.states.filter(expired).length;
-  const owners=view.states.filter(s=>s.state==='stopped'||s.state==='ceiling'||s.state==='expired');
-  mark(status).textContent=`${owners.length} owners with stopped or UNKNOWN evidence${unknown?' · UNKNOWN coverage: '+unknown+' owners have missing or expired evidence':!view.complete?' · UNKNOWN: writer coverage is incomplete':''} · board tx ${view.tx??'not read'} · checked ${stamp(checked.held)}`;
-  cite(status,'./held/head.json','Owner query');cite(status,'./held/work.json','Work query');
-  if(!owners.length)root.append(el('p',view.complete&&!unknown?'No stopped owners in the verified writer scope.':'Stopped-owner coverage is UNKNOWN; an empty result cannot establish that every owner is live.','note'));
-  for(const owner of owners){
-    const card=el('article',undefined,'ask'),uncertain=expired(owner),label=uncertain?'UNKNOWN · last recorded '+owner.state:owner.state==='ceiling'?'ceiling-stopped':'stopped';
-    card.append(el('h3',owner.agent+' · '+label));
-    const rows=view.rows.filter(row=>row.owner===owner.owner);
-    for(const row of rows){const line=el('p');line.append(el('span',`${row.id} · P${row.priority} · ${row.status} · ${row.title}${row.modified?' · updated '+row.modified:''} `));
-      line.append(recordButton(row.id,row.title));card.append(line);}
-    if(!rows.length)card.append(el('p',view.more?'No owned work within this bounded selection.':'No active owned work in the verified board read.','note'));
-    const proof=el('details');proof.append(el('summary','Owner evidence'),el('p',`Observed ${stamp(owner.observed_at*1000)} · lifecycle revision ${owner.revision} · ${owner.fact}`,'meta'));card.append(proof);root.append(card);
-  }
-  if(view.more)root.append(el('p','More owned work exists beyond this bounded selection.','note'));
-  root.append(el('p','Reassignment stays with the lead. Owner evidence expires after 30 minutes.','note'));
+  const view=state.held;
+  if(!view){unavailable($('held-work'),reason('held'),checked.held||now());mark($('held-status')).textContent='Owner liveness · no verified lifecycle evidence';return;}
+  renderHeldPanel($('held-work'),$('held-status'),view,checked.held,now());
 }
 function renderDeferred(){
   const root=$('recently-deferred'),status=$('deferred-status'),view=state.deferred;

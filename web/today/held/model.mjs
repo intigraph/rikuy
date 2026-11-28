@@ -23,6 +23,18 @@ export function decodeHead(body,definition,now=Date.now(),watermark={}){
   Object.assign(watermark,{revision:head.revision,raw,versions:new Map([...(watermark.versions||[]),...versions])});
   return {headRevision:head.revision,states,complete:head.complete&&states.every(s=>!s.expired),pending:head.source_agents-head.agents.length,unknown:states.filter(s=>s.expired).length};
 }
+// One-shot job identities (eph-merge-*, eph-review-*, ...) finish and stop by design.
+export const ephemeralAgent=agent=>/^eph-/.test(agent);
+export const HELD_COLLAPSE_OWNERS=5;
+// Owners with stopped, ceiling or expired evidence, split into those holding
+// board work (rendered) and the rest (one count line). Expired stays UNKNOWN.
+export function heldSummary(view,at=Date.now()){
+  const uncertain=s=>s.state==='expired'||at>=s.observed_at*1000+1800000;
+  const owners=view.states.filter(s=>s.state==='stopped'||s.state==='ceiling'||s.state==='expired');
+  const holders=[],quiet=[];
+  for(const owner of owners){const rows=view.rows.filter(row=>row.owner===owner.owner);(rows.length?holders:quiet).push({...owner,rows,uncertain:uncertain(owner)});}
+  return {owners:owners.length,holders,quiet:quiet.length,quietEphemeral:quiet.filter(s=>ephemeralAgent(s.agent)).length,unknown:view.pending+view.states.filter(uncertain).length,collapsed:holders.length>HELD_COLLAPSE_OWNERS};
+}
 export function ownerBatches(view){
   // Expired stop observations remain visible as UNKNOWN, never confirmed stopped.
   const owners=view.states.filter(s=>s.state==='stopped'||s.state==='ceiling'||s.state==='expired').map(s=>s.owner).sort();

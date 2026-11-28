@@ -9,6 +9,7 @@ const server=createServer(async(req,res)=>{
   try {
     let name=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
     if(name==='/favicon.ico'){res.writeHead(204);res.end();return;}
+    if(name==='/today/demo-held/'||name==='/demo-today-held.mjs'){res.setHeader('Content-Type',name.endsWith('.mjs')?'text/javascript':'text/html');res.end(await readFile(resolve('scripts',name.endsWith('.mjs')?'demo-today-held.mjs':'demo-today-held.html')));return;}
     if(name==='/today/demo-asks/'||name==='/demo-today-asks.mjs'){res.setHeader('Content-Type',name.endsWith('.mjs')?'text/javascript':'text/html');res.end(await readFile(resolve('scripts',name.endsWith('.mjs')?'demo-today-asks.mjs':'demo-today-asks.html')));return;}
     if(name.endsWith('/'))name+='index.html';
     const file=resolve(root,'.'+name);
@@ -112,11 +113,36 @@ async function explicitAskRecord(){
     assert.deepEqual(remote,[]);
   }finally{await context.close();}
 }
+async function demoHeldWork(){
+  for(const viewport of [{width:1440,height:900},{width:412,height:915}]){
+    const context=await browser.newContext({viewport}),page=await context.newPage(),failures=[],live=[];
+    page.on('pageerror',e=>failures.push(e.message));
+    await page.route('**/*',route=>{const u=new URL(route.request().url());if(u.origin!==origin){live.push(u.href);return route.abort();}return route.continue();});
+    try{
+      await page.goto(origin+'/today/demo-held/');
+      await page.waitForFunction(()=>window.demoHeldRendered);
+      const held=await page.evaluate(()=>({cards:document.querySelectorAll('#held-work article').length,outside:document.querySelectorAll('#held-work > article').length,open:document.querySelector('#held-work details.held-owners')?.open,quiet:[...document.querySelectorAll('#held-work .held-quiet')].map(n=>n.textContent),empty:document.body.textContent.includes('No owned work within this bounded selection'),height:document.documentElement.scrollHeight}));
+      assert.equal(held.cards,9,'only the nine owners holding work get a card');
+      assert.equal(held.outside,0,'more than five holders render inside a collapsed group');
+      assert.equal(held.open,false,'the holder group is collapsed by default');
+      assert.deepEqual(held.quiet,['89 other owners show no owned work in the verified board read (86 ephemeral job identities).']);
+      assert.equal(held.empty,false,'no per-owner empty cards');
+      assert.ok(held.height<=viewport.height+200,`collapsed panel stays short (${held.height}px)`);
+      await page.goto(origin+'/today/');
+      await page.waitForFunction(()=>document.querySelector('#connection')?.textContent.includes('Live readers await deployment admission'));
+      const top=await page.evaluate(()=>document.getElementById('h-held').closest('section').getBoundingClientRect().top);
+      assert.ok(top>viewport.height,`held work sits below the fold (${top}px)`);
+      assert.deepEqual(failures,[]);assert.deepEqual(live,[]);
+    }finally{await context.close();}
+  }
+}
 try {
   browser=await chromium.launch({headless:process.env.RIKUY_BROWSER_HEADED!=='1',...(process.env.RIKUY_BROWSER_EXECUTABLE?{executablePath:process.env.RIKUY_BROWSER_EXECUTABLE}:{})});
   await loadToday();
   await explicitAskRecord();
   await demoDecisionCards();
+  await demoHeldWork();
+  console.log('PASS synthetic held work: only holders render, collapsed past five, below the fold at 1440 and 412');
   console.log('PASS explicit Ask metadata, readable record and keyboard graph navigation; zero nonlocal requests');
   console.log('PASS built Today module graph, disabled-reader startup and tab transition');
   await assert.rejects(loadToday({breakDependency:true}),/Timeout|built module imports/);

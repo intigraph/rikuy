@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {renderStored} from '../stored-query.mjs';
-import {decodeHead,ownerBatches,decodeWork,heldReader} from './model.mjs';
+import {decodeHead,ownerBatches,decodeWork,heldReader,heldSummary,ephemeralAgent,HELD_COLLAPSE_OWNERS} from './model.mjs';
 const headDef=JSON.parse(fs.readFileSync(new URL('./head.json',import.meta.url))),workDef=JSON.parse(fs.readFileSync(new URL('./work.json',import.meta.url))),now=Date.parse('2026-10-24T15:00:00Z');
 const reply=(def,rows,params={})=>({query:def.name,sparql:renderStored(def,params),rows,count:rows.length,truncated:false});
 const entry=(agent='worker',revision=1,state='stopped')=>({agent,revision,state,contract:'shantytown-owned-work/v1',generation:'generation-1',observed_at:now/1000-60,fact:headDef.onto+'owned-work-'+revision.toString(16).padStart(64,'0')});
@@ -74,4 +74,19 @@ for(const changeTx of [false,true])test('bounded projection cursor paging '+(cha
  if(changeTx)await assert.rejects(read(null,new AbortController().signal),/restart required/);
  else{const view=await read(null,new AbortController().signal);assert.equal(view.rows.length,51);assert.equal(view.tx,123);assert.equal(view.more,false);}
  assert.equal(calls.length,2);assert.deepEqual(calls[1].after,{entity:workDef.itemPrefix+'aegis-f49',graph:workDef.graph});
+});
+test('held summary renders only owners holding work and counts the rest, ephemeral jobs included',()=>{
+  const agents=[entry('lead',1),entry('eph-merge-1a',2),entry('eph-review-2b',3),entry('quiet',4,'ceiling'),entry('eph-task-3c',5),entry('up',6,'live')];
+  const view={...decodeHead(body(head(agents)),headDef,now),rows:[item('aegis-a',headDef.principalPrefix+'lead'),item('aegis-b',headDef.principalPrefix+'eph-task-3c')],more:false};
+  const sum=heldSummary(view,now);
+  assert.equal(sum.owners,5);assert.deepEqual(sum.holders.map(h=>h.agent),['lead','eph-task-3c']);
+  assert.equal(sum.quiet,3);assert.equal(sum.quietEphemeral,2);assert.equal(sum.collapsed,false);
+  assert.equal(ephemeralAgent('eph-merge-1a'),true);assert.equal(ephemeralAgent('ephraim'),false);
+});
+test('more than five owners holding work collapse; expired holders stay UNKNOWN',()=>{
+  const agents=Array.from({length:HELD_COLLAPSE_OWNERS+1},(_,i)=>entry('w'+i,i+1));agents[0].observed_at=now/1000-1800;
+  const view={...decodeHead(body(head(agents)),headDef,now),rows:agents.map((a,i)=>item('aegis-r'+i,headDef.principalPrefix+a.agent)),more:false};
+  const sum=heldSummary(view,now);
+  assert.equal(sum.collapsed,true);assert.equal(sum.holders.length,6);assert.equal(sum.holders[0].uncertain,true);assert.equal(sum.unknown,1);
+  view.rows.pop();assert.equal(heldSummary(view,now).collapsed,false);
 });
