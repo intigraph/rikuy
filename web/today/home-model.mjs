@@ -76,3 +76,15 @@ export function deploymentGroups(view){
   const severity=g=>g.failed?2:g.rolledback?1:0;
   return [...groups.values()].sort((a,b)=>severity(b)-severity(a)||Date.parse(b.last)-Date.parse(a.last)||a.label.localeCompare(b.label));
 }
+const outcomeText=g=>{const parts=[];if(g.succeeded)parts.push(g.succeeded+' applied');if(g.rolledback)parts.push(g.rolledback+' rolled back');if(g.failed)parts.push(g.failed+' failed');return parts.join(', ');};
+// The first services by severity and recency, then one line for the rest, so the
+// listed outcomes always sum to the headline counts.
+export function deploymentLines(groups,limit=3){
+  const lines=groups.slice(0,limit).map(g=>({text:g.label+' — '+outcomeText(g),problem:Boolean(g.rolledback||g.failed)}));
+  const rest=groups.slice(limit);
+  if(rest.length){
+    const sum={succeeded:0,rolledback:0,failed:0};for(const g of rest)for(const k in sum)sum[k]+=g[k];
+    lines.push({text:`${rest.length} other ${rest.length===1?'service':'services'} — `+outcomeText(sum),problem:Boolean(sum.rolledback||sum.failed)});
+  }
+  return lines;
+}

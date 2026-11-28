@@ -28,6 +28,15 @@ const request = async (url, {body}) => {
 view.setAskChoicesReader(askChoicesReader({request, endpoint: location.origin, definition}));
 const render = () => view.renderAsks({rows, incomplete: false}, null, Date.now());
 render();
+// Synthetic overview: more P0 items and deploying services than the panels
+// show, so each panel must state what it leaves out.
+const owners = ['crew/alpha', 'crew/beta', null];
+const priorities = Array.from({length: 7}, (_, i) => ({id: 'aegis-demo' + (20 + i), item: item('aegis-demo' + (20 + i)), title: 'Synthetic P0 work ' + (i + 1), priority: 0, status: i % 2 ? 'in_progress' : 'open', owner: owners[i % 3], revision: 2, modified: '2026-11-27T00:00:00Z'}));
+const services = [['quipu', 14], ['shantytown', 12], ['homelab-mcp', 9], ['rikuy', 6], ['camayoc', 4], ['tambo', 3]];
+const deployRows = services.flatMap(([service, n], s) => Array.from({length: n}, (_, i) => ({service, outcome: 'succeeded', occurredAt: new Date(Date.UTC(2026, 10, 27, 23 - s, 59 - i)).toISOString()})));
+deployRows.push({service: 'tambo', outcome: 'rolledback', occurredAt: '2026-11-27T12:00:00Z'});
+const deploys = {rows: deployRows, counts: {succeeded: deployRows.filter(r => r.outcome === 'succeeded').length, rolledback: 1, failed: 0}};
+view.renderOverview({priorities, deploys}, {}, {});
 // Re-render as a live refresh would; cached choices must not re-read.
 setTimeout(render, 50);
 window.demoAsksRendered = true;
