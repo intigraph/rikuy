@@ -8,7 +8,7 @@
       "source": "README.md",
       "subject": "http://aegis.gastown.local/ontology/doc/rikuy/README.md#what-it-does-today",
       "summary": "Rikuy is a static browser brief over Quipu: a Today brief, Ask cards, passkey-signed decisions, settlement into Seeds, a graph explorer and a job-cost report. It is not a separate knowledge store. The demo and the job-cost report work from a clean checkout; live reads and signing are built and ship switched off.",
-      "source_sha256": "db9b3ce865f428271de44759c70a17cbc9371b311de7cbf541e359b8a10017aa",
+      "source_sha256": "57e236cfee984e6edfeea2c4533c4b5790d42902572812785d9f2509bf2b42df",
       "type": "Concept"
     },
     {
@@ -30,7 +30,7 @@
       "source": "README.md",
       "subject": "http://aegis.gastown.local/ontology/doc/rikuy/README.md#install",
       "summary": "The source installer builds the current public main branch and copies only the static output into a revision-named folder. It starts no server and configures no credentials or live connection; no prebuilt, checksummed package is published yet.",
-      "source_sha256": "db9b3ce865f428271de44759c70a17cbc9371b311de7cbf541e359b8a10017aa",
+      "source_sha256": "57e236cfee984e6edfeea2c4533c4b5790d42902572812785d9f2509bf2b42df",
       "properties": {
         "interfaceKind": "file-format",
         "publicName": "Static dist directory"
@@ -59,7 +59,7 @@
       "source": "README.md",
       "subject": "http://aegis.gastown.local/ontology/doc/rikuy/README.md",
       "summary": "Start with what works today and the synthetic demo; a working demo does not prove admitted live reads or signing enrollment.",
-      "source_sha256": "db9b3ce865f428271de44759c70a17cbc9371b311de7cbf541e359b8a10017aa",
+      "source_sha256": "57e236cfee984e6edfeea2c4533c4b5790d42902572812785d9f2509bf2b42df",
       "properties": {
         "startHereOrder": 1,
         "glossaryTerm": "https://scbrown.github.io/quechua/ns#Decision"
@@ -80,7 +80,7 @@
       "source": "README.md",
       "subject": "http://aegis.gastown.local/ontology/doc/rikuy/README.md#before-you-start",
       "summary": "Confirm the runtime, browser and admitted-read requirements; keep credentials on the server and every reader, signing and enrollment switched off until each is admitted.",
-      "source_sha256": "db9b3ce865f428271de44759c70a17cbc9371b311de7cbf541e359b8a10017aa",
+      "source_sha256": "57e236cfee984e6edfeea2c4533c4b5790d42902572812785d9f2509bf2b42df",
       "properties": {
         "startHereOrder": 3
       }
