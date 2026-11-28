@@ -87,7 +87,36 @@ try{
     assert.deepEqual([...failures,...late],[]);
     await context.close();
   }
-  // 3. prefers-reduced-motion: no animation or transition runs on Today.
+  // 3. Phone first screen at 412x915: all six tabs reachable without clipping,
+  // three asks with their choices and the P0 count above the fold, the page
+  // status on one line, and no horizontal overflow.
+  {
+    const {context,page,failures}=await open({viewport:{width:412,height:915},reducedMotion:'reduce'});
+    await page.goto(origin+'/today/');await ready(page);
+    await page.evaluate(()=>import('./home-view.mjs').then(view=>{
+      const ask=(n,title,options,rec)=>({id:'synthetic-ask-'+n,title,kind:'ask',priority:1,status:'open',created:'2026-11-01T00:00:00Z',gates:['ask-type'],options,rec,unblocks:'https://example.invalid/item/synthetic-linked',default:'Keep waiting',expires:'2026-12-01T12:00:00Z'});
+      view.renderAsks({rows:[ask(1,'ASK Stiwi: Which signing key should the phone use once enrollment opens?','Security key | Synced passkey','Security key'),ask(2,'ASK Stiwi: Retire the legacy brief (now / after review / never)','',''),ask(3,'ASK Stiwi: Choose the next bounded step','(1) Verify the source (2) Wait for a receipt (3) Stop here','(1) the evidence is readable'),ask(4,'ASK Stiwi: Keep the synthetic rollout paused?','','')],incomplete:false},null,Date.now());
+      view.renderPriorities([1,2,3].map(n=>({id:'synthetic-p0-'+n,title:'Synthetic priority '+n,priority:0,revision:1,modified:'2026-11-27',status:'in_progress'})),null,Date.now());
+    }));
+    const m=await page.evaluate(()=>{const H=innerHeight,nav=document.querySelector('.tabs').getBoundingClientRect(),conn=document.querySelector('#connection');
+      return {scrollWidth:document.documentElement.scrollWidth,
+        clipped:[...document.querySelectorAll('.tabs [role=tab]')].filter(t=>{const r=t.getBoundingClientRect(),c=getComputedStyle(t);return r.left<nav.left-0.5||r.right>nav.right+0.5||r.right>innerWidth||t.scrollWidth>t.clientWidth+1||c.visibility==='hidden';}).map(t=>t.textContent.trim()),
+        tabs:document.querySelectorAll('.tabs [role=tab]').length,
+        asks:[...document.querySelectorAll('#ask-top .ask')].filter(a=>{const g=a.querySelector('.decision-actions');return g&&g.children.length&&g.getBoundingClientRect().bottom<=H;}).length,
+        p0:document.querySelector('#p0-count').textContent,p0Visible:document.querySelector('#p0-count').getBoundingClientRect().bottom<=H&&!document.querySelector('#p0-count').hidden,
+        statusOneLine:conn.getBoundingClientRect().height<2.2*parseFloat(getComputedStyle(conn).lineHeight)};});
+    console.log('Today phone first screen at 412x915:',JSON.stringify(m));
+    if(shots)await mkdir(shots,{recursive:true}),await page.screenshot({path:resolve(shots,'today-412x915.png')});
+    assert.equal(m.tabs,6);
+    assert.deepEqual(m.clipped,[],'all six tabs are reachable without clipping at 412 px');
+    assert.ok(m.scrollWidth<=412,`no horizontal overflow at 412 px (scrollWidth ${m.scrollWidth})`);
+    assert.ok(m.asks>=3,`at least three asks with their choices on the first screen (saw ${m.asks})`);
+    assert.equal(m.p0,'3 P0');assert.ok(m.p0Visible,'the P0 count is on the first screen');
+    assert.ok(m.statusOneLine,'the page status line is one line on a phone');
+    assert.deepEqual(failures,[]);
+    await context.close();
+  }
+  // 4. prefers-reduced-motion: no animation or transition runs on Today.
   {
     const {context,page,failures}=await open({reducedMotion:'reduce'});
     await page.goto(origin+'/today/');await ready(page);
