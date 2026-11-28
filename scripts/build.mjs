@@ -8,6 +8,8 @@ await cp(resolve(root,'web/legacy'),out,{recursive:true,filter});
 await cp(resolve(root,'web/legacy'),resolve(out,'legacy'),{recursive:true,filter});
 for(const name of ['knowledge','offline','enroll','deck','today','economics'])await cp(resolve(root,'web',name),resolve(out,name),{recursive:true,filter});
 await cp(resolve(root,'web/today/home.html'),resolve(out,'today/index.html'));
+// One token source: Today wears the console tokens proved on the demo.
+await cp(resolve(root,'web/console/tokens.css'),resolve(out,'today/tokens.css'));
 await writeFile(resolve(out,'index.html'),'<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=./today/"><title>Rikuy</title><a href="./today/">Open Today</a> · <a href="./legacy/">Legacy brief</a></html>\n');
 const revision=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim();
 await writeFile(resolve(out,'source.json'),JSON.stringify({project:'rikuy',revision,activation:'deployment-owned; experimental readers OFF'},null,2)+'\n');
