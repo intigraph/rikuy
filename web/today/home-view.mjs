@@ -109,16 +109,25 @@ export function renderAsks(view,reason,at){
   mark(root).replaceChildren();mark(top).replaceChildren();
   $('ask-count').hidden=!view;$('ask-count').textContent=view?String(view.rows.length):'';
   $('h-asks').textContent='Needs you';
-  if(!view){unavailable(top,reason,at);unavailable(root,reason,at);mark($('asks-status')).textContent='Live asks · count unavailable';$('ask-rest-count').textContent='';$('h-remaining').textContent='Other decisions';return;}
+  if(!view){unavailable(top,reason,at);unavailable(root,reason,at);mark($('asks-status')).textContent='Live asks · count unavailable';if($('ask-order'))$('ask-order').textContent='';$('ask-rest-count').textContent='';$('h-remaining').textContent='Other decisions';return;}
   const decisions=decisionView(view);
   mark($('asks-status')).textContent=`${decisions.total} asks · every active Ask, human-gated or “ASK Stiwi” seed${view.incomplete?' · coverage incomplete':''} · checked ${stamp(at)}`;
   cite($('asks-status'),'./asks/query.json');
   cite($('asks-status'),'./asks/titles.json','Title query');
+  // The ordering rule is stated where the order is shown (decisionView).
+  let order=$('ask-order');
+  if(!order){order=el('p',undefined,'ask-order');order.id='ask-order';top.before(order);}
+  order.textContent=`Order: priority first (P0 highest), then oldest first. The top ${decisions.featured.length||3} are explicit asks; every other question and human gate follows in the same order.`;
   const cardFor=(row,index)=>{
     const card=el('article',undefined,'ask');card.dataset.item=row.id;
     card.append(el('div',(index===undefined?'':(index+1)+'. ')+questionLabel(row.title),'q'));
+    // Priority, age and owner sit on the card itself, with Open record on the same line.
+    const meta=el('div',undefined,'meta ask-meta');
+    for(const[label,value]of [['priority','P'+row.priority],['age','age '+(row.created?age(row.created):'unknown')],['owner',row.owner?.split('/').at(-1)||'unassigned'],['status',row.status],['id',row.id]]){const part=el('span',value);part.dataset.field=label;meta.append(part);}
+    meta.append(recordButton(row.id,row.title));
+    card.append(meta);
     const details=el('details',undefined,'ask-details');details.open=opened.has(row.id);
-    details.append(el('summary','Choices and record'));
+    details.append(el('summary','Recorded options and linked work'));
     const choices=el('div',undefined,'ask-choices');details.append(choices);
     const showChoices=({options,rec})=>{
       choices.replaceChildren();
@@ -142,11 +151,10 @@ export function renderAsks(view,reason,at){
       const linkedButton=recordButton(linked,'Work awaiting this decision');linkedButton.textContent='Open linked work';
       details.append(el('p','Unblocks '+linked),linkedButton);
     }
-    details.append(el('div',[row.id,'P'+row.priority,row.status,'age '+(row.created?age(row.created):'unknown'),row.owner?.split('/').at(-1)||'unassigned'].join(' · '),'meta'));
     details.addEventListener('toggle',()=>{details.open?opened.add(row.id):opened.delete(row.id);root.dataset.openIds=JSON.stringify([...opened]);if(details.open)loadChoices();});
     if(details.open)loadChoices();
     decisionCard(card,row);
-    card.append(details,recordButton(row.id,row.title));
+    card.append(details);
     return card;
   };
   for(const [index,row] of decisions.featured.entries())top.append(cardFor(row,index));

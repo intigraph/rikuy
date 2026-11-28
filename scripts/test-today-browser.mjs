@@ -60,13 +60,21 @@ async function demoDecisionCards(){
     const cards=await page.locator('.ask').evaluateAll(nodes=>nodes.map(card=>({
       id:card.dataset.item,choose:card.querySelectorAll('.ask-decide [data-action=choose]').length,
       controls:card.querySelectorAll('.ask-decide button').length,enabled:card.querySelectorAll('.ask-decide button:not(:disabled)').length,
-      rec:[...card.querySelectorAll('.ask-decide .recommended')].map(b=>b.dataset.choice),reason:card.querySelector('.ask-decide .decision-status')?.textContent})));
+      rec:[...card.querySelectorAll('.ask-decide .recommended')].map(b=>b.dataset.choice),reason:card.querySelector('.ask-decide .decision-status')?.textContent,
+      fields:Object.fromEntries([...card.querySelectorAll(':scope > .ask-meta [data-field]')].map(n=>[n.dataset.field,n.checkVisibility()?n.textContent:''])),
+      record:card.querySelector(':scope > .ask-meta .record-link')?.checkVisibility(),hiddenMeta:card.querySelectorAll('details .meta').length,
+      decideBeforeDetails:!!card.querySelector(':scope > .ask-decide ~ details')})));
     assert.equal(cards.length,3);
     for(const card of cards){
       assert.ok(card.choose>=2,card.id+' has at least two choices');assert.equal(card.rec.length,1,card.id+' marks exactly one REC');
       assert.equal(card.enabled,0,card.id+' choices are disabled under the public config');
       assert.match(card.reason,/^Signing not admitted on this deployment/);
+      assert.match(card.fields.priority,/^P[0-4]$/,card.id+' shows priority on the card');assert.match(card.fields.age,/^age \d+ (days?|h)$/,card.id+' shows age');
+      assert.ok(card.fields.owner,card.id+' shows owner');assert.equal(card.record,true,card.id+' Open record sits on the metadata line');
+      assert.equal(card.hiddenMeta,0,card.id+' metadata is not behind the disclosure');assert.ok(card.decideBeforeDetails,card.id+' choices render inline before the disclosure');
     }
+    assert.equal(cards[0].fields.owner,'demo-owner');assert.equal(cards[0].fields.priority,'P0');
+    assert.match(await page.locator('#ask-order').textContent(),/^Order: priority first \(P0 highest\), then oldest first\./,'ordering rule stated in the panel header');
     assert.deepEqual(cards.map(c=>c.rec[0]),['choose-1-verify-the-source','choose-2-after-review','choose-1-yes']);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'no horizontal scroll at phone width');
     assert.deepEqual(failures,[]);assert.deepEqual(live,[]);
