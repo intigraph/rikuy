@@ -17,3 +17,6 @@ same way `scripts/test-today-look-browser.mjs` does; no request leaves the page.
 
 Desktop layout is unchanged: the compact rules apply at 600 px and below.
 `askDecisionsEnabled` stays false; every choice still renders disabled with its reason.
+
+The CI browser may lack the condensed console fonts. With every font forced to
+the wider DejaVu Sans, the third Ask choices still end at y=839 of 915.
