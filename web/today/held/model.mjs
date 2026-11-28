@@ -1,6 +1,6 @@
 import {Unknown} from '../knowledge/model.mjs';
 import {storedRows} from '../stored-query.mjs';
-import {sourceControl} from '../asks/model.mjs';
+import {sourceControl,itemTitle} from '../asks/model.mjs';
 const safeInt=(x,min=0)=>Number.isSafeInteger(x)&&x>=min;
 const agentName=x=>typeof x==='string'&&/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(x);
 export function decodeHead(body,definition,now=Date.now(),watermark={}){
@@ -23,6 +23,18 @@ export function decodeHead(body,definition,now=Date.now(),watermark={}){
   Object.assign(watermark,{revision:head.revision,raw,versions:new Map([...(watermark.versions||[]),...versions])});
   return {headRevision:head.revision,states,complete:head.complete&&states.every(s=>!s.expired),pending:head.source_agents-head.agents.length,unknown:states.filter(s=>s.expired).length};
 }
+// One-shot job identities (eph-merge-*, eph-review-*, ...) finish and stop by design.
+export const ephemeralAgent=agent=>/^eph-/.test(agent);
+export const HELD_COLLAPSE_OWNERS=5;
+// Owners with stopped, ceiling or expired evidence, split into those holding
+// board work (rendered) and the rest (one count line). Expired stays UNKNOWN.
+export function heldSummary(view,at=Date.now()){
+  const uncertain=s=>s.state==='expired'||at>=s.observed_at*1000+1800000;
+  const owners=view.states.filter(s=>s.state==='stopped'||s.state==='ceiling'||s.state==='expired');
+  const holders=[],quiet=[];
+  for(const owner of owners){const rows=view.rows.filter(row=>row.owner===owner.owner);(rows.length?holders:quiet).push({...owner,rows,uncertain:uncertain(owner)});}
+  return {owners:owners.length,holders,quiet:quiet.length,quietEphemeral:quiet.filter(s=>ephemeralAgent(s.agent)).length,unknown:view.pending+view.states.filter(uncertain).length,collapsed:holders.length>HELD_COLLAPSE_OWNERS};
+}
 export function ownerBatches(view){
   // Expired stop observations remain visible as UNKNOWN, never confirmed stopped.
   const owners=view.states.filter(s=>s.state==='stopped'||s.state==='ceiling'||s.state==='expired').map(s=>s.owner).sort();
@@ -37,7 +49,7 @@ export function decodeWork(body,definition,owners){
   const rows=body.rows.map(row=>{
     const c=row.columns,owner=c?.assignee?.iri,id=typeof row.entity==='string'&&row.entity.startsWith(definition.itemPrefix)?row.entity.slice(definition.itemPrefix.length):'';
     if(!/^aegis-[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(id)||row.graph!==definition.graph||!allowed.has(owner)||row.multi!==false||row.key_plain!==true||!definition.key_in.includes(row.key)||!safeInt(c?.priority)||c.priority>4||typeof c.updated!=='string'||!Number.isFinite(Date.parse(c.updated))||seen.has(id))throw new Unknown('Foreign or malformed held-work projection row');
-    seen.add(id);return {id,item:row.entity,owner,priority:c.priority,status:row.key,modified:c.updated,title:'Open source record for title and due date'};
+    seen.add(id);return {id,item:row.entity,owner,priority:c.priority,status:row.key,modified:c.updated};
   });
   return {rows,more:body.truncated,nextAfter:body.next_after,tx:body.tx};
 }
@@ -61,5 +73,36 @@ export function heldReader({request,endpoint,head,work,control,now=()=>Date.now(
       }
     }
     return {...view,rows,more,tx};
+  };
+}
+// Held-work titles: the board projection carries no title, so each row reads it
+// through the Needs-you item point read. Cached by item@modified (an edited item is
+// re-read, an unchanged one is not), at most `limit` in flight, each timed out.
+// A failure is kept for failureTtlMs so refreshes do not hammer the reader, then
+// retried; it is never replaced by a stand-in title. At most maxReads point reads
+// leave this page; past the cap a row's title is "not loaded", not read.
+export const HELD_TITLE_READS=40;
+export class TitleNotLoaded extends Error{constructor(){super('title not loaded: the per-page title read cap is reached');this.notLoaded=true;}}
+export function heldTitleReader({request,endpoint,definition,limit=4,maxReads=HELD_TITLE_READS,timeoutMs=6000,failureTtlMs=300000,now=()=>Date.now()}){
+  const cache=new Map(),queue=[];let active=0,reads=0;
+  const pump=()=>{
+    while(active<limit&&queue.length){
+      const {seed,resolve,reject}=queue.shift();active++;
+      const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),timeoutMs);
+      Promise.resolve().then(()=>request(new URL('/ask',endpoint).href,{body:{name:definition.name,params:{seed}},cap:16384,signal:ctl.signal}))
+        .then(body=>itemTitle(body,definition,seed))
+        .catch(error=>{throw new Unknown(ctl.signal.aborted?'the title read timed out':error?.message||'the title read failed');})
+        .then(resolve,reject).finally(()=>{clearTimeout(timer);active--;pump();});
+    }
+  };
+  return row=>{
+    const key=row.item+'@'+row.modified,hit=cache.get(key);
+    if(hit&&!(hit.failedAt!==undefined&&now()-hit.failedAt>=failureTtlMs))return hit.pending;
+    if(reads>=maxReads)return Promise.reject(new TitleNotLoaded());
+    reads++;
+    const entry={pending:new Promise((resolve,reject)=>{queue.push({seed:row.item,resolve,reject});pump();})};
+    entry.pending.catch(()=>{entry.failedAt=now();});
+    cache.set(key,entry);
+    return entry.pending;
   };
 }

@@ -3,6 +3,7 @@ import {mountAskDecision} from './ask-decisions.mjs';
 import {askChoices} from './ask-choices.mjs';
 import {choiceReads} from './ask-choice-reads.mjs';
 import {NOT_ADMITTED} from './ask-decision-adapter.mjs';
+import {heldSummary} from './held/model.mjs';
 // Presentation only. Decoded source data stays textContent, including titles.
 export const $=id=>document.getElementById(id);
 export const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
@@ -226,4 +227,48 @@ export function renderOverview(state,reasons,checked){
     const source=el('p','Source: '+(box===work?'daily_brief_priorities_v3':'daily_brief_deploys_v1'),'provenance');
     cite(source,box===work?'./priorities/query.json':'./pace/query.json');box.append(source);
   }
+}
+// Held-work titles. The board projection carries no title, so each visible row
+// reads it through the item point read. Rows inside a closed holder group are not
+// read until the group is opened; the reader caps reads per page.
+let heldTitles,heldOpen=false;
+export function setHeldTitleReader(read){heldTitles=read;}
+// The real title, "title not loaded" past the read cap, or "title unavailable" with
+// the reason; never a stand-in title.
+function showHeldTitle(node,button,row){
+  const failed=(text,cls)=>{node.textContent=text;node.className='held-title '+cls;};
+  if(!heldTitles)return failed('title unavailable: no title reader is configured','missing');
+  node.textContent='title loading…';
+  heldTitles(row).then(title=>{node.textContent=title;node.className='held-title';button.setAttribute('aria-label','Open record: '+title);},
+    error=>error?.notLoaded?failed('title not loaded (open to load)','not-loaded'):failed('title unavailable: '+(error?.message||'the title read failed'),'missing'));
+}
+// Held work for owners with stopped, ceiling or expired lifecycle evidence.
+// Only owners holding work get a card; the rest collapse into one count line.
+export function renderHeldPanel(root,status,view,checkedAt,at=Date.now()){
+  mark(root).replaceChildren();
+  const sum=heldSummary(view,at),items=sum.holders.reduce((n,h)=>n+h.rows.length,0),pending=[];
+  mark(status).textContent=`${sum.holders.length} of ${sum.owners} owners with stopped or UNKNOWN evidence hold work${sum.unknown?' · UNKNOWN coverage: '+sum.unknown+' owners have missing or expired evidence':!view.complete?' · UNKNOWN: writer coverage is incomplete':''} · board tx ${view.tx??'not read'} · checked ${stamp(checkedAt)}`;
+  cite(status,'./held/head.json','Owner query');cite(status,'./held/work.json','Work query');
+  if(!sum.owners)root.append(el('p',view.complete&&!sum.unknown?'No stopped owners in the verified writer scope.':'Stopped-owner coverage is UNKNOWN; an empty result cannot establish that every owner is live.','note'));
+  const cards=sum.collapsed?el('details',undefined,'held-owners'):root;
+  if(sum.collapsed){cards.append(el('summary',`Show ${sum.holders.length} owners holding ${items} items`));root.append(cards);}
+  for(const owner of sum.holders){
+    const card=el('article',undefined,'ask'),label=owner.uncertain?'UNKNOWN · last recorded '+owner.state:owner.state==='ceiling'?'ceiling-stopped':'stopped';
+    card.append(el('h3',owner.agent+' · '+label));
+    for(const row of owner.rows){
+      const line=el('p'),title=el('span','title not loaded','held-title'),button=recordButton(row.id,row.id);
+      line.append(el('span',`${row.id} · P${row.priority} · ${row.status} · `),title,el('span',`${row.modified?' · updated '+row.modified:''} `),button);card.append(line);
+      pending.push(()=>showHeldTitle(title,button,row));
+    }
+    const proof=el('details');proof.append(el('summary','Owner evidence'),el('p',`Observed ${stamp(owner.observed_at*1000)} · lifecycle revision ${owner.revision} · ${owner.fact}`,'meta'));card.append(proof);cards.append(card);
+  }
+  if(sum.quiet)root.append(el('p',`${sum.quiet} other ${sum.quiet===1?'owner shows':'owners show'} no owned work ${view.more?'within this bounded selection':'in the verified board read'}${sum.quietEphemeral?` (${sum.quietEphemeral} ephemeral job ${sum.quietEphemeral===1?'identity':'identities'})`:''}.`,'note held-quiet'));
+  if(view.more)root.append(el('p','More owned work exists beyond this bounded selection.','note'));
+  root.append(el('p','Reassignment stays with the lead. Owner evidence expires after 30 minutes.','note'));
+  // A collapsed group reads no titles until it is opened; the open state survives a refresh.
+  const load=()=>{for(const start of pending.splice(0))start();};
+  if(!sum.collapsed)return load();
+  cards.open=heldOpen;
+  cards.addEventListener('toggle',()=>{heldOpen=cards.open;if(cards.open)load();});
+  if(cards.open)load();
 }

@@ -9,6 +9,7 @@ const server=createServer(async(req,res)=>{
   try {
     let name=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
     if(name==='/favicon.ico'){res.writeHead(204);res.end();return;}
+    if(name==='/today/demo-held/'||name==='/demo-today-held.mjs'){res.setHeader('Content-Type',name.endsWith('.mjs')?'text/javascript':'text/html');res.end(await readFile(resolve('scripts',name.endsWith('.mjs')?'demo-today-held.mjs':'demo-today-held.html')));return;}
     if(name==='/today/demo-asks/'||name==='/demo-today-asks.mjs'){res.setHeader('Content-Type',name.endsWith('.mjs')?'text/javascript':'text/html');res.end(await readFile(resolve('scripts',name.endsWith('.mjs')?'demo-today-asks.mjs':'demo-today-asks.html')));return;}
     if(name.endsWith('/'))name+='index.html';
     const file=resolve(root,'.'+name);
@@ -87,6 +88,40 @@ async function demoDecisionCards(){
     console.log(`PASS demo decision cards: ${cards.length} cards, ${cards.reduce((n,c)=>n+c.controls,0)} decision controls (${cards.map(c=>c.choose).join('/')} choices + Later + Comment), REC marked once each, all disabled with the stated reason`);
   }finally{await context.close();}
 }
+async function demoHeldTitles(){
+  const context=await browser.newContext({viewport:{width:412,height:915}}),page=await context.newPage(),failures=[],live=[];
+  page.on('pageerror',e=>failures.push(e.message));
+  await page.route('**/*',route=>{const u=new URL(route.request().url());if(u.origin!==origin){live.push(u.href);return route.abort();}return route.continue();});
+  // Settled once no row is still unstarted ("title not loaded") or in flight.
+  const settled=()=>page.waitForFunction(()=>![...document.querySelectorAll('.held-title')].some(n=>n.textContent==='title loading…'||n.textContent==='title not loaded'));
+  const titles=()=>page.locator('.held-title').allTextContents();
+  try{
+    await page.goto(origin+'/today/demo-held/');
+    await page.waitForFunction(()=>window.demoHeldRendered);
+    await page.waitForTimeout(120);
+    assert.equal(await page.evaluate(()=>document.querySelector('#held-work details.held-owners').open),false);
+    assert.equal(await page.evaluate(()=>window.demoTitleReads),0,'a collapsed holder group makes no title reads');
+    await page.locator('#held-work details.held-owners > summary').click();
+    await settled();
+    let shown=await titles();
+    assert.equal(shown.length,13);assert.equal(await page.evaluate(()=>window.demoTitleReads),13,'opening the group reads each visible row once');
+    assert.equal(shown.filter(t=>t.startsWith('title unavailable')).length,1,shown.join(' / '));assert.equal(shown.at(-1),'title unavailable: the source record has no title');
+    assert.ok(shown.slice(0,-1).every(t=>/^[A-Z][a-z]+ the /.test(t)),'every other row shows its real title');
+    await page.evaluate(()=>window.demoHeldRender());await settled();
+    assert.equal(await page.evaluate(()=>document.querySelector('#held-work details.held-owners').open),true,'a refresh keeps the group open');
+    assert.deepEqual(await titles(),shown);assert.equal(await page.evaluate(()=>window.demoTitleReads),13,'a refresh reuses the item@modified cache');
+    assert.equal((await page.content()).includes('Open source record for title'),false,'no placeholder title');
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'no horizontal scroll at phone width');
+    await page.goto(origin+'/today/demo-held/?cap=8');
+    await page.waitForFunction(()=>window.demoHeldRendered);
+    await page.locator('#held-work details.held-owners > summary').click();await settled();
+    shown=await titles();
+    assert.equal(await page.evaluate(()=>window.demoTitleReads),8,'the per-page cap bounds title reads');
+    assert.equal(shown.filter(t=>t==='title not loaded (open to load)').length,5,'rows past the cap say the title is not loaded');
+    assert.deepEqual(failures,[]);assert.deepEqual(live,[]);
+    console.log('PASS demo held titles: collapsed group 0 reads; opened 13 reads, 12 real titles, 1 unavailable with its reason; refresh 0 new reads; cap 8 leaves 5 not loaded; no placeholder');
+  }finally{await context.close();}
+}
 async function explicitAskRecord(){
   const context=await browser.newContext(),page=await context.newPage(),remote=[];
   await page.route('**/*',route=>{if(new URL(route.request().url()).origin!==origin){remote.push(route.request().url());return route.abort();}return route.continue();});
@@ -112,11 +147,37 @@ async function explicitAskRecord(){
     assert.deepEqual(remote,[]);
   }finally{await context.close();}
 }
+async function demoHeldWork(){
+  for(const viewport of [{width:1440,height:900},{width:412,height:915}]){
+    const context=await browser.newContext({viewport}),page=await context.newPage(),failures=[],live=[];
+    page.on('pageerror',e=>failures.push(e.message));
+    await page.route('**/*',route=>{const u=new URL(route.request().url());if(u.origin!==origin){live.push(u.href);return route.abort();}return route.continue();});
+    try{
+      await page.goto(origin+'/today/demo-held/');
+      await page.waitForFunction(()=>window.demoHeldRendered);
+      const held=await page.evaluate(()=>({cards:document.querySelectorAll('#held-work article').length,outside:document.querySelectorAll('#held-work > article').length,open:document.querySelector('#held-work details.held-owners')?.open,quiet:[...document.querySelectorAll('#held-work .held-quiet')].map(n=>n.textContent),empty:document.body.textContent.includes('No owned work within this bounded selection'),height:document.documentElement.scrollHeight}));
+      assert.equal(held.cards,9,'only the nine owners holding work get a card');
+      assert.equal(held.outside,0,'more than five holders render inside a collapsed group');
+      assert.equal(held.open,false,'the holder group is collapsed by default');
+      assert.deepEqual(held.quiet,['89 other owners show no owned work in the verified board read (86 ephemeral job identities).']);
+      assert.equal(held.empty,false,'no per-owner empty cards');
+      assert.ok(held.height<=viewport.height+200,`collapsed panel stays short (${held.height}px)`);
+      await page.goto(origin+'/today/');
+      await page.waitForFunction(()=>document.querySelector('#connection')?.textContent.includes('Live readers await deployment admission'));
+      const top=await page.evaluate(()=>document.getElementById('h-held').closest('section').getBoundingClientRect().top);
+      assert.ok(top>viewport.height,`held work sits below the fold (${top}px)`);
+      assert.deepEqual(failures,[]);assert.deepEqual(live,[]);
+    }finally{await context.close();}
+  }
+}
 try {
   browser=await chromium.launch({headless:process.env.RIKUY_BROWSER_HEADED!=='1',...(process.env.RIKUY_BROWSER_EXECUTABLE?{executablePath:process.env.RIKUY_BROWSER_EXECUTABLE}:{})});
   await loadToday();
   await explicitAskRecord();
   await demoDecisionCards();
+  await demoHeldWork();
+  console.log('PASS synthetic held work: only holders render, collapsed past five, below the fold at 1440 and 412');
+  await demoHeldTitles();
   console.log('PASS explicit Ask metadata, readable record and keyboard graph navigation; zero nonlocal requests');
   console.log('PASS built Today module graph, disabled-reader startup and tab transition');
   await assert.rejects(loadToday({breakDependency:true}),/Timeout|built module imports/);
