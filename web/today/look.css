@@ -97,8 +97,11 @@ footer{color:var(--c-dim)}
   .ask{padding:6px 8px;margin:0 0 4px}
   .ask .q{font-size:.84375rem;line-height:1.3;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
   .ask .ask-meta{flex-wrap:nowrap;white-space:nowrap;gap:0 8px;font-size:.6875rem;line-height:1.3;margin:1px 0 0;min-width:0}
-  .ask .ask-meta>span{flex:none}
-  .ask .ask-meta [data-field=id]{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  /* The meta line stays one line at any font size: the text fields give way
+     (ellipsis, id first) so Open record never pushes past the screen edge. */
+  .ask .ask-meta>span{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .ask .ask-meta [data-field=priority]{flex:none}
+  .ask .ask-meta [data-field=id]{flex-shrink:8}
   .ask .ask-meta .record-link{flex:none;min-height:26px;font-size:.75rem}
   .ask-decide{margin:2px 0}
   .ask-decide .decision-why{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;font-size:.75rem;line-height:1.3}
